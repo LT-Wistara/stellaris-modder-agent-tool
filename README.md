@@ -2,7 +2,7 @@
 
 让 AI Agent 在写 Stellaris Mod 时**查真实规则、验真实代码**的离线工具。
 
-附带 **173 个 CWT 规则文件**（23,057 个符号），提供 4 个 MCP 工具、一套 CLI 和一个 Python API。只依赖 Python **3.9+** 标准库 —— **不需要 pip、不需要联网、不需要配置数据路径**。
+附带 **173 个 CWT 规则文件**（23,057 个符号），提供 4 个 MCP 工具、一套 CLI 和一个 Python API。只依赖 Python **3.9+** 标准库
 
 ```text
 Agent: 我想给建筑加一个 planet_jobs_unity_produces_mult 修正
@@ -53,10 +53,10 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 黑窗口就是服务器进程，**关掉窗口即停止**。重复双击不会起第二个进程 —— 它会检测到已有服务，直接把片段打出来。启动失败会打印原因，并把完整堆栈写入 `start-error.log`。
 
 ```
-
 **模式自动判断**：有控制台（双击）走 HTTP；被客户端用管道拉起（`serve` 参数，或 stdin 不是终端）自动走 stdio，此时 stdout 只输出 JSON-RPC。同一个脚本既能给人用，也能给 Agent 用。
 
 > **Mod 根目录由 `descriptor.mod` 唯一确定。** 工具只读"自己所在的那个 Mod"——判定方式是"从工具自身位置向上找 `descriptor.mod`"。找不到就报未检测到并打印修复提示（退化为只能查内置规则），**不会**根据 `common/`、`events/` 这类目录名去猜，以免静默读错脚本。位置放错了用 `STELLARIS_MOD_ROOT` 或 `--mod-root` 显式指定。
+```
 
 
 ---
@@ -137,68 +137,7 @@ python stellaris_tool.py serve --http
 
 ---
 
-## 五、更新内置语料库
-
-内置语料是一个**固定快照**（`stellaris_agent/data/`，来源见 `UPSTREAM.json` 的 `commit_sha`）。工具本身永远不联网 —— 更新是一个显式动作：
-
-```powershell
-python stellaris_tool.py update-corpus --check    # 只报告差异，不写任何文件（默认）
-python stellaris_tool.py update-corpus --apply    # 下载、验证、替换
-```
-
-也可以 `python scripts/update_corpus.py --apply`。
-
-### 启动时会提醒你落后了多少
-
-交互式启动（双击 `start.cmd`）会顺手查一次上游，落后就打印一行提示：
-
-```text
-[提示] 内置语料落后上游 12 个提交（9d417d7ef7 -> cddc46bee2）。
-       运行  python stellaris_tool.py update-corpus --check  查看差异，
-       或    python stellaris_tool.py update-corpus --apply  下载并替换。
-       The bundled CWT corpus is 12 commit(s) behind upstream (9d417d7ef7 -> cddc46bee2).
-       Nothing changes until you run it: the tool stays offline otherwise.
-```
-
-这个检查的边界，都是刻意的：
-
-| 行为 | 原因 |
-|---|---|
-| **后台线程**执行 | 不拖慢横幅和握手 |
-| **不下载任何归档**，只两次轻量 API 调用 | 启动路径要便宜 |
-| 网络不可达时**静默跳过** | 离线是正常状态，不是错误 |
-| 结果**缓存 24 小时** | 客户端每次会话都拉起服务器，不能每次都去问 GitHub |
-| **只报告，绝不替换文件** | 更新必须是你主动的动作 |
-
-`stellaris_doctor` 的 `update` 字段会带上最近一次检查结果（只读缓存，不联网），所以 Agent 也能告诉你"语料落后了"。关掉它：`--no-update-check` 或 `STELLARIS_UPDATE_CHECK=0`。
-
-
-`--check` 会打印本地 pin 与上游 HEAD 的差距，以及 **added / removed / changed / unchanged** 四类文件清单：
-
-```text
-local commit  : 9d417d7ef783fd5198b35ae55675923f1cf24101
-upstream head : cddc46bee2205165615230b91e1766bafd88f841  2026-09-22T10:38:09Z
-target version: 4.5
-files         : 173 local, 175 upstream
-  added       : common/policy_categories.cwt, common/resource_regions.cwt
-  changed     : effects.cwt, triggers.cwt, modifiers.cwt, ...
-  unchanged   : 162
-```
-
-`--apply` 的保障：
-
-1. 只取 `config/**.cwt` 和上游 `LICENSE` —— 上游同时发布的 `script-docs/` / `script-files/` 是几十 MB 的生成日志，**不属于语料**，会被丢弃；
-2. 先解压到暂存目录，**用工具自己的解析器逐个解析并要求无损 roundtrip**，通过后才替换；
-3. 替换是"备份 → 换入 → 删除备份"，中途任何失败都会完整回滚；
-4. `UPSTREAM.json` 与文件由同一份数据生成，不会出现清单与实际不一致。
-
-其它参数：`--commit <sha>` 固定到某个提交、`--repository owner/name`（默认取 `UPSTREAM.json` 里记录的仓库，所以你 fork 之后仍然从自己的仓库更新）、`--branch`、`--timeout`。
-
-> 行尾说明：Windows 上 `core.autocrlf=true` 会把语料检出成 CRLF，而上游存的是 LF。`--check` 比较时会**规范化行尾**，所以行尾差异不会被误报成改动；`--apply` 写入上游原始字节（LF）。仓库里的 `.gitattributes` 已把 `stellaris_agent/data/**` 标记为 `-text`，防止 Git 再次转换。
-
----
-
-## 六、热更新与检索细节
+## 五、热更新与检索细节
 
 **正在运行的 MCP 会自己发现 Mod 改动，新建条目无需重启。** 它用"文件数 + 总字节数 + mtime 之和"对白名单目录做指纹（约 4 ms），变化即重建索引（含模糊索引），按 2 秒节流。新建、修改（即使长度不变）、删除都能识别。`--no-watch` 或 `STELLARIS_WATCH=0` 可关闭，`stellaris_doctor` 的 `watch` 字段会报告状态、节流间隔与重建次数。
 
@@ -206,7 +145,7 @@ files         : 173 local, 175 upstream
 
 ---
 
-## 七、目录结构
+## 六、目录结构
 
 ```text
 stellaris-agent-tool/
@@ -237,21 +176,7 @@ stellaris-agent-tool/
 
 ---
 
-## 八、开发与测试
-
-```powershell
-test.cmd                 # 或 sh test.sh，即 python -m unittest discover -s tests -v
-python scripts/verify.py # 跑测试并把结果写入 docs/TEST_REPORT.json / .txt
-python scripts/build_release.py   # 在上级目录生成 stellaris-agent-tool-<version>-portable.zip
-```
-
-版本号只有一个来源：`pyproject.toml` 的 `version`，由 `stellaris_agent/__init__.py` 读取。测试会校验 README、评测报告与服务端 `serverInfo.version` 三者一致。
-
-设计细节见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)、[`docs/DYNAMIC_DATA.md`](docs/DYNAMIC_DATA.md)。
-
----
-
-## 九、已知限制
+## 七、已知限制
 
 - **行尾差异不会误报，但 `--apply` 会把语料统一成 LF**（上游原始字节）。
 - **不读启动器数据库、playset 和其他已安装的 Mod** —— 只看原版 + 你自己那一个 Mod，这是刻意的：你要验的是自己的 Mod。
@@ -261,6 +186,6 @@ python scripts/build_release.py   # 在上级目录生成 stellaris-agent-tool-<
 
 ---
 
-## 许可
+## 八、许可
 
 MIT。内置 CWT 语料来自 [cwtools-stellaris-config](https://github.com/cwtools/cwtools-stellaris-config)（DragonKnightOfBreeze fork），版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_agent/data/LICENSE.cwt`。
