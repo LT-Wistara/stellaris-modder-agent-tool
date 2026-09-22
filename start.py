@@ -41,7 +41,7 @@ CORPUS_CHECK_TIMEOUT = 5.0
 PROMPT_TIMEOUT = 30.0
 GAME_ENV = 'STELLARIS_GAME_ROOT'
 MOD_ENV = 'STELLARIS_MOD_ROOT'
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent
 LINE = '=' * 66
 THIN = '-' * 66
 
@@ -92,9 +92,9 @@ def user_environment(name):
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(
-        prog='start.py',
+        prog=Path(sys.executable).name if getattr(sys, 'frozen', False) else 'start.py',
         description='Stellaris Agent MCP server: start it and print client configuration.')
-    parser.add_argument('command', nargs='?', default=None,
+    parser.add_argument('command', nargs='?', default=None, choices=['serve'],
                         help="'serve' starts stdio (what MCP clients use); omitted means "
                              "interactive HTTP mode when a console is attached")
     parser.add_argument('--http', action='store_true', help='force HTTP mode')
@@ -111,6 +111,8 @@ def parse_arguments(argv):
                         help='read only the bundled CWT corpus')
     parser.add_argument('--no-watch', action='store_true',
                         help='do not re-index game/mod files when they change')
+    parser.add_argument('--game-root', metavar='DIR', help='Stellaris installation directory')
+    parser.add_argument('--mod-root', metavar='DIR', help='mod directory containing descriptor.mod')
     parser.add_argument('--print-only', action='store_true',
                         help='print configuration and exit without starting a server')
     parser.add_argument('--no-update-check', action='store_true',
@@ -123,6 +125,8 @@ def parse_arguments(argv):
 
 
 def choose_mode(args):
+    if args.print_only:
+        return 'http'
     if args.stdio:
         return 'stdio'
     if args.http:
@@ -209,7 +213,7 @@ def print_snippets(http_url):
     """
     entry = str(ROOT / 'start.py')
     python = str(Path(sys.executable).resolve())
-    stdio = {'command': python, 'args': [entry, 'serve']}
+    stdio = {'command': python, 'args': ['serve'] if getattr(sys, 'frozen', False) else [entry, 'serve']}
 
     say('')
     say(LINE)
@@ -248,19 +252,25 @@ def port_in_use(host, port):
     """(True, payload) when something already answers MCP on that port."""
     import urllib.error
     import urllib.request
-    url = f'http://{host}:{port}/mcp'
+    url = http_url(host, port)
     body = json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
                        'params': {'protocolVersion': '2025-06-18', 'capabilities': {},
                                   'clientInfo': {'name': 'start.py', 'version': '1'}}}).encode('utf-8')
     request = urllib.request.Request(url, data=body, headers={'Content-Type': 'application/json'})
     try:
         with urllib.request.urlopen(request, timeout=3) as response:
-            return True, response.read(400).decode('utf-8', 'replace')
+            payload = response.read(1_000_000).decode('utf-8')
+            result = json.loads(payload).get('result', {})
+            info = result.get('serverInfo', {}) if isinstance(result, dict) else {}
+            return isinstance(info, dict) and info.get('name') == 'stellaris-modder-agent-tool', payload
     except urllib.error.HTTPError as error:
-        # 401/403 still means a server is there.
-        return error.code in (400, 401, 403, 406, 415), ''
-    except (urllib.error.URLError, socket.timeout, OSError):
         return False, ''
+    except (urllib.error.URLError, socket.timeout, OSError, ValueError, AttributeError):
+        return False, ''
+
+
+def http_url(host, port):
+    return f'http://[{host}]:{port}/mcp' if ':' in host else f'http://{host}:{port}/mcp'
 
 
 def serve_http(database, host, port, allow_remote, url):
@@ -281,7 +291,7 @@ def serve_http(database, host, port, allow_remote, url):
     say('  服务器已启动，保持本窗口开着（关闭窗口 = 停止服务器）')
     say('  Server is running. Keep this window open; closing it stops the server.')
     say(LINE)
-    print_snippets(url)
+    print_snippets(http_url(host, server.server_port))
     if sys.stdin and sys.stdin.isatty():
         say('  提示：把上面的片段贴进你的 MCP 客户端后，重新加载客户端即可使用。')
         say('        按 Ctrl+C 停止服务器。')
@@ -420,15 +430,13 @@ def main(argv=None):
     try:
         return run(argv)
     except KeyboardInterrupt:
-        say('')
-        say('已中断。 / interrupted.')
+        print('已中断。 / interrupted.', file=sys.stderr)
         return 130
     except Exception as error:  # noqa: BLE001 - a launcher must never die silently
-        say('')
-        say('[错误] 启动失败：' + type(error).__name__ + ': ' + str(error))
+        print('[错误] 启动失败：' + type(error).__name__ + ': ' + str(error), file=sys.stderr)
         path = write_crash_log(error)
         if path is not None:
-            say('       详细堆栈已写入：' + str(path))
+            print('       详细堆栈已写入：' + str(path), file=sys.stderr)
         else:
             import traceback
             traceback.print_exc()
@@ -454,8 +462,8 @@ def run(argv):
     try:
         environment, health = detect_environment(
             not args.no_game_data,
-            os.environ.get(GAME_ENV) or user_environment(GAME_ENV),
-            os.environ.get(MOD_ENV) or user_environment(MOD_ENV))
+            args.game_root or os.environ.get(GAME_ENV) or user_environment(GAME_ENV),
+            args.mod_root or os.environ.get(MOD_ENV) or user_environment(MOD_ENV))
         if interactive:
             # Say something right away: silence while the corpus is parsed looks
             # like a hang on a double-clicked window.
@@ -463,7 +471,7 @@ def run(argv):
             say('Starting: reading the bundled corpus and building the index...')
         database = build_database(args, environment, background=(mode == 'stdio'))
     except (OSError, ValueError, RecursionError) as error:
-        say('[错误] ' + str(error))
+        print('[错误] ' + str(error), file=sys.stderr)
         return 1
 
     if mode == 'stdio':
@@ -473,7 +481,7 @@ def run(argv):
 
     host = args.host
     port = args.port
-    url = f'http://{host}:{port}/mcp'
+    url = http_url(host, port)
 
     if args.print_only:
         report(database, environment, health)

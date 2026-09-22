@@ -26,6 +26,7 @@ def main(argv=None):
     search.add_argument('query')
     search.add_argument('-t', '--type')
     search.add_argument('--limit', type=int, default=20)
+    search.add_argument('--mode', choices=('name', 'text'), default='name')
     definition = commands.add_parser('get', help='Registry definition or complete subdirectory CWT')
     definition.add_argument('name')
     definition.add_argument('-t', '--type')
@@ -128,7 +129,10 @@ def main(argv=None):
         elif args.command == 'list':
             result = db.list_files()
         elif args.command == 'search':
-            result = db.search(args.query, args.type, args.limit)
+            if args.mode == 'text':
+                result = db.search_text(args.query, type=args.type, limit=args.limit)
+            else:
+                result = db.search(args.query, args.type, args.limit)
         elif args.command == 'get':
             result = db.get(args.name, args.type)
         elif args.command == 'validate':

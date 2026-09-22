@@ -22,7 +22,11 @@ Machine-specific and build-time files are never packed: ``client-config/``
 ``.git/``, caches, virtual environments and this script's own output.
 """
 from pathlib import Path
+import argparse
+import platform
 import re
+import shutil
+import subprocess
 import sys
 import zipfile
 
@@ -30,10 +34,10 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT.parent
 TOP = 'stellaris-modder-agent-tool'
 
-EXCLUDED_DIRS = {'__pycache__', '.git', '.venv', 'venv', 'build', 'dist', '.idea', '.vscode'}
+EXCLUDED_DIRS = {'__pycache__', '.git', '.venv', 'venv', 'build', 'dist', 'Releases', '.idea', '.vscode'}
 EXCLUDED_DIRS_BY_PATH = {'client-config'}
 EXCLUDED_SUFFIXES = {'.pyc', '.pyo'}
-EXCLUDED_BY_PATH = {'scripts/' + Path(__file__).name}
+EXCLUDED_BY_PATH = {'scripts/' + Path(__file__).name, 'gui-settings.json', 'gui-settings.tmp'}
 
 # A usable bundle must contain these; a silent mistake here would ship a
 # launcher that cannot find its entry point.
@@ -58,6 +62,8 @@ def included_files():
         parts = relative.parts
         if EXCLUDED_DIRS.intersection(parts):
             continue
+        if any(part.startswith('.venv-') for part in parts) or path.suffix == '.log':
+            continue
         if EXCLUDED_DIRS_BY_PATH.intersection(parts):
             continue
         if path.suffix in EXCLUDED_SUFFIXES:
@@ -81,7 +87,70 @@ def write_archive(output, files):
                 archive.writestr(info, handle.read())
 
 
-def main():
+def build_windows():
+    """Build an onedir EXE; the adjacent corpus remains updateable across runs."""
+    if sys.platform != 'win32' or platform.machine().lower() not in ('amd64', 'x86_64'):
+        raise SystemExit('Windows x64 Python is required for this release.')
+    release = ROOT / 'Releases'
+    work = ROOT / 'build' / 'windows'
+    release.mkdir(exist_ok=True)
+    work.mkdir(parents=True, exist_ok=True)
+    subprocess.run([
+        sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean',
+        '--distpath', str(release), '--workpath', str(work),
+        str(ROOT / 'scripts' / 'windows.spec'),
+    ], check=True, cwd=ROOT)
+    return package_windows()
+
+
+def package_windows():
+    """Refresh release documentation and archive an already-built executable."""
+    from importlib.metadata import distribution
+    release = ROOT / 'Releases'
+    name = 'StellarisModderAgent'
+    folder = release / name
+    if not (folder / (name + '.exe')).is_file():
+        raise SystemExit('Build the Windows EXE before packaging it.')
+    for filename in ('README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md'):
+        shutil.copy2(ROOT / filename, folder / filename)
+    shutil.copy2(ROOT / 'docs' / 'WINDOWS_RELEASE.md', folder / '使用说明.txt')
+    shutil.copy2(Path(sys.base_prefix) / 'LICENSE.txt', folder / 'LICENSE-PYTHON.txt')
+    pyinstaller = distribution('pyinstaller')
+    for item in pyinstaller.files or ():
+        if str(item).endswith('/licenses/COPYING.txt'):
+            shutil.copy2(pyinstaller.locate_file(item), folder / 'LICENSE-PYINSTALLER.txt')
+            break
+    for package in ('customtkinter', 'pillow', 'darkdetect', 'packaging'):
+        installed = distribution(package)
+        for item in installed.files or ():
+            if '.dist-info/' in str(item) and ('license' in str(item).lower() or str(item).endswith('COPYING')) and installed.locate_file(item).is_file():
+                name_part = str(item).split('.dist-info/', 1)[1].replace('/', '-')
+                shutil.copy2(installed.locate_file(item), folder / f'LICENSE-{package}-{name_part}')
+    docs = folder / 'docs'
+    docs.mkdir(exist_ok=True)
+    for filename in ('RELEASE_REVIEW.md', 'GUI_RELEASE.md', 'WINDOWS_RELEASE.md', 'TEST_REPORT.txt', 'TEST_REPORT.json',
+                     'FUZZY_SEARCH_REPORT.md'):
+        source = ROOT / 'docs' / filename
+        if source.exists():
+            shutil.copy2(source, docs / filename)
+    output = release / f'{TOP}-{project_version()}-windows-x64.zip'
+    write_archive(output, [(path, path.relative_to(release).as_posix())
+                           for path in sorted(folder.rglob('*')) if path.is_file()
+                           and path.name not in ('gui-settings.json', 'gui-settings.tmp') and path.suffix != '.log'])
+    with zipfile.ZipFile(output) as archive:
+        if archive.testzip():
+            raise SystemExit('Release archive verification failed')
+    print(str(output))
+    print(f'{output.stat().st_size:,} bytes; launcher: {folder / (name + ".exe")}')
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--windows', action='store_true', help='build a standalone Windows x64 EXE zip')
+    args = parser.parse_args(argv)
+    if args.windows:
+        return build_windows()
     files = included_files()
     names = {archive_name[len(TOP) + 1:] for _, archive_name in files}
     missing = [name for name in REQUIRED if name not in names]

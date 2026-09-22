@@ -9,4 +9,13 @@
 - License: MIT. The exact upstream license is redistributed as `stellaris_modder_agent/data/LICENSE.cwt`.
 - Packaging date, UTC timestamp and complete file list: `stellaris_modder_agent/data/UPSTREAM.json`.
 
+## Windows executable distribution
+
+The Windows package includes a Python runtime and a PyInstaller bootloader.
+Their license texts are included as `LICENSE-PYTHON.txt` and `LICENSE-PYINSTALLER.txt`.
+The desktop UI uses CustomTkinter, Pillow, darkdetect and packaging; their
+redistribution notices are included in the `LICENSE-<package>-*` files.
+In that package, the CWT license and manifest are under
+`_internal/stellaris_modder_agent/data/`.
+
 Stellaris is a Paradox Interactive game. This tool is an independent development utility and claims no affiliation or endorsement.

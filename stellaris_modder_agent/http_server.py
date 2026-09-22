@@ -10,6 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 import json
 import os
+import socket
 import sys
 import time
 
@@ -119,6 +120,9 @@ def create_http_server(database, host='127.0.0.1', port=8765, allow_remote=False
                     time.sleep(SSE_KEEPALIVE_SECONDS)
             except OSError:
                 pass
+            finally:
+                # An unframed HTTP/1.1 stream ends only when its connection closes.
+                self.close_connection = True
 
         def do_HEAD(self):
             if self.authorized():
@@ -134,7 +138,10 @@ def create_http_server(database, host='127.0.0.1', port=8765, allow_remote=False
         def log_message(self, format, *args):
             print('MCP HTTP: ' + format % args, file=sys.stderr)
 
-    return ThreadingHTTPServer((host, port), Handler)
+    class HTTPServer(ThreadingHTTPServer):
+        address_family = socket.AF_INET6 if ':' in host else socket.AF_INET
+
+    return HTTPServer((host, port), Handler)
 
 
 def serve_http(database=None, host='127.0.0.1', port=8765):

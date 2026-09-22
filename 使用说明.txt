@@ -1,21 +1,10 @@
-Stellaris Agent Tool 1.1.1 —— 使用说明
-================================================================
+Stellaris Modder Agent 1.2.0
 
-是什么  离线工具，让 AI 查 Stellaris 真实脚本规则、验证你写的 Mod 代码。
-        不联网，不需要 pip。
+Windows 发布版：双击 StellarisModderAgent.exe 打开图形面板。
+面板中可启动 / 停止服务、设置游戏与 Mod 路径、更新 CWT 语料、复制客户端配置。
+保留 StellarisModderAgent-server.exe 与 _internal 文件夹，无需安装 Python。
 
-要什么  只有一条：Python 3.9+，安装时勾选加入 PATH。
+源码版：先运行 python -m pip install -r requirements-gui.txt，再运行 python gui.py。
+原有 start.cmd / start.py 仍提供命令行服务入口。
 
-怎么用  1. 整个文件夹解压进你的 Mod 根目录（与 descriptor.mod 同级）。
-        2. 双击 start.cmd。
-        3. 把黑窗口打印的片段贴进 MCP 客户端，重载即可。
-
-        黑窗口就是服务器，关掉即停；重复双击不会起第二个。
-        位置放错时它会提示，也可用 STELLARIS_MOD_ROOT 指定。
-
-排障    查不到名字先跑 stellaris_doctor，多半是游戏或 Mod 数据没加载。
-
-命令    python stellaris_tool.py doctor
-        python stellaris_tool.py update-corpus --check
-
-详细    README.md
+详见 README.md 与 docs/WINDOWS_RELEASE.md。

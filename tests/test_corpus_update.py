@@ -293,8 +293,9 @@ class ProgressBarCase(unittest.TestCase):
 
     def test_it_reports_how_much_is_left(self):
         stream = FakeStream(True)
-        bar = corpus.ProgressBar(200, stream)
-        bar.update(1, 200, 'a.cwt')
+        with patch.object(corpus.time, 'monotonic', side_effect=[0.0, 1.0]):
+            bar = corpus.ProgressBar(200, stream)
+            bar.update(1, 200, 'a.cwt')
         self.assertIn('left', stream.getvalue())
 
     def test_a_captured_stream_gets_plain_lines_instead(self):

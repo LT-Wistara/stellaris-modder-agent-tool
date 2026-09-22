@@ -19,6 +19,7 @@ from pathlib import Path
 import json
 import os
 import re
+import sys
 
 GAME_ENV = ('STELLARIS_GAME_ROOT', 'STELLARIS_GAME_DIR')
 MOD_ENV = ('STELLARIS_MOD_ROOT', 'STELLARIS_MOD_DIR')
@@ -292,7 +293,8 @@ def detect_mod_root(explicit=None, start=None, steps=None):
             candidate = Path(value)
             steps.append(Step('env:' + name, str(candidate), True, 'explicit mod root'))
             return candidate
-    here = Path(start) if start else Path(__file__).resolve()
+    here = Path(start) if start else (Path(sys.executable).resolve()
+                                    if getattr(sys, 'frozen', False) else Path(__file__).resolve())
     for candidate in [here] + list(here.parents):
         if (candidate / MOD_DESCRIPTOR).is_file():
             steps.append(Step('walk-up', str(candidate), True, 'descriptor.mod found'))

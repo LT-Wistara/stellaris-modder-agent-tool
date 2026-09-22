@@ -1,0 +1,3 @@
+# Build-time only; users of the EXE do not need Python or pip.
+pyinstaller==6.16.0
+-r requirements-gui.txt

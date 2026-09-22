@@ -1,8 +1,8 @@
-# Stellaris Agent Tool 1.1.1
+# Stellaris Agent Tool 1.2.0
 
 让 AI Agent 在写 Stellaris Mod 时**查真实规则、验真实代码**的离线工具。
 
-附带 **173 个 CWT 规则文件**（23,057 个符号），提供 4 个 MCP 工具、一套 CLI 和一个 Python API。只依赖 Python **3.9+** 标准库
+附带 **173 个 CWT 规则文件**（23,057 个符号），提供桌面 GUI、4 个 MCP 工具、一套 CLI 和一个 Python API。核心服务只依赖 Python **3.9+** 标准库；源码 GUI 使用 CustomTkinter 和 Pillow，EXE 发布版已包含全部依赖。
 
 ```text
 Agent: 我想给建筑加一个 planet_jobs_unity_produces_mult 修正
@@ -43,7 +43,18 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 ## 二、快速开始（Windows）
 
-**前置条件只有一条：Python 3.9 或更新版本**，安装时勾选加入 PATH。
+**EXE 发布版无需安装 Python**：下载 `Releases/stellaris-modder-agent-tool-1.2.0-windows-x64.zip`，将整个 `StellarisModderAgent` 文件夹解压到自己的 Mod 中，双击 `StellarisModderAgent.exe` 打开图形面板，不再出现命令行窗口。
+
+- **服务控制台**：启动 / 停止服务、设置端口、切换游戏数据与热更新。
+- **数据与更新**：选择游戏 / Mod 目录、保存设置、检查 / 安装 CWT 更新。
+- **客户端接入**：复制 HTTP、stdio 或 Codex 配置。
+- **运行日志**：查看启动与更新进度、复制错误日志。
+
+保留同目录的 `StellarisModderAgent-server.exe` 与 `_internal` 文件夹。stdio 客户端使用服务 EXE，参数为 `["serve"]`；旧版本用户请从面板重新复制配置。关闭面板会停止它启动的 HTTP 服务，客户端独立启动的 stdio 服务不受影响。更新语料前先停止面板内的服务。
+
+详见 [Windows 发布版说明](docs/WINDOWS_RELEASE.md) 与 [GUI 发布记录](docs/GUI_RELEASE.md)。源码 GUI 运行方式：`python -m pip install -r requirements-gui.txt`，然后运行 `python gui.py`。
+
+以下为保留的**源码命令行版**步骤，要求 Python 3.9 或更新版本，安装时勾选加入 PATH。
 
 1. 把整个文件夹解压到**你自己的 Mod 根目录**里（与 `descriptor.mod` 同级的那一层，放其下任意子目录也可以）；
 2. 双击 **`start.py`**；
@@ -166,8 +177,8 @@ stellaris-modder-agent-tool/
 │  ├─ update_corpus.py         语料库更新（脚本形式）
 │  ├─ evaluate_fuzzy.py        模糊检索评测
 │  ├─ verify.py                跑测试并写 docs/TEST_REPORT.*
-│  └─ build_release.py         打包 portable zip
-├─ tests/                      290 个测试
+│  └─ build_release.py         打包源码 ZIP / Windows EXE ZIP（--windows）
+├─ tests/                      核心、协议、桌面进程与设置回归测试
 ├─ deploy/                     systemd / nginx / certbot 模板
 └─ docs/                       设计文档与评测报告
 ```

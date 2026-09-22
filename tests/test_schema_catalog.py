@@ -9,6 +9,7 @@ import unittest
 import urllib.request
 from unittest.mock import patch
 
+from stellaris_modder_agent import __version__
 from stellaris_modder_agent.index import Database, DATA
 from stellaris_modder_agent.http_server import create_http_server
 from stellaris_modder_agent.server import Server, TOOLS
@@ -264,7 +265,7 @@ class SchemaCatalogCase(unittest.TestCase):
         for response, (name, _, expected) in zip(replies[1:], calls):
             payload = json.loads(response['result']['content'][0]['text'])
             if name == 'stellaris_list':
-                self.assertEqual(payload.pop('metadata')['server']['version'], '1.1.1')
+                self.assertEqual(payload.pop('metadata')['server']['version'], __version__)
             else:
                 self.assertNotIn('metadata', payload)
             self.assertEqual(payload, expected)
@@ -287,7 +288,7 @@ class SchemaCatalogCase(unittest.TestCase):
                     result = json.load(response)['result']
                     payload = json.loads(result['content'][0]['text'])
                     if name == 'stellaris_list':
-                        self.assertEqual(payload.pop('metadata')['server']['version'], '1.1.1')
+                        self.assertEqual(payload.pop('metadata')['server']['version'], __version__)
                     else:
                         self.assertNotIn('metadata', payload)
                     self.assertEqual(payload, expected)

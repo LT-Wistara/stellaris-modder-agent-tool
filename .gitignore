@@ -5,12 +5,16 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-*/
+Releases/
 build/
 dist/
 client-config/
 
 # Runtime output from start.py
 start-error.log
+gui-settings.json
+gui-settings.tmp
 
 # Corpus updater staging/backup directories (`stellaris_modder_tool.py update-corpus`)
 .staging-corpus-*/
