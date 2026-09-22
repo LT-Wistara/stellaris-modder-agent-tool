@@ -3,7 +3,7 @@ PARSED: 173
 FAILED: 0
 
 TESTS:
-274 passed
+290 passed
 0 failed
 
 CLI: passed
@@ -48,9 +48,27 @@ test_real_content_change_is_still_reported (test_corpus_update.ComparisonCase.te
 test_missing_manifest_falls_back_to_the_project_default (test_corpus_update.DefaultsCase.test_missing_manifest_falls_back_to_the_project_default) ... ok
 test_repository_comes_from_the_manifest (test_corpus_update.DefaultsCase.test_repository_comes_from_the_manifest)
 A fork or mirror keeps updating from itself, not from the default. ... ok
+test_counts_are_shown (test_corpus_update.HintCase.test_counts_are_shown) ... ok
+test_it_says_nothing_changes_by_itself (test_corpus_update.HintCase.test_it_says_nothing_changes_by_itself) ... ok
+test_nothing_to_say_when_current (test_corpus_update.HintCase.test_nothing_to_say_when_current) ... ok
 test_a_failure_midway_restores_everything (test_corpus_update.InstallCase.test_a_failure_midway_restores_everything)
 An un-serialisable manifest stands in for any failure after the rename. ... ok
 test_install_replaces_the_whole_snapshot (test_corpus_update.InstallCase.test_install_replaces_the_whole_snapshot) ... ok
+test_default_is_on (test_corpus_update.LaunchFlagCase.test_default_is_on) ... ok
+test_environment_turns_it_off (test_corpus_update.LaunchFlagCase.test_environment_turns_it_off) ... ok
+test_flag_turns_it_off (test_corpus_update.LaunchFlagCase.test_flag_turns_it_off) ... ok
+test_an_unavailable_compare_still_reports_being_behind (test_corpus_update.StalenessCase.test_an_unavailable_compare_still_reports_being_behind)
+Knowing "some" beats reporting "current" when the count is unknown. ... ok
+test_behind_count_comes_from_the_compare_api (test_corpus_update.StalenessCase.test_behind_count_comes_from_the_compare_api) ... ok
+test_unreachable_upstream_reports_nothing (test_corpus_update.StalenessCase.test_unreachable_upstream_reports_nothing)
+Offline is the normal case, not a failure. ... ok
+test_up_to_date_is_zero (test_corpus_update.StalenessCase.test_up_to_date_is_zero) ... ok
+test_a_second_call_does_not_ask_github_again (test_corpus_update.StatusCacheCase.test_a_second_call_does_not_ask_github_again) ... ok
+test_an_unwritable_cache_is_not_fatal (test_corpus_update.StatusCacheCase.test_an_unwritable_cache_is_not_fatal) ... ok
+test_expired_cache_reads_as_none (test_corpus_update.StatusCacheCase.test_expired_cache_reads_as_none) ... ok
+test_fresh_cache_is_returned (test_corpus_update.StatusCacheCase.test_fresh_cache_is_returned) ... ok
+test_missing_cache_reads_as_none (test_corpus_update.StatusCacheCase.test_missing_cache_reads_as_none) ... ok
+test_unreadable_cache_reads_as_none (test_corpus_update.StatusCacheCase.test_unreadable_cache_reads_as_none) ... ok
 test_a_parseable_corpus_passes (test_corpus_update.VerificationCase.test_a_parseable_corpus_passes) ... ok
 test_an_unparseable_file_stops_the_update (test_corpus_update.VerificationCase.test_an_unparseable_file_stops_the_update) ... ok
 test_marker_is_read_from_aliases (test_corpus_update.VersionMarkerCase.test_marker_is_read_from_aliases) ... ok
@@ -321,6 +339,6 @@ test_unknown_schema_field (test_tool.ValidateCase.test_unknown_schema_field) ...
 test_unknown_scope_context (test_tool.ValidateCase.test_unknown_scope_context) ... ok
 
 ----------------------------------------------------------------------
-Ran 274 tests in 171.023s
+Ran 290 tests in 155.072s
 
 OK

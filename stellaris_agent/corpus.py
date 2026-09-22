@@ -53,7 +53,15 @@ DEFAULT_BRANCH = 'master'
 
 USER_AGENT = 'stellaris-agent-tool corpus updater (+https://github.com/LT-Wistara/stellaris-agent-tool)'
 API_COMMIT = 'https://api.github.com/repos/{repository}/commits/{ref}'
+API_COMPARE = 'https://api.github.com/repos/{repository}/compare/{base}...{head}'
 ARCHIVE = 'https://codeload.github.com/{repository}/tar.gz/{ref}'
+
+# The launch-time staleness check is deliberately cheap: two small API calls and
+# no archive download. Its result is cached because start.py runs on every client
+# session, and asking GitHub once per session would be rude to the API and slow
+# for the user.
+CHECK_CACHE_NAME = 'stellaris-agent-tool-update-check.json'
+CHECK_MAX_AGE = 24 * 60 * 60
 
 CONFIG_MEMBER = re.compile(r'^[^/]+/config/(?P<relative>.+\.cwt)$')
 LICENSE_MEMBER = re.compile(r'^[^/]+/LICENSE$')
@@ -372,6 +380,117 @@ def _defaults(manifest):
     if match:
         repository = match.group('slug')
     return repository, branch
+
+
+# region staleness check
+
+def cache_path():
+    """Where the last check is remembered, shared by every launch of the tool."""
+    return Path(tempfile.gettempdir()) / CHECK_CACHE_NAME
+
+
+def upstream_status(manifest=None, repository=None, branch=None, timeout=8):
+    """How far the bundled snapshot is behind upstream, or ``None``.
+
+    Two small API calls -- no archive download -- because this runs on the launch
+    path.  It returns ``None`` instead of raising when GitHub is unreachable: the
+    tool works offline by design, and a failed check is not an error worth
+    showing anyone.
+    """
+    manifest = read_manifest() if manifest is None else manifest
+    if repository is None:
+        repository, default_branch = _defaults(manifest)
+        branch = branch or default_branch
+    branch = branch or DEFAULT_BRANCH
+    local = manifest.get('commit_sha')
+    try:
+        head, committed_at = upstream_commit(repository, branch, timeout=timeout)
+    except UpdateError:
+        return None
+
+    behind = 0
+    if local and local != head:
+        behind = None
+        try:
+            comparison = json.loads(_get(
+                API_COMPARE.format(repository=repository, base=local, head=head),
+                accept='application/vnd.github+json', timeout=timeout))
+            behind = comparison.get('ahead_by')
+        except (UpdateError, ValueError):
+            # The head already differs, so "some" is known even when the exact
+            # count is not; that is enough for a hint.
+            behind = None
+    return {'repository': repository, 'branch': branch, 'local': local, 'upstream': head,
+            'committed_at': committed_at, 'behind': behind,
+            'checked_at': datetime.now(timezone.utc).isoformat()}
+
+
+def read_status_cache(path=None, max_age=CHECK_MAX_AGE):
+    """The cached check, or ``None`` when it is missing, unreadable or expired."""
+    path = Path(path) if path is not None else cache_path()
+    if not path.is_file():
+        return None
+    try:
+        payload = json.loads(path.read_text('utf-8'))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if max_age is not None:
+        try:
+            age = (datetime.now(timezone.utc)
+                   - datetime.fromisoformat(str(payload['checked_at']))).total_seconds()
+        except (KeyError, TypeError, ValueError):
+            return None
+        if age > max_age:
+            return None
+    return payload
+
+
+def write_status_cache(status, path=None):
+    """Best effort: a read-only temp directory must not break a launch."""
+    path = Path(path) if path is not None else cache_path()
+    try:
+        path.write_text(json.dumps(status, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    except OSError:
+        pass
+
+
+def cached_status(path=None, max_age=CHECK_MAX_AGE, **kwargs):
+    """The check from cache, refreshed only once the cache has expired."""
+    cached = read_status_cache(path, max_age)
+    if cached is not None:
+        return cached
+    status = upstream_status(**kwargs)
+    if status is not None:
+        write_status_cache(status, path)
+    return status
+
+
+def update_hint(status):
+    """A short bilingual hint, or ``None`` when there is nothing to report."""
+    if not status or status.get('behind') == 0:
+        return None
+    count = status.get('behind')
+    local = str(status.get('local') or '?')[:10]
+    head = str(status.get('upstream') or '?')[:10]
+    if count:
+        english = 'The bundled CWT corpus is %d commit(s) behind upstream (%s -> %s).' % (
+            count, local, head)
+        chinese = '内置语料落后上游 %d 个提交（%s -> %s）。' % (count, local, head)
+    else:
+        english = 'The bundled CWT corpus is behind upstream (%s -> %s).' % (local, head)
+        chinese = '内置语料落后上游（%s -> %s）。' % (local, head)
+    return '\n'.join([
+        '[提示] ' + chinese,
+        '       运行  python stellaris_tool.py update-corpus --check  查看差异，',
+        '       或    python stellaris_tool.py update-corpus --apply  下载并替换。',
+        '       ' + english,
+        '       Nothing changes until you run it: the tool stays offline otherwise.',
+    ])
+
+
+# endregion
 
 
 def main(argv=None):

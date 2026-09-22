@@ -192,6 +192,32 @@ python stellaris_tool.py update-corpus --apply    # 下载、验证、替换
 
 也可以 `python scripts/update_corpus.py --apply`。
 
+### 启动时会提醒你落后了多少
+
+交互式启动（双击 `start.cmd`）会顺手查一次上游，落后就打印一行提示：
+
+```text
+[提示] 内置语料落后上游 12 个提交（9d417d7ef7 -> cddc46bee2）。
+       运行  python stellaris_tool.py update-corpus --check  查看差异，
+       或    python stellaris_tool.py update-corpus --apply  下载并替换。
+       The bundled CWT corpus is 12 commit(s) behind upstream (9d417d7ef7 -> cddc46bee2).
+       Nothing changes until you run it: the tool stays offline otherwise.
+```
+
+这个检查的边界，都是刻意的：
+
+| 行为 | 原因 |
+|---|---|
+| **后台线程**执行 | 不拖慢横幅和握手 |
+| **不下载任何归档**，只两次轻量 API 调用 | 启动路径要便宜 |
+| 网络不可达时**静默跳过** | 离线是正常状态，不是错误 |
+| 结果**缓存 24 小时** | 客户端每次会话都拉起服务器，不能每次都去问 GitHub |
+| **只报告，绝不替换文件** | 更新必须是你主动的动作 |
+
+`stellaris_doctor` 的 `update` 字段会带上最近一次检查结果（只读缓存，不联网），所以 Agent 也能告诉你"语料落后了"。关掉它：`--no-update-check` 或 `STELLARIS_UPDATE_CHECK=0`。
+
+> 为什么不做成自动同步？因为答案带 `commit` 溯源字段，而且 `docs/FUZZY_SEARCH_REPORT.md` 里的实测数字和测试基线都绑定在某个具体快照上。如果语料在你不知情时变化，这些会**静默失效** —— 而且是往"看起来没问题"的方向失效。所以这里只提醒，替换由你决定。
+
 `--check` 会打印本地 pin 与上游 HEAD 的差距，以及 **added / removed / changed / unchanged** 四类文件清单：
 
 ```text
@@ -249,7 +275,7 @@ stellaris-agent-tool/
 │  ├─ evaluate_fuzzy.py        模糊检索评测
 │  ├─ verify.py                跑测试并写 docs/TEST_REPORT.*
 │  └─ build_release.py         打包 portable zip
-├─ tests/                      274 个测试
+├─ tests/                      290 个测试
 ├─ deploy/                     systemd / nginx / certbot 模板
 └─ docs/                       设计文档与评测报告
 ```

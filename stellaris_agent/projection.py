@@ -194,6 +194,6 @@ def project(tool, payload):
     if tool == 'stellaris_doctor':
         return select(payload, ('status', 'game_data_enabled', 'enabled', 'reason', 'seconds',
                                 'truncated', 'watch', 'sources', 'environment', 'index', 'generated_modifiers',
-                                'version_check', 'note'))
+                                'version_check', 'update', 'note'))
     return select(payload, ('status', 'code', 'message', 'type', 'scope', 'candidates',
                             'kind', 'path', 'content', 'files', 'available', 'hint'))

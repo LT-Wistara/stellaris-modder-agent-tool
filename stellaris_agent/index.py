@@ -314,6 +314,9 @@ class Database:
     def doctor(self):
         """Report detected data sources and what was indexed from them."""
         report = {'status': 'CONFIRMED_CWT', 'game_data_enabled': self.game_data}
+        # Set before the early return below: whether the corpus is behind upstream
+        # has nothing to do with whether game data was loaded.
+        report['update'] = self._cached_update_status()
         if not self.game_data:
             report.update({'enabled': False,
                            'reason': 'Game/mod data is disabled for this process.'})
@@ -325,6 +328,20 @@ class Database:
                           'variable, Steam registry, Steam library manifests, defaults. Only the '
                           'game installation and the mod containing this tool are read.')
         return report
+
+    @staticmethod
+    def _cached_update_status():
+        """The last launch-time corpus check, when one is still fresh.
+
+        Read from cache on purpose: ``stellaris_doctor`` is the offline entry
+        point and must never wait on the network. ``None`` means nobody has
+        checked recently, not that the corpus is current.
+        """
+        try:
+            from .corpus import read_status_cache
+            return read_status_cache()
+        except Exception:  # noqa: BLE001 - a broken cache must not break the report
+            return None
 
     def _source_summary(self, environment, report):
         """State plainly which sources are usable here, and how to get the missing one."""

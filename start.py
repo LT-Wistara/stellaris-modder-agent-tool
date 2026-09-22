@@ -27,6 +27,7 @@ import os
 from pathlib import Path
 import socket
 import sys
+import threading
 
 MIN_PYTHON = (3, 9)
 DEFAULT_HOST = '127.0.0.1'
@@ -105,6 +106,9 @@ def parse_arguments(argv):
                         help='do not re-index game/mod files when they change')
     parser.add_argument('--print-only', action='store_true',
                         help='print configuration and exit without starting a server')
+    parser.add_argument('--no-update-check', action='store_true',
+                        help='do not look for a newer CWT corpus when starting interactively '
+                             '(also STELLARIS_UPDATE_CHECK=0)')
     return parser.parse_args(argv)
 
 
@@ -298,6 +302,33 @@ def write_crash_log(error):
         return None
 
 
+def update_check_enabled(args):
+    if getattr(args, 'no_update_check', False):
+        return False
+    return os.environ.get('STELLARIS_UPDATE_CHECK', '1').strip().lower() not in ('0', 'false', 'no')
+
+
+def announce_corpus_update():
+    """Mention a stale corpus, in the background.
+
+    This runs in a thread and swallows every failure on purpose: it is a
+    convenience, so neither a slow network nor no network at all may delay the
+    banner or fail a launch. The check behind it is cached for a day, so a client
+    that starts the server on every session does not ask GitHub every time, and
+    nothing is ever downloaded or replaced here -- updating stays an explicit
+    ``update-corpus --apply``.
+    """
+    try:
+        from stellaris_agent import corpus
+        hint = corpus.update_hint(corpus.cached_status(timeout=8))
+        if hint:
+            say('')
+            for line in hint.splitlines():
+                say(line)
+    except Exception:  # noqa: BLE001 - a convenience must never break the launcher
+        pass
+
+
 def main(argv=None):
     configure_console()
     try:
@@ -374,6 +405,8 @@ def run(argv):
 
     if interactive:
         report(database, environment, health)
+    if interactive and update_check_enabled(args):
+        threading.Thread(target=announce_corpus_update, daemon=True).start()
     return serve_http(database, host, port, args.allow_remote, url)
 
 

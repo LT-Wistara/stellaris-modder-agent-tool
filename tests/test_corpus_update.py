@@ -17,12 +17,14 @@ Everything here runs offline against synthetic archives.
 """
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -181,6 +183,136 @@ class DefaultsCase(unittest.TestCase):
         repository, branch = corpus._defaults({})
         self.assertEqual(repository, corpus.DEFAULT_REPOSITORY)
         self.assertEqual(branch, corpus.DEFAULT_BRANCH)
+
+
+class StalenessCase(unittest.TestCase):
+    """The launch-time hint: cheap, cached, and never fatal.
+
+    ``start.py`` runs on every client session, so this check must not download an
+    archive, must not ask GitHub more than about once a day, and must treat an
+    unreachable upstream as "nothing to say" rather than as an error.
+    """
+
+    LOCAL = 'a' * 40
+    HEAD = 'b' * 40
+
+    def status(self, local=None, head=None, ahead_by=3, commit_raises=False, compare_raises=False):
+        local = self.LOCAL if local is None else local
+        head = self.HEAD if head is None else head
+
+        def fake_commit(repository, ref, timeout=30):
+            if commit_raises:
+                raise corpus.UpdateError('offline')
+            return head, '2026-01-01T00:00:00Z'
+
+        def fake_get(url, accept=None, timeout=120):
+            if compare_raises:
+                raise corpus.UpdateError('compare unavailable')
+            return json.dumps({'ahead_by': ahead_by}).encode()
+
+        manifest = {'repository': 'https://github.com/a/b', 'commit_sha': local}
+        with patch.object(corpus, 'upstream_commit', fake_commit), \
+                patch.object(corpus, '_get', fake_get):
+            return corpus.upstream_status(manifest)
+
+    def test_unreachable_upstream_reports_nothing(self):
+        """Offline is the normal case, not a failure."""
+        self.assertIsNone(self.status(commit_raises=True))
+
+    def test_up_to_date_is_zero(self):
+        self.assertEqual(self.status(local=self.HEAD)['behind'], 0)
+
+    def test_behind_count_comes_from_the_compare_api(self):
+        status = self.status(ahead_by=12)
+        self.assertEqual(status['behind'], 12)
+        self.assertEqual(status['local'], self.LOCAL)
+        self.assertEqual(status['upstream'], self.HEAD)
+
+    def test_an_unavailable_compare_still_reports_being_behind(self):
+        """Knowing "some" beats reporting "current" when the count is unknown."""
+        status = self.status(compare_raises=True)
+        self.assertIsNone(status['behind'])
+        self.assertIsNotNone(corpus.update_hint(status))
+
+
+class StatusCacheCase(unittest.TestCase):
+    def setUp(self):
+        self.base = Path(tempfile.mkdtemp(prefix='stellaris-check-'))
+        self.cache = self.base / 'check.json'
+
+    def tearDown(self):
+        shutil.rmtree(self.base, ignore_errors=True)
+
+    def test_missing_cache_reads_as_none(self):
+        self.assertIsNone(corpus.read_status_cache(self.cache))
+
+    def test_unreadable_cache_reads_as_none(self):
+        self.cache.write_text('{ not json', encoding='utf-8')
+        self.assertIsNone(corpus.read_status_cache(self.cache))
+
+    def test_expired_cache_reads_as_none(self):
+        corpus.write_status_cache({'checked_at': '2020-01-01T00:00:00+00:00', 'behind': 3},
+                                  self.cache)
+        self.assertIsNone(corpus.read_status_cache(self.cache, max_age=60))
+
+    def test_fresh_cache_is_returned(self):
+        corpus.write_status_cache({'checked_at': '2030-01-01T00:00:00+00:00', 'behind': 3},
+                                  self.cache)
+        self.assertEqual(corpus.read_status_cache(self.cache, max_age=60)['behind'], 3)
+
+    def test_a_second_call_does_not_ask_github_again(self):
+        calls = []
+
+        def fake_status(**kwargs):
+            calls.append(kwargs)
+            return {'local': 'a', 'upstream': 'b', 'behind': 5,
+                    'checked_at': '2030-01-01T00:00:00+00:00'}
+
+        with patch.object(corpus, 'upstream_status', fake_status):
+            first = corpus.cached_status(self.cache, max_age=60)
+            second = corpus.cached_status(self.cache, max_age=60)
+        self.assertEqual(len(calls), 1, 'a fresh cache must not trigger another request')
+        self.assertEqual(first['behind'], second['behind'])
+
+    def test_an_unwritable_cache_is_not_fatal(self):
+        corpus.write_status_cache({'checked_at': 'x'}, self.base / 'no' / 'such' / 'dir.json')
+
+
+class HintCase(unittest.TestCase):
+    def test_nothing_to_say_when_current(self):
+        self.assertIsNone(corpus.update_hint({'behind': 0}))
+        self.assertIsNone(corpus.update_hint(None))
+
+    def test_counts_are_shown(self):
+        hint = corpus.update_hint({'behind': 12, 'local': 'a' * 40, 'upstream': 'b' * 40})
+        self.assertIn('12', hint)
+        self.assertIn('update-corpus', hint)
+
+    def test_it_says_nothing_changes_by_itself(self):
+        hint = corpus.update_hint({'behind': 1, 'local': 'a' * 40, 'upstream': 'b' * 40})
+        self.assertIn('stays offline', hint)
+
+
+class LaunchFlagCase(unittest.TestCase):
+    """The hint is a convenience, so it must be switchable off."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT))
+        import start  # noqa: PLC0415 - the launcher is a script, not a package module
+        self.start = start
+        self.addCleanup(lambda: os.environ.pop('STELLARIS_UPDATE_CHECK', None))
+
+    def test_default_is_on(self):
+        os.environ.pop('STELLARIS_UPDATE_CHECK', None)
+        self.assertTrue(self.start.update_check_enabled(type('A', (), {'no_update_check': False})()))
+
+    def test_flag_turns_it_off(self):
+        os.environ.pop('STELLARIS_UPDATE_CHECK', None)
+        self.assertFalse(self.start.update_check_enabled(type('A', (), {'no_update_check': True})()))
+
+    def test_environment_turns_it_off(self):
+        os.environ['STELLARIS_UPDATE_CHECK'] = '0'
+        self.assertFalse(self.start.update_check_enabled(type('A', (), {'no_update_check': False})()))
 
 
 if __name__ == '__main__':
