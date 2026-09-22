@@ -121,10 +121,11 @@ class FallbackCase(unittest.TestCase):
         progress = []
         with patch.object(corpus, '_get', self.served(payload)):
             files, licence = corpus.download_files('a/b', 'sha', ['a.cwt', 'common/b.cwt'],
-                                                   progress=lambda d, t: progress.append((d, t)))
+                                                   progress=lambda d, t, name: progress.append((d, t)))
         self.assertEqual(files, {'a.cwt': b'A', 'common/b.cwt': b'B'})
         self.assertEqual(licence, b'MIT')
-        self.assertEqual(progress, [(1, 2), (2, 2)])
+        self.assertEqual(progress, [(0, 2), (1, 2), (2, 2)],
+                         'progress is reported before each fetch, so a stalled one still shows')
 
     def test_a_missing_licence_does_not_stop_the_download(self):
         """Attribution is not the corpus; install() keeps the previous file."""
@@ -254,6 +255,132 @@ class TransportCase(unittest.TestCase):
         with patch.object(corpus, '_get', fake_get):
             corpus.download_files('a/b', 'sha', ['a.cwt'])
         self.assertGreater(seen['a.cwt'], 1)
+
+
+class FakeStream(io.StringIO):
+    def __init__(self, tty):
+        super().__init__()
+        self._tty = tty
+
+    def isatty(self):
+        return self._tty
+
+
+class ProgressBarCase(unittest.TestCase):
+    """A silent minute reads as a hang, so progress must show from the first file.
+
+    The per-file route is a hundred-odd sequential requests; whoever answers the
+    y/N prompt is staring at the window the whole time.
+    """
+
+    def bar(self, total, tty):
+        return corpus.ProgressBar(total, FakeStream(tty))
+
+    def test_a_terminal_gets_one_line_that_redraws(self):
+        stream = FakeStream(True)
+        bar = corpus.ProgressBar(4, stream)
+        for done in range(1, 5):
+            bar.update(done, 4, 'common/buildings.cwt')
+        bar.close()
+        text = stream.getvalue()
+        self.assertEqual(text.count('\r'), 4, 'every update redraws the same line')
+        self.assertIn('100%', text)
+        self.assertIn('4/4', text)
+        self.assertIn('common/buildings.cwt', text)
+        self.assertTrue(text.endswith('\n'), 'close() must finish the line')
+
+    def test_it_reports_how_much_is_left(self):
+        stream = FakeStream(True)
+        bar = corpus.ProgressBar(200, stream)
+        bar.update(1, 200, 'a.cwt')
+        self.assertIn('left', stream.getvalue())
+
+    def test_a_captured_stream_gets_plain_lines_instead(self):
+        """In-place redraws would be garbage in a log or a pipe."""
+        stream = FakeStream(False)
+        bar = corpus.ProgressBar(25, stream)
+        for done in range(1, 26):
+            bar.update(done, 25, 'x.cwt')
+        bar.close()
+        text = stream.getvalue()
+        self.assertNotIn('\r', text)
+        lines = [line for line in text.splitlines() if line.strip()]
+        self.assertEqual(len(lines), 3, 'every %d files, plus the last'
+                         % corpus.PROGRESS_EVERY)
+        self.assertIn('25/25', lines[-1])
+
+    def test_a_broken_stream_does_not_fail_the_update(self):
+        class Broken:
+            def isatty(self):
+                return True
+
+            def write(self, text):
+                raise OSError('pipe closed')
+
+            def flush(self):
+                raise OSError('pipe closed')
+
+        bar = corpus.ProgressBar(3, Broken())
+        bar.update(1, 3, 'a.cwt')
+        bar.close()
+
+    def test_a_long_filename_cannot_wrap_the_line(self):
+        stream = FakeStream(True)
+        bar = corpus.ProgressBar(2, stream)
+        bar.update(1, 2, 'common/' + 'x' * 300 + '.cwt')
+        line = stream.getvalue().split('\r')[-1]
+        self.assertLessEqual(len(line), corpus.ProgressBar.PAD)
+
+
+class BudgetCase(unittest.TestCase):
+    """A bad network must end in a message, not in an indefinitely busy window."""
+
+    def _get(self, url, accept=None, timeout=120, attempts=1):
+        return b'x'
+
+    def test_the_route_gives_up_at_its_budget(self):
+        clock = iter([0.0, 0.0, 1000.0])
+        with patch.object(corpus, '_get', self._get), \
+                patch.object(corpus.time, 'monotonic', lambda: next(clock, 1000.0)):
+            with self.assertRaises(corpus.UpdateError) as caught:
+                corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], budget=10)
+        message = str(caught.exception)
+        self.assertIn('Stopped after 1 of 2 files', message)
+        self.assertIn('unchanged', message)
+
+
+class RepeatedRoundCase(unittest.TestCase):
+    """One stalled connection must not discard the files that already arrived.
+
+    A partial corpus can never be installed, so without another sweep over the
+    stragglers a single bad moment late in the run is fatal.
+    """
+
+    def test_a_file_that_fails_a_round_is_picked_up_in_the_next(self):
+        seen = []
+
+        def flaky(url, accept=None, timeout=120, attempts=1):
+            name = url.rsplit('/', 1)[-1]
+            seen.append(name)
+            if name == 'b.cwt' and seen.count('b.cwt') < 2:
+                raise corpus.UpdateError('read timed out')
+            return b'x'
+
+        with patch.object(corpus, '_get', flaky):
+            files, _ = corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], rounds=3)
+        self.assertEqual(sorted(files), ['a.cwt', 'b.cwt'])
+        self.assertEqual(seen.count('a.cwt'), 1, 'a file that arrived is not fetched twice')
+        self.assertEqual(seen.count('b.cwt'), 2, 'the straggler is swept again')
+
+    def test_giving_up_names_the_files_it_could_not_get(self):
+        with patch.object(corpus, '_get',
+                          side_effect=corpus.UpdateError('read timed out')):
+            with self.assertRaises(corpus.UpdateError) as caught:
+                corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], rounds=2)
+        message = str(caught.exception)
+        self.assertIn('Could not fetch 2 of 2 files after 2 rounds', message)
+        self.assertIn('unchanged', message)
+        self.assertIn('a.cwt', message)
 
 
 class VersionMarkerCase(unittest.TestCase):
@@ -534,6 +661,7 @@ class ConfirmUpdateCase(unittest.TestCase):
 
         applications = []
         with patch.object(corpus, 'cached_status', cached_status), \
+                patch.object(corpus, 'read_status_cache', lambda *a, **k: None), \
                 patch.object(corpus, 'main',
                              lambda argv: (applications.append(argv), apply_code)[1]), \
                 patch.object(corpus, 'cache_path', lambda: cache or Path(os.devnull)), \
@@ -564,11 +692,17 @@ class ConfirmUpdateCase(unittest.TestCase):
         self.assertIn('did not finish', self.output())
         self.assertNotIn('Corpus updated', self.output())
 
-    def test_an_unreachable_check_is_silent(self):
-        """Offline is the normal case: no prompt, no noise, no exception."""
+    def test_an_unreachable_check_says_nothing_about_updates(self):
+        """Offline is the normal case: no prompt, no claim, no exception.
+
+        The one line that does appear is the "checking" note, which has to be
+        printed before the wait -- a silent five seconds reads as a hang too.
+        """
         applications = self.confirm(check_error=corpus.UpdateError('offline'))
         self.assertEqual(applications, [])
-        self.assertEqual(self.output(), '')
+        self.assertNotIn('Update now?', self.output())
+        self.assertNotIn('behind', self.output())
+        self.assertIn('Checking for corpus updates', self.output())
 
     def test_a_cached_verdict_is_dropped_after_a_successful_update(self):
         """Otherwise the next launch offers the update that already happened."""

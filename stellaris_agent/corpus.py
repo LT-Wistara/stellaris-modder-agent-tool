@@ -77,6 +77,18 @@ CHECK_MAX_AGE = 24 * 60 * 60
 # for each further attempt.
 RETRY_PAUSE = 1.5
 FILE_ATTEMPTS = 4
+# Sweeps over the files that failed, before giving up. One stalled connection out
+# of a hundred-odd must not discard the ones that already arrived.
+FILE_ROUNDS = 3
+# A CWT file is small, so its request gets a much shorter leash than an archive
+# download: a stalled connection must not hold the update for two minutes.
+FILE_TIMEOUT = 30
+# Ceiling for the whole per-file route, so a bad network ends in a message rather
+# than in a window that looks frozen.
+FILE_BUDGET = 600
+# How often the per-file route reports progress. Ten files is a few seconds even
+# on a slow link, which is soon enough to look alive.
+PROGRESS_EVERY = 10
 
 CONFIG_MEMBER = re.compile(r'^[^/]+/config/(?P<relative>.+\.cwt)$')
 LICENSE_MEMBER = re.compile(r'^[^/]+/LICENSE$')
@@ -251,23 +263,128 @@ def tree_paths(repository, ref, timeout=30):
                   and entry.get('path', '').endswith('.cwt'))
 
 
-def download_files(repository, ref, paths, timeout=30, progress=None):
+def _duration(seconds):
+    """``45s`` / ``2m30s`` -- short enough for a progress line."""
+    seconds = int(max(0, seconds))
+    if seconds < 60:
+        return '%ds' % seconds
+    return '%dm%02ds' % (seconds // 60, seconds % 60)
+
+
+class ProgressBar:
+    """One line that redraws in place, or plain lines when not on a terminal.
+
+    A minute of silence is indistinguishable from a hang, and the per-file route
+    is exactly that: one request per CWT, so the caller has to show movement from
+    the very first file. On a terminal this draws a bar with a rate and a
+    remaining-time estimate; when the output is captured (a log, a pipe, a CI
+    run) in-place redraws would be garbage, so it degrades to one line every
+    ``PROGRESS_EVERY`` files instead.
+    """
+
+    WIDTH = 24
+    MAX_DETAIL = 34
+    PAD = 96
+
+    def __init__(self, total, stream=None):
+        self.total = max(1, int(total))
+        self.stream = stream if stream is not None else sys.stdout
+        self.live = bool(getattr(self.stream, 'isatty', lambda: False)())
+        self.started = time.monotonic()
+        self.drawn = False
+
+    def _write(self, text):
+        try:
+            self.stream.write(text)
+            self.stream.flush()
+        except (OSError, ValueError):
+            # A closed or redirected stream must not turn into an update failure.
+            self.live = False
+
+    def update(self, done, total=None, detail=''):
+        total = int(total or self.total)
+        if not self.live:
+            if done % PROGRESS_EVERY and done != total:
+                return
+            self._write('  %d/%d files\n' % (done, total))
+            return
+        elapsed = time.monotonic() - self.started
+        rate = done / elapsed if elapsed > 0 else 0.0
+        detail = detail if len(detail) <= self.MAX_DETAIL else '...' + detail[-(self.MAX_DETAIL - 3):]
+        filled = int(self.WIDTH * done / total)
+        tail = ''
+        if rate and done < total:
+            tail = '  ~%s left' % _duration((total - done) / rate)
+        line = '  [%s%s] %3d%%  %d/%d  %-*s%s' % (
+            '#' * filled, '-' * (self.WIDTH - filled), 100 * done // total, done, total,
+            self.MAX_DETAIL, detail, tail)
+        # Pad so a previously longer line leaves nothing behind.
+        self._write('\r' + line[:self.PAD].ljust(self.PAD))
+        self.drawn = True
+
+    def close(self):
+        if self.live and self.drawn:
+            self._write('\n')
+        self.drawn = False
+
+
+def download_files(repository, ref, paths, timeout=FILE_TIMEOUT, progress=None,
+                   budget=FILE_BUDGET, rounds=FILE_ROUNDS):
     """``(files, license_bytes)`` fetched one request per file.
 
     Slower than the archive -- about one round trip per CWT -- but it only needs
     the API and raw file hosts, so it works on networks that block the archive
     host. Bytes are exactly what upstream serves, same as the tarball route.
+
+    Four guards, because a hundred-odd sequential requests over an unsteady link
+    is a different problem from one big download:
+
+    * each request gets its own short timeout -- these are small files, and the
+      generous archive timeout is the wrong budget for one of them;
+    * ``rounds`` sweeps the *remaining* files again, so one stalled connection
+      does not throw away a hundred files that already arrived. A partial corpus
+      can never be installed, so without this a single bad moment is fatal;
+    * ``budget`` caps the whole route, so it ends in a message instead of running
+      for as long as the network feels like;
+    * ``progress`` is called *before* each request, not after, so the line names
+      the file being fetched right now even if that fetch is the one that stalls.
     """
+    started = time.monotonic()
     files = {}
-    for index, relative in enumerate(paths, 1):
-        files[relative] = _get(RAW_FILE.format(repository=repository, ref=ref,
-                                               path=CONFIG_PREFIX + relative),
-                               timeout=timeout, attempts=FILE_ATTEMPTS)
-        if progress is not None:
-            progress(index, len(paths))
+    failures = {}
+    pending = list(paths)
+    for _ in range(max(1, rounds)):
+        if not pending:
+            break
+        remaining = []
+        for relative in pending:
+            if time.monotonic() - started > budget:
+                raise UpdateError('Stopped after %d of %d files: the per-file route has been '
+                                  'running for more than %d seconds. The corpus is unchanged.'
+                                  % (len(files), len(paths), budget))
+            if progress is not None:
+                progress(len(files), len(paths), relative)
+            try:
+                files[relative] = _get(RAW_FILE.format(repository=repository, ref=ref,
+                                                       path=CONFIG_PREFIX + relative),
+                                       timeout=min(timeout, FILE_TIMEOUT),
+                                       attempts=FILE_ATTEMPTS)
+                failures.pop(relative, None)
+            except UpdateError as error:
+                failures[relative] = str(error).splitlines()[0]
+                remaining.append(relative)
+        pending = remaining
+    if pending:
+        detail = '\n'.join('    ' + name + ': ' + failures.get(name, '')
+                           for name in sorted(pending)[:3])
+        raise UpdateError('Could not fetch %d of %d files after %d rounds; the corpus is '
+                          'unchanged.\n  first failures:\n%s'
+                          % (len(pending), len(paths), max(1, rounds), detail))
+    if progress is not None:
+        progress(len(files), len(paths), '')
     try:
         license_bytes = _get(RAW_FILE.format(repository=repository, ref=ref, path='LICENSE'),
-                             timeout=timeout, attempts=FILE_ATTEMPTS)
+                             timeout=min(timeout, FILE_TIMEOUT), attempts=FILE_ATTEMPTS)
     except UpdateError:
         # The licence is attribution, not corpus: its absence must not stop an
         # otherwise good update, and install() keeps the previous file.
@@ -624,18 +741,23 @@ def main(argv=None):
         # raw file hosts serve the same commit, just one request per file.
         print('  archive host unavailable; fetching file by file instead')
         print('  (' + str(archive_error).splitlines()[0] + ')')
-
-        def progress(done, total):
-            if done % 25 == 0 or done == total:
-                print('  %d/%d files' % (done, total), flush=True)
-
         try:
+            print('  listing the commit ...', flush=True)
             paths = tree_paths(repository, commit, timeout=min(args.timeout, 30))
-            incoming, license_bytes = download_files(repository, commit, paths,
-                                                     timeout=args.timeout, progress=progress)
         except UpdateError as error:
             print(str(error), file=sys.stderr)
             return 1
+        print('  %d files, one request each:' % len(paths), flush=True)
+        bar = ProgressBar(len(paths))
+        try:
+            incoming, license_bytes = download_files(repository, commit, paths,
+                                                     timeout=args.timeout, progress=bar.update)
+        except UpdateError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        finally:
+            # Also on Ctrl+C: leave the bar on its own line, never half drawn.
+            bar.close()
 
     summary, _ = report(current, incoming, manifest, repository=repository, branch=ref,
                         commit=commit, committed_at=committed_at, blocked=not args.apply)

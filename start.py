@@ -341,6 +341,10 @@ def confirm_corpus_update(args):
     except Exception:  # noqa: BLE001 - the updater must never block startup
         return
     try:
+        # Say something only when a network round trip is actually coming up: a
+        # fresh cache answers instantly, and a line for that is just noise.
+        if corpus.read_status_cache() is None:
+            say('  正在检查内置语料是否有更新… / Checking for corpus updates...')
         status = corpus.cached_status(timeout=getattr(args, 'update_timeout',
                                                       CORPUS_CHECK_TIMEOUT))
     except Exception:  # noqa: BLE001
