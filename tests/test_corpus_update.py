@@ -15,6 +15,7 @@ tests pin the properties that matter:
 
 Everything here runs offline against synthetic archives.
 """
+import contextlib
 import io
 import json
 import os
@@ -76,6 +77,183 @@ class ArchiveCase(unittest.TestCase):
         with self.assertRaises(corpus.UpdateError) as caught:
             corpus.read_archive(b'this is not a tar.gz')
         self.assertIn('tar.gz', str(caught.exception))
+
+
+class FallbackCase(unittest.TestCase):
+    """A blocked archive host must not make updating impossible.
+
+    Networks differ in which GitHub hosts they allow, so the updater tries the
+    single-request tarball first and falls back to one request per file. Neither
+    route may ever install a partial corpus.
+    """
+
+    def served(self, payload):
+        def fake_get(url, accept=None, timeout=120, attempts=1):
+            for path, blob in payload.items():
+                if url.endswith('/' + path):
+                    return blob
+            raise corpus.UpdateError('404 for ' + url)
+        return fake_get
+
+    def test_tree_paths_keeps_only_the_corpus(self):
+        payload = {'truncated': False, 'tree': [
+            {'type': 'blob', 'path': 'config/aliases.cwt'},
+            {'type': 'blob', 'path': 'config/common/buildings.cwt'},
+            {'type': 'blob', 'path': 'config/README.md'},
+            {'type': 'tree', 'path': 'config/common'},
+            {'type': 'blob', 'path': 'script-docs/v4.5.0/modifiers.log'},
+            {'type': 'blob', 'path': 'LICENSE'},
+        ]}
+        with patch.object(corpus, '_get', lambda *a, **k: json.dumps(payload).encode()):
+            self.assertEqual(corpus.tree_paths('a/b', 'sha'),
+                             ['aliases.cwt', 'common/buildings.cwt'])
+
+    def test_a_truncated_tree_is_refused(self):
+        """Part of a corpus parses fine, so nothing downstream could spot it."""
+        payload = {'truncated': True, 'tree': [{'type': 'blob', 'path': 'config/a.cwt'}]}
+        with patch.object(corpus, '_get', lambda *a, **k: json.dumps(payload).encode()):
+            with self.assertRaises(corpus.UpdateError) as caught:
+                corpus.tree_paths('a/b', 'sha')
+        self.assertIn('partial corpus', str(caught.exception))
+
+    def test_download_files_fetches_every_path_and_the_licence(self):
+        payload = {'config/a.cwt': b'A', 'config/common/b.cwt': b'B', 'LICENSE': b'MIT'}
+        progress = []
+        with patch.object(corpus, '_get', self.served(payload)):
+            files, licence = corpus.download_files('a/b', 'sha', ['a.cwt', 'common/b.cwt'],
+                                                   progress=lambda d, t: progress.append((d, t)))
+        self.assertEqual(files, {'a.cwt': b'A', 'common/b.cwt': b'B'})
+        self.assertEqual(licence, b'MIT')
+        self.assertEqual(progress, [(1, 2), (2, 2)])
+
+    def test_a_missing_licence_does_not_stop_the_download(self):
+        """Attribution is not the corpus; install() keeps the previous file."""
+        payload = {'config/a.cwt': b'X'}
+        with patch.object(corpus, '_get', self.served(payload)):
+            files, licence = corpus.download_files('a/b', 'sha', ['a.cwt'])
+        self.assertEqual(files, {'a.cwt': b'X'})
+        self.assertIsNone(licence)
+
+    def test_main_uses_the_fallback_when_the_archive_host_fails(self):
+        head = 'b' * 40
+        payload = {'aliases.cwt': b'foo = bar\n'}
+        captured = io.StringIO()
+        with patch.object(corpus, 'upstream_commit', lambda *a, **k: (head, None)), \
+                patch.object(corpus, 'download_archive',
+                             side_effect=corpus.UpdateError('archive host unreachable')), \
+                patch.object(corpus, 'tree_paths', lambda *a, **k: ['aliases.cwt']), \
+                patch.object(corpus, 'download_files', lambda *a, **k: (payload, b'MIT')), \
+                patch.object(corpus, 'read_manifest',
+                             lambda *a, **k: {'repository': 'https://github.com/a/b'}), \
+                patch.object(corpus, 'local_files', lambda *a, **k: {}), \
+                patch.object(corpus, 'read_status_cache', lambda *a, **k: None), \
+                contextlib.redirect_stdout(captured):
+            code = corpus.main(['--check'])
+        self.assertEqual(code, 0)
+        self.assertIn('archive host unavailable', captured.getvalue())
+        self.assertIn('0 local, 1 upstream', captured.getvalue())
+        self.assertIn('added       : aliases.cwt', captured.getvalue())
+
+    def test_main_reports_a_total_failure_without_installing(self):
+        captured = io.StringIO()
+        errors = io.StringIO()
+        with patch.object(corpus, 'upstream_commit', lambda *a, **k: ('b' * 40, None)), \
+                patch.object(corpus, 'download_archive',
+                             side_effect=corpus.UpdateError('archive host unreachable')), \
+                patch.object(corpus, 'tree_paths',
+                             side_effect=corpus.UpdateError('api host unreachable')), \
+                patch.object(corpus, 'read_manifest',
+                             lambda *a, **k: {'repository': 'https://github.com/a/b'}), \
+                patch.object(corpus, 'local_files', lambda *a, **k: {}), \
+                patch.object(corpus, 'install') as installed, \
+                contextlib.redirect_stdout(captured), contextlib.redirect_stderr(errors):
+            code = corpus.main(['--apply'])
+        self.assertEqual(code, 1)
+        self.assertIn('api host unreachable', errors.getvalue())
+        installed.assert_not_called()
+
+
+class FakeResponse:
+    def __init__(self, blob):
+        self.blob = blob
+
+    def read(self):
+        return self.blob
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class TransportCase(unittest.TestCase):
+    """A flaky network must end in a clean message, never a traceback.
+
+    urllib wraps only the *sending* half of a request in ``URLError``: a timeout
+    while reading the status line or the body escapes from ``getresponse()`` as a
+    bare ``TimeoutError``. Catching only ``URLError`` killed the updater with a
+    traceback partway through a 175-file fetch, on exactly the unsteady networks
+    the per-file route exists for.
+    """
+
+    def get(self, side_effect, attempts=1):
+        with patch.object(corpus.urllib.request, 'urlopen', side_effect=side_effect), \
+                patch.object(corpus.time, 'sleep', lambda seconds: None):
+            return corpus._get('https://example.invalid/x', timeout=1, attempts=attempts)
+
+    def test_a_read_timeout_is_reported_not_raised_raw(self):
+        with self.assertRaises(corpus.UpdateError) as caught:
+            self.get(TimeoutError('read timed out'))
+        self.assertIn('Cannot reach', str(caught.exception))
+
+    def test_a_connection_error_is_reported(self):
+        with self.assertRaises(corpus.UpdateError) as caught:
+            self.get(corpus.urllib.error.URLError('name resolution failed'))
+        self.assertIn('Cannot reach', str(caught.exception))
+
+    def test_a_server_error_is_reported(self):
+        error = corpus.urllib.error.HTTPError('https://example.invalid/x', 404, 'Not Found', {}, None)
+        with self.assertRaises(corpus.UpdateError) as caught:
+            self.get(error)
+        self.assertIn('HTTP 404', str(caught.exception))
+
+    def test_a_transient_failure_is_retried(self):
+        calls = []
+
+        def flaky(url, timeout=None):
+            calls.append(1)
+            if len(calls) < 3:
+                raise TimeoutError('read timed out')
+            return FakeResponse(b'payload')
+
+        with patch.object(corpus.urllib.request, 'urlopen', flaky), \
+                patch.object(corpus.time, 'sleep', lambda seconds: None):
+            self.assertEqual(corpus._get('https://example.invalid/x', attempts=4), b'payload')
+        self.assertEqual(len(calls), 3)
+
+    def test_retries_are_bounded(self):
+        calls = []
+
+        def always_fails(url, timeout=None):
+            calls.append(1)
+            raise TimeoutError('read timed out')
+
+        with self.assertRaises(corpus.UpdateError):
+            self.get(always_fails, attempts=3)
+        self.assertEqual(len(calls), 3, 'a broken host must not be retried forever')
+
+    def test_the_per_file_route_asks_for_retries(self):
+        """One dropped connection out of 175 must not discard the whole update."""
+        seen = {}
+
+        def fake_get(url, accept=None, timeout=120, attempts=1):
+            seen[url.rsplit('/', 1)[-1]] = attempts
+            return b'x'
+
+        with patch.object(corpus, '_get', fake_get):
+            corpus.download_files('a/b', 'sha', ['a.cwt'])
+        self.assertGreater(seen['a.cwt'], 1)
 
 
 class VersionMarkerCase(unittest.TestCase):
@@ -293,8 +471,126 @@ class HintCase(unittest.TestCase):
         self.assertIn('stays offline', hint)
 
 
+class YesNoCase(unittest.TestCase):
+    """Only a clear yes may change anything on disk."""
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT))
+        import start  # noqa: PLC0415
+        self.start = start
+        self.addCleanup(patch.stopall)
+        patch.object(start, 'say', lambda text='': None).start()
+
+    def answer(self, text):
+        with patch('builtins.input', lambda prompt='': text):
+            return self.start.ask_yes_no('? ')
+
+    def test_yes_in_every_spelling(self):
+        for text in ('y', 'Y', 'yes', 'YES', ' y ', '是'):
+            with self.subTest(answer=text):
+                self.assertTrue(self.answer(text))
+
+    def test_anything_else_is_no(self):
+        for text in ('', 'n', 'no', 'nope', 'q', 'yes please'):
+            with self.subTest(answer=text):
+                self.assertFalse(self.answer(text))
+
+    def test_a_closed_stdin_is_no_not_a_crash(self):
+        with patch('builtins.input', side_effect=EOFError):
+            self.assertFalse(self.start.ask_yes_no('? '))
+        with patch('builtins.input', side_effect=KeyboardInterrupt):
+            self.assertFalse(self.start.ask_yes_no('? '))
+
+
+class ConfirmUpdateCase(unittest.TestCase):
+    """The interactive offer that runs before the server starts.
+
+    Two properties matter: saying no (or saying nothing) must leave the corpus
+    alone, and no failure anywhere in here may stop the launch -- the window is
+    the only feedback a double-clicking user gets.
+    """
+
+    def setUp(self):
+        sys.path.insert(0, str(ROOT))
+        import start  # noqa: PLC0415
+        self.start = start
+        self.said = []
+        self.addCleanup(patch.stopall)
+        patch.object(start, 'say', lambda text='': self.said.append(text)).start()
+
+    def status(self, behind):
+        return {'local': 'a' * 40, 'upstream': 'b' * 40, 'behind': behind,
+                'checked_at': '2030-01-01T00:00:00+00:00'}
+
+    def confirm(self, *, behind=12, answer='y', apply_code=0, check_error=None,
+                cache=None):
+        from stellaris_agent import corpus
+        args = type('Args', (), {'update_timeout': 5.0})()
+
+        def cached_status(**kwargs):
+            if check_error is not None:
+                raise check_error
+            return self.status(behind)
+
+        applications = []
+        with patch.object(corpus, 'cached_status', cached_status), \
+                patch.object(corpus, 'main',
+                             lambda argv: (applications.append(argv), apply_code)[1]), \
+                patch.object(corpus, 'cache_path', lambda: cache or Path(os.devnull)), \
+                patch('builtins.input', lambda prompt='': answer):
+            self.start.confirm_corpus_update(args)
+        return applications
+
+    def output(self):
+        return '\n'.join(self.said)
+
+    def test_a_current_corpus_asks_nothing(self):
+        self.assertEqual(self.confirm(behind=0), [])
+        self.assertNotIn('Update now?', self.output())
+
+    def test_yes_installs_the_update(self):
+        self.assertEqual(self.confirm(answer='y'), [['--apply']])
+        self.assertIn('Corpus updated', self.output())
+
+    def test_no_leaves_the_corpus_alone(self):
+        self.assertEqual(self.confirm(answer='n'), [])
+        self.assertIn('Skipped', self.output())
+
+    def test_pressing_enter_leaves_the_corpus_alone(self):
+        self.assertEqual(self.confirm(answer=''), [])
+
+    def test_a_failed_update_still_starts_the_server(self):
+        self.assertEqual(self.confirm(answer='y', apply_code=1), [['--apply']])
+        self.assertIn('did not finish', self.output())
+        self.assertNotIn('Corpus updated', self.output())
+
+    def test_an_unreachable_check_is_silent(self):
+        """Offline is the normal case: no prompt, no noise, no exception."""
+        applications = self.confirm(check_error=corpus.UpdateError('offline'))
+        self.assertEqual(applications, [])
+        self.assertEqual(self.output(), '')
+
+    def test_a_cached_verdict_is_dropped_after_a_successful_update(self):
+        """Otherwise the next launch offers the update that already happened."""
+        from stellaris_agent import corpus
+        cache = Path(tempfile.mkdtemp(prefix='stellaris-cache-')) / 'check.json'
+        self.addCleanup(shutil.rmtree, cache.parent, ignore_errors=True)
+        corpus.write_status_cache(self.status(12), cache)
+        self.assertTrue(cache.is_file())
+        self.confirm(answer='y', cache=cache)
+        self.assertFalse(cache.is_file())
+
+    def test_the_cache_survives_a_skipped_update(self):
+        from stellaris_agent import corpus
+        cache = Path(tempfile.mkdtemp(prefix='stellaris-cache-')) / 'check.json'
+        self.addCleanup(shutil.rmtree, cache.parent, ignore_errors=True)
+        corpus.write_status_cache(self.status(12), cache)
+        self.confirm(answer='n', cache=cache)
+        self.assertTrue(cache.is_file(), 'a declined offer should not cost a re-check')
+
+
 class LaunchFlagCase(unittest.TestCase):
-    """The hint is a convenience, so it must be switchable off."""
+    """The check is a convenience, so it must be switchable off."""
 
     def setUp(self):
         sys.path.insert(0, str(ROOT))

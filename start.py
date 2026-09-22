@@ -27,11 +27,13 @@ import os
 from pathlib import Path
 import socket
 import sys
-import threading
 
 MIN_PYTHON = (3, 9)
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 8765
+# How long an interactive start waits for the "is the corpus current?" answer
+# before giving up and launching anyway.
+CORPUS_CHECK_TIMEOUT = 5.0
 GAME_ENV = 'STELLARIS_GAME_ROOT'
 MOD_ENV = 'STELLARIS_MOD_ROOT'
 ROOT = Path(__file__).resolve().parent
@@ -109,6 +111,9 @@ def parse_arguments(argv):
     parser.add_argument('--no-update-check', action='store_true',
                         help='do not look for a newer CWT corpus when starting interactively '
                              '(also STELLARIS_UPDATE_CHECK=0)')
+    parser.add_argument('--update-timeout', type=float, default=CORPUS_CHECK_TIMEOUT,
+                        help='seconds to wait for that check before starting anyway '
+                             '(default %(default)s)')
     return parser.parse_args(argv)
 
 
@@ -308,25 +313,64 @@ def update_check_enabled(args):
     return os.environ.get('STELLARIS_UPDATE_CHECK', '1').strip().lower() not in ('0', 'false', 'no')
 
 
-def announce_corpus_update():
-    """Mention a stale corpus, in the background.
+def ask_yes_no(prompt):
+    """A yes/no question; anything that is not a clear yes keeps the status quo."""
+    try:
+        answer = input(prompt)
+    except (EOFError, KeyboardInterrupt):
+        say('')
+        return False
+    return answer.strip().lower() in ('y', 'yes', '是')
 
-    This runs in a thread and swallows every failure on purpose: it is a
-    convenience, so neither a slow network nor no network at all may delay the
-    banner or fail a launch. The check behind it is cached for a day, so a client
-    that starts the server on every session does not ask GitHub every time, and
-    nothing is ever downloaded or replaced here -- updating stays an explicit
-    ``update-corpus --apply``.
+
+def confirm_corpus_update(args):
+    """Offer to refresh a stale corpus before the server starts.
+
+    Deliberately placed before the index is built: a corpus replaced here is then
+    the one that gets indexed, so the update takes effect in this same launch.
+
+    Only called for an interactive start. In stdio mode stdout carries JSON-RPC,
+    so a question written there would corrupt the stream.
+
+    Everything is best effort. A slow or absent network, an unreachable download
+    host, or a failed verification all end with the launcher starting normally on
+    whatever corpus is on disk -- never with a dead window.
     """
     try:
         from stellaris_agent import corpus
-        hint = corpus.update_hint(corpus.cached_status(timeout=8))
-        if hint:
-            say('')
-            for line in hint.splitlines():
-                say(line)
-    except Exception:  # noqa: BLE001 - a convenience must never break the launcher
-        pass
+    except Exception:  # noqa: BLE001 - the updater must never block startup
+        return
+    try:
+        status = corpus.cached_status(timeout=getattr(args, 'update_timeout',
+                                                      CORPUS_CHECK_TIMEOUT))
+    except Exception:  # noqa: BLE001
+        return
+    hint = corpus.update_hint(status)
+    if not hint:
+        return
+
+    say('')
+    for line in hint.splitlines():
+        say(line)
+    say('')
+    if not ask_yes_no('  现在更新？/ Update now? [y/N] '):
+        say('  已跳过，用当前语料启动。 / Skipped; starting with the corpus on disk.')
+        return
+
+    say('')
+    code = corpus.main(['--apply'])
+    say('')
+    if code == 0:
+        # The cached verdict still says "behind"; drop it so the next launch
+        # re-checks instead of offering the update that just happened.
+        try:
+            corpus.cache_path().unlink(missing_ok=True)
+        except OSError:
+            pass
+        say('  语料已更新，继续启动。 / Corpus updated; continuing to start.')
+    else:
+        say('  更新未完成，继续用现有语料启动。')
+        say('  Update did not finish; starting with the corpus on disk.')
 
 
 def main(argv=None):
@@ -359,6 +403,11 @@ def run(argv):
     args = parse_arguments(sys.argv[1:] if argv is None else argv)
     mode = choose_mode(args)
     interactive = mode == 'http' and is_interactive()
+
+    # Before anything else is built: ask about a stale corpus while the answer can
+    # still change what gets indexed.
+    if interactive and not args.print_only and update_check_enabled(args):
+        confirm_corpus_update(args)
 
     try:
         environment, health = detect_environment(
@@ -405,8 +454,6 @@ def run(argv):
 
     if interactive:
         report(database, environment, health)
-    if interactive and update_check_enabled(args):
-        threading.Thread(target=announce_corpus_update, daemon=True).start()
     return serve_http(database, host, port, args.allow_remote, url)
 
 

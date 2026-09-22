@@ -39,6 +39,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.error
 import urllib.request
 
@@ -56,12 +57,26 @@ API_COMMIT = 'https://api.github.com/repos/{repository}/commits/{ref}'
 API_COMPARE = 'https://api.github.com/repos/{repository}/compare/{base}...{head}'
 ARCHIVE = 'https://codeload.github.com/{repository}/tar.gz/{ref}'
 
+# Fallback channel. Networks differ in which GitHub hosts they allow -- corporate
+# proxies and some national networks block the archive host while leaving the API
+# and the raw file host reachable, and others do the opposite. So the updater
+# tries the single-request tarball first and, if that host cannot be reached at
+# all, fetches the same commit one file at a time through these two.
+API_TREE = 'https://api.github.com/repos/{repository}/git/trees/{ref}?recursive=1'
+RAW_FILE = 'https://raw.githubusercontent.com/{repository}/{ref}/{path}'
+CONFIG_PREFIX = 'config/'
+
 # The launch-time staleness check is deliberately cheap: two small API calls and
 # no archive download. Its result is cached because start.py runs on every client
 # session, and asking GitHub once per session would be rude to the API and slow
 # for the user.
 CHECK_CACHE_NAME = 'stellaris-agent-tool-update-check.json'
 CHECK_MAX_AGE = 24 * 60 * 60
+
+# Retry policy for the per-file route: seconds before the first retry, doubled
+# for each further attempt.
+RETRY_PAUSE = 1.5
+FILE_ATTEMPTS = 4
 
 CONFIG_MEMBER = re.compile(r'^[^/]+/config/(?P<relative>.+\.cwt)$')
 LICENSE_MEMBER = re.compile(r'^[^/]+/LICENSE$')
@@ -115,17 +130,43 @@ def local_files(config_dir=CONFIG_DIR):
 
 # region talking to upstream
 
-def _get(url, accept=None, timeout=120):
+def _get(url, accept=None, timeout=120, attempts=1):
+    """One GET, wrapped so callers only ever see :class:`UpdateError`.
+
+    ``attempts`` retries transport failures and 5xx replies with a growing pause.
+    The per-file route asks for retries because a hundred-odd sequential requests
+    will eventually meet a flaky moment, and one dropped connection must not
+    throw away an otherwise good update.
+
+    The bare ``OSError`` clause is not redundant. urllib only wraps the *sending*
+    half of a request in ``URLError``; a timeout that happens while reading the
+    status line or the body arrives as a plain ``TimeoutError`` from inside
+    ``getresponse()``, and an updater that only catches ``URLError`` dies with a
+    traceback on exactly the networks it was written to cope with.
+    """
     request = urllib.request.Request(url, headers={'User-Agent': USER_AGENT,
                                                    **({'Accept': accept} if accept else {})})
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.read()
-    except urllib.error.HTTPError as error:
-        raise UpdateError('Upstream returned HTTP ' + str(error.code) + ' for ' + url)
-    except urllib.error.URLError as error:
-        raise UpdateError('Cannot reach ' + url + ': ' + str(error.reason)
-                          + '\nCheck the network, or keep the bundled corpus as it is.')
+    pause = RETRY_PAUSE
+    for attempt in range(1, max(1, attempts) + 1):
+        last = attempt >= max(1, attempts)
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            if not last and error.code >= 500:
+                time.sleep(pause)
+                pause *= 2
+                continue
+            raise UpdateError('Upstream returned HTTP ' + str(error.code) + ' for ' + url)
+        except (urllib.error.URLError, OSError) as error:
+            if not last:
+                time.sleep(pause)
+                pause *= 2
+                continue
+            reason = getattr(error, 'reason', None) or (type(error).__name__ + ': ' + str(error))
+            raise UpdateError('Cannot reach ' + url + ': ' + str(reason)
+                              + '\nCheck the network, or keep the bundled corpus as it is.')
+    raise UpdateError('Cannot reach ' + url)
 
 
 def upstream_commit(repository=DEFAULT_REPOSITORY, ref=DEFAULT_BRANCH, timeout=30):
@@ -186,6 +227,52 @@ def detect_version(files):
         return None
     match = VERSION_MARKER.search(text.decode('utf-8', 'replace'))
     return match.group(1) if match else None
+
+
+def tree_paths(repository, ref, timeout=30):
+    """Relative ``config/**/*.cwt`` paths at one commit, from the API.
+
+    Refuses a truncated tree rather than returning part of one: a partial corpus
+    that still parses would be far worse than a failed update, because nothing
+    downstream could tell it apart from a complete one.
+    """
+    payload = json.loads(_get(API_TREE.format(repository=repository, ref=ref),
+                              accept='application/vnd.github+json', timeout=timeout,
+                              attempts=3))
+    if payload.get('truncated'):
+        raise UpdateError('Upstream reported a truncated file list for ' + ref
+                          + '; refusing to install a partial corpus.')
+    tree = payload.get('tree')
+    if not isinstance(tree, list):
+        raise UpdateError('Upstream did not return a file list for ' + ref)
+    return sorted(entry['path'][len(CONFIG_PREFIX):] for entry in tree
+                  if entry.get('type') == 'blob'
+                  and entry.get('path', '').startswith(CONFIG_PREFIX)
+                  and entry.get('path', '').endswith('.cwt'))
+
+
+def download_files(repository, ref, paths, timeout=30, progress=None):
+    """``(files, license_bytes)`` fetched one request per file.
+
+    Slower than the archive -- about one round trip per CWT -- but it only needs
+    the API and raw file hosts, so it works on networks that block the archive
+    host. Bytes are exactly what upstream serves, same as the tarball route.
+    """
+    files = {}
+    for index, relative in enumerate(paths, 1):
+        files[relative] = _get(RAW_FILE.format(repository=repository, ref=ref,
+                                               path=CONFIG_PREFIX + relative),
+                               timeout=timeout, attempts=FILE_ATTEMPTS)
+        if progress is not None:
+            progress(index, len(paths))
+    try:
+        license_bytes = _get(RAW_FILE.format(repository=repository, ref=ref, path='LICENSE'),
+                             timeout=timeout, attempts=FILE_ATTEMPTS)
+    except UpdateError:
+        # The licence is attribution, not corpus: its absence must not stop an
+        # otherwise good update, and install() keeps the previous file.
+        license_bytes = None
+    return files, license_bytes
 
 
 # endregion
@@ -524,11 +611,31 @@ def main(argv=None):
             commit, committed_at = args.commit, None
         else:
             commit, committed_at = upstream_commit(repository, ref, timeout=min(args.timeout, 30))
-        blob = download_archive(repository, commit, timeout=args.timeout)
-        incoming, license_bytes, _ = read_archive(blob)
     except UpdateError as error:
         print(str(error), file=sys.stderr)
         return 1
+
+    incoming = license_bytes = None
+    try:
+        incoming, license_bytes, _ = read_archive(
+            download_archive(repository, commit, timeout=args.timeout))
+    except UpdateError as archive_error:
+        # A blocked archive host is a network fact, not a dead end: the API and
+        # raw file hosts serve the same commit, just one request per file.
+        print('  archive host unavailable; fetching file by file instead')
+        print('  (' + str(archive_error).splitlines()[0] + ')')
+
+        def progress(done, total):
+            if done % 25 == 0 or done == total:
+                print('  %d/%d files' % (done, total), flush=True)
+
+        try:
+            paths = tree_paths(repository, commit, timeout=min(args.timeout, 30))
+            incoming, license_bytes = download_files(repository, commit, paths,
+                                                     timeout=args.timeout, progress=progress)
+        except UpdateError as error:
+            print(str(error), file=sys.stderr)
+            return 1
 
     summary, _ = report(current, incoming, manifest, repository=repository, branch=ref,
                         commit=commit, committed_at=committed_at, blocked=not args.apply)
