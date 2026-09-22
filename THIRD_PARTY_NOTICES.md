@@ -10,7 +10,3 @@
 - Packaging date, UTC timestamp and complete file list: `stellaris_agent/data/UPSTREAM.json`.
 
 Stellaris is a Paradox Interactive game. This tool is an independent development utility and claims no affiliation or endorsement.
-
-## Existing v5 behavior
-
-The user-provided `stellaris_api_search_v5.py` was inspected as a behavioral reference. This implementation preserves its validated contiguous alias paragraph behavior, full block extraction and category-to-scope distinction through a new parser/index architecture. The original script is not redistributed as a separate dependency.
