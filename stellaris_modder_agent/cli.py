@@ -48,6 +48,13 @@ def main(argv=None):
                         help='upstream repository as owner/name (default: the one in UPSTREAM.json)')
     update.add_argument('--branch', default=None, help='branch to follow')
     update.add_argument('--commit', default=None, help='pin one exact commit')
+    update.add_argument('--full', action='store_true',
+                        help='download every file instead of only the ones upstream changed; '
+                             'use it if the local snapshot was edited by hand')
+    update.add_argument('--workers', type=int, default=None,
+                        help='requests in flight at once on the per-file route')
+    update.add_argument('--timeout', type=int, default=None,
+                        help='per-request timeout in seconds')
     server = commands.add_parser('serve')
     server.add_argument('--http', action='store_true', help='Use stateless Streamable HTTP instead of stdio')
     server.add_argument('--host', default='127.0.0.1',
@@ -68,6 +75,12 @@ def main(argv=None):
             forwarded += ['--branch', args.branch]
         if args.commit:
             forwarded += ['--commit', args.commit]
+        if args.full:
+            forwarded += ['--full']
+        if args.workers is not None:
+            forwarded += ['--workers', str(args.workers)]
+        if args.timeout is not None:
+            forwarded += ['--timeout', str(args.timeout)]
         return update_corpus(forwarded)
     try:
         game_data = not args.no_game_data

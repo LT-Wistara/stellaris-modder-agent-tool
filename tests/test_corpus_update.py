@@ -24,6 +24,8 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import threading
+import time
 import unittest
 from unittest.mock import patch
 
@@ -124,8 +126,8 @@ class FallbackCase(unittest.TestCase):
                                                    progress=lambda d, t, name: progress.append((d, t)))
         self.assertEqual(files, {'a.cwt': b'A', 'common/b.cwt': b'B'})
         self.assertEqual(licence, b'MIT')
-        self.assertEqual(progress, [(0, 2), (1, 2), (2, 2)],
-                         'progress is reported before each fetch, so a stalled one still shows')
+        self.assertEqual(progress, [(1, 2), (2, 2), (2, 2)],
+                         'one report as each file lands, then one for the finish')
 
     def test_a_missing_licence_does_not_stop_the_download(self):
         """Attribution is not the corpus; install() keeps the previous file."""
@@ -339,14 +341,155 @@ class BudgetCase(unittest.TestCase):
         return b'x'
 
     def test_the_route_gives_up_at_its_budget(self):
-        clock = iter([0.0, 0.0, 1000.0])
+        clock = iter([0.0, 1000.0])
         with patch.object(corpus, '_get', self._get), \
                 patch.object(corpus.time, 'monotonic', lambda: next(clock, 1000.0)):
             with self.assertRaises(corpus.UpdateError) as caught:
-                corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], budget=10)
+                corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], budget=10, workers=1)
         message = str(caught.exception)
         self.assertIn('Stopped after 1 of 2 files', message)
         self.assertIn('unchanged', message)
+
+
+class ParallelCase(unittest.TestCase):
+    """Overlap the requests; the cost here is latency, not bandwidth.
+
+    Measured against the real host: a 4 KB file and a 200 KB file cost about the
+    same, and the TCP+TLS handshake is under a tenth of either. So the speedup
+    comes from having several requests in flight, not from moving bytes faster.
+    """
+
+    def test_requests_overlap_and_stay_within_the_limit(self):
+        lock = threading.Lock()
+        active = []
+        peak = []
+
+        def slow(url, accept=None, timeout=120, attempts=1):
+            with lock:
+                active.append(1)
+                peak.append(len(active))
+            time.sleep(0.05)
+            with lock:
+                active.pop()
+            return b'x'
+
+        paths = ['f%02d.cwt' % index for index in range(12)]
+        with patch.object(corpus, '_get', slow):
+            files, _ = corpus.download_files('a/b', 'sha', paths, workers=4)
+        self.assertEqual(len(files), 12)
+        self.assertGreater(max(peak), 1, 'requests must overlap')
+        self.assertLessEqual(max(peak), 4, 'and stay inside the worker limit')
+
+    def test_one_worker_still_works(self):
+        with patch.object(corpus, '_get', lambda *a, **k: b'x'):
+            files, _ = corpus.download_files('a/b', 'sha', ['a.cwt', 'b.cwt'], workers=1)
+        self.assertEqual(sorted(files), ['a.cwt', 'b.cwt'])
+
+
+class IncrementalCase(unittest.TestCase):
+    """Fetch what changed, not the whole snapshot.
+
+    A release moves a handful of files while the snapshot holds a hundred and
+    seventy; every file not fetched is a request not paid for.
+    """
+
+    def compare(self, entries, cap=False):
+        payload = {'files': entries}
+        with patch.object(corpus, '_get', lambda *a, **k: json.dumps(payload).encode()):
+            return corpus.changed_paths('a/b', 'base', 'head')
+
+    def test_only_corpus_files_are_listed(self):
+        changed, removed, complete = self.compare([
+            {'filename': 'config/effects.cwt', 'status': 'modified'},
+            {'filename': 'config/common/new.cwt', 'status': 'added'},
+            {'filename': 'config/gone.cwt', 'status': 'removed'},
+            {'filename': 'config/notes.md', 'status': 'modified'},
+            {'filename': 'script-docs/v4.5.0/effects.log', 'status': 'added'},
+        ])
+        self.assertEqual(changed, ['common/new.cwt', 'effects.cwt'])
+        self.assertEqual(removed, ['gone.cwt'])
+        self.assertTrue(complete)
+
+    def test_a_capped_file_list_is_not_trusted(self):
+        """A truncated list read as complete would silently miss files."""
+        entries = [{'filename': 'config/f%03d.cwt' % i, 'status': 'modified'}
+                   for i in range(corpus.COMPARE_FILE_CAP)]
+        with patch.object(corpus, '_get',
+                          lambda *a, **k: json.dumps({'files': entries}).encode()):
+            _, _, complete = corpus.changed_paths('a/b', 'base', 'head')
+        self.assertFalse(complete)
+
+    def test_a_missing_file_list_is_not_trusted(self):
+        with patch.object(corpus, '_get', lambda *a, **k: json.dumps({}).encode()):
+            self.assertEqual(corpus.changed_paths('a/b', 'base', 'head'), ([], [], False))
+
+    def test_a_matching_tree_can_be_diffed(self):
+        manifest = {'commit_sha': 'a' * 40, 'files': ['aliases.cwt', 'effects.cwt']}
+        current = {'aliases.cwt': b'x', 'effects.cwt': b'y'}
+        self.assertEqual(corpus.incremental_base(current, manifest), 'a' * 40)
+
+    def test_a_hand_edited_tree_cannot_be_diffed(self):
+        """If the files do not match the manifest, there is no baseline to trust."""
+        manifest = {'commit_sha': 'a' * 40, 'files': ['aliases.cwt', 'effects.cwt']}
+        self.assertIsNone(corpus.incremental_base({'aliases.cwt': b'x'}, manifest))
+        self.assertIsNone(corpus.incremental_base(
+            {'aliases.cwt': b'x', 'effects.cwt': b'y', 'extra.cwt': b'z'}, manifest))
+
+    def test_no_manifest_means_a_full_download(self):
+        self.assertIsNone(corpus.incremental_base({}, {}))
+        self.assertIsNone(corpus.incremental_base({'a.cwt': b'x'},
+                                                  {'commit_sha': 'a' * 40}))
+
+    def test_changed_files_are_merged_over_the_local_snapshot(self):
+        with patch.object(corpus, 'upstream_commit', lambda *a, **k: ('b' * 40, None)), \
+                patch.object(corpus, 'changed_paths',
+                             lambda *a, **k: (['effects.cwt', 'brand_new.cwt'],
+                                              ['gone.cwt'], True)), \
+                patch.object(corpus, 'download_files',
+                             lambda *a, **k: ({'effects.cwt': b'new',
+                                               'brand_new.cwt': b'new'}, None)), \
+                patch.object(corpus, 'read_manifest',
+                             lambda *a, **k: {'repository': 'https://github.com/a/b',
+                                              'commit_sha': 'a' * 40,
+                                              'files': ['aliases.cwt', 'effects.cwt',
+                                                        'gone.cwt']}), \
+                patch.object(corpus, 'local_files',
+                             lambda *a, **k: {'aliases.cwt': b'keep', 'effects.cwt': b'old',
+                                              'gone.cwt': b'x'}), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            code = corpus.main(['--check'])
+        text = out.getvalue()
+        self.assertEqual(code, 0)
+        self.assertIn('1 added, 1 updated, 1 removed, 1 untouched', text)
+        self.assertIn('added       : brand_new.cwt', text)
+        self.assertIn('changed     : effects.cwt', text)
+        self.assertIn('removed     : gone.cwt', text)
+        self.assertNotIn('aliases.cwt', text.split('changed     :')[1].split('\n')[0])
+
+    def test_repeated_progress_lines_are_not_repeated(self):
+        """The closing report would otherwise print the same count twice."""
+        stream = FakeStream(False)
+        bar = corpus.ProgressBar(2, stream)
+        bar.update(2, 2, 'done')
+        bar.update(2, 2, '')
+        bar.close()
+        self.assertEqual(len([line for line in stream.getvalue().splitlines() if line.strip()]), 1)
+
+    def test_full_forces_every_file(self):
+        with patch.object(corpus, 'changed_paths') as diff, \
+                patch.object(corpus, 'upstream_commit', lambda *a, **k: ('b' * 40, None)), \
+                patch.object(corpus, 'read_manifest',
+                             lambda *a, **k: {'repository': 'https://github.com/a/b',
+                                              'commit_sha': 'a' * 40,
+                                              'files': ['aliases.cwt']}), \
+                patch.object(corpus, 'local_files',
+                             lambda *a, **k: {'aliases.cwt': b'x'}), \
+                patch.object(corpus, 'read_archive',
+                             lambda blob: ({'aliases.cwt': b'x'}, None, 'top')), \
+                patch.object(corpus, 'download_archive', lambda *a, **k: b''), \
+                contextlib.redirect_stdout(io.StringIO()):
+            corpus.main(['--check', '--full'])
+        diff.assert_not_called()
 
 
 class RepeatedRoundCase(unittest.TestCase):
