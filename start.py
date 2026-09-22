@@ -27,6 +27,7 @@ import os
 from pathlib import Path
 import socket
 import sys
+import time
 
 MIN_PYTHON = (3, 9)
 DEFAULT_HOST = '127.0.0.1'
@@ -34,6 +35,10 @@ DEFAULT_PORT = 8765
 # How long an interactive start waits for the "is the corpus current?" answer
 # before giving up and launching anyway.
 CORPUS_CHECK_TIMEOUT = 5.0
+# How long the y/N question waits for an answer. A hidden or service console has
+# a stdin that passes ``isatty()`` but nobody to type into it, so the question has
+# to expire instead of holding the server hostage.
+PROMPT_TIMEOUT = 30.0
 GAME_ENV = 'STELLARIS_GAME_ROOT'
 MOD_ENV = 'STELLARIS_MOD_ROOT'
 ROOT = Path(__file__).resolve().parent
@@ -313,8 +318,40 @@ def update_check_enabled(args):
     return os.environ.get('STELLARIS_UPDATE_CHECK', '1').strip().lower() not in ('0', 'false', 'no')
 
 
-def ask_yes_no(prompt):
-    """A yes/no question; anything that is not a clear yes keeps the status quo."""
+def input_ready(timeout):
+    """True when a keypress can actually be read within *timeout* seconds.
+
+    ``sys.stdin.isatty()`` does not answer "is a human there?": a process started
+    from a hidden window, a service or a scheduled task inherits a console that
+    passes the check and then never receives a keystroke. Waiting on a real
+    readiness check is what keeps those launches from hanging forever.
+    """
+    try:
+        if os.name == 'nt':
+            import msvcrt
+            deadline = time.monotonic() + timeout
+            while time.monotonic() < deadline:
+                if msvcrt.kbhit():
+                    return True
+                time.sleep(0.05)
+            return False
+        import select
+        ready, _, _ = select.select([sys.stdin], [], [], timeout)
+        return bool(ready)
+    except Exception:  # noqa: BLE001 - if we cannot tell, ask normally
+        return True
+
+
+def ask_yes_no(prompt, timeout=PROMPT_TIMEOUT):
+    """A yes/no question; anything but a clear yes keeps the status quo.
+
+    Silence keeps it too. An unattended launch answers nothing at all, and the
+    only safe reading of that is "do not touch my files".
+    """
+    if timeout is not None and not input_ready(timeout):
+        say('')
+        say('  没有收到回答，按"不更新"继续。 / No answer; continuing without updating.')
+        return False
     try:
         answer = input(prompt)
     except (EOFError, KeyboardInterrupt):
@@ -357,7 +394,8 @@ def confirm_corpus_update(args):
     for line in hint.splitlines():
         say(line)
     say('')
-    if not ask_yes_no('  现在更新？/ Update now? [y/N] '):
+    if not ask_yes_no('  现在更新？/ Update now? [y/N]  (%d 秒后自动跳过 / skips in %ds)  '
+                      % (int(PROMPT_TIMEOUT), int(PROMPT_TIMEOUT))):
         say('  已跳过，用当前语料启动。 / Skipped; starting with the corpus on disk.')
         return
 

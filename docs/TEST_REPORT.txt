@@ -3,7 +3,7 @@ PARSED: 173
 FAILED: 0
 
 TESTS:
-321 passed
+322 passed
 0 failed
 
 CLI: passed
@@ -109,6 +109,8 @@ test_marker_is_read_from_aliases (test_corpus_update.VersionMarkerCase.test_mark
 test_no_marker_reports_none_instead_of_guessing (test_corpus_update.VersionMarkerCase.test_no_marker_reports_none_instead_of_guessing) ... ok
 test_a_closed_stdin_is_no_not_a_crash (test_corpus_update.YesNoCase.test_a_closed_stdin_is_no_not_a_crash) ... ok
 test_anything_else_is_no (test_corpus_update.YesNoCase.test_anything_else_is_no) ... ok
+test_silence_is_no_and_never_asks (test_corpus_update.YesNoCase.test_silence_is_no_and_never_asks)
+A hidden or service console has a tty stdin and nobody to type in it. ... ok
 test_yes_in_every_spelling (test_corpus_update.YesNoCase.test_yes_in_every_spelling) ... ok
 test_a_new_mod_entry_appears_without_restarting (test_dynamic.DynamicCase.test_a_new_mod_entry_appears_without_restarting)
 Modding is iterative: a file written now must be visible in the next query. ... ok
@@ -376,6 +378,6 @@ test_unknown_schema_field (test_tool.ValidateCase.test_unknown_schema_field) ...
 test_unknown_scope_context (test_tool.ValidateCase.test_unknown_scope_context) ... ok
 
 ----------------------------------------------------------------------
-Ran 321 tests in 128.008s
+Ran 322 tests in 145.569s
 
 OK

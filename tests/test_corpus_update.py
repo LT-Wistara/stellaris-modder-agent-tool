@@ -609,7 +609,8 @@ class YesNoCase(unittest.TestCase):
         patch.object(start, 'say', lambda text='': None).start()
 
     def answer(self, text):
-        with patch('builtins.input', lambda prompt='': text):
+        with patch.object(self.start, 'input_ready', lambda timeout: True), \
+                patch('builtins.input', lambda prompt='': text):
             return self.start.ask_yes_no('? ')
 
     def test_yes_in_every_spelling(self):
@@ -623,10 +624,21 @@ class YesNoCase(unittest.TestCase):
                 self.assertFalse(self.answer(text))
 
     def test_a_closed_stdin_is_no_not_a_crash(self):
-        with patch('builtins.input', side_effect=EOFError):
-            self.assertFalse(self.start.ask_yes_no('? '))
-        with patch('builtins.input', side_effect=KeyboardInterrupt):
-            self.assertFalse(self.start.ask_yes_no('? '))
+        with patch.object(self.start, 'input_ready', lambda timeout: True):
+            with patch('builtins.input', side_effect=EOFError):
+                self.assertFalse(self.start.ask_yes_no('? '))
+            with patch('builtins.input', side_effect=KeyboardInterrupt):
+                self.assertFalse(self.start.ask_yes_no('? '))
+
+    def test_silence_is_no_and_never_asks(self):
+        """A hidden or service console has a tty stdin and nobody to type in it.
+
+        Waiting on ``isatty()`` alone is what hung an unattended launch on the
+        question forever; the prompt has to expire.
+        """
+        with patch.object(self.start, 'input_ready', lambda timeout: False), \
+                patch('builtins.input', side_effect=AssertionError('must not be asked')):
+            self.assertFalse(self.start.ask_yes_no('? ', timeout=0.01))
 
 
 class ConfirmUpdateCase(unittest.TestCase):
@@ -665,6 +677,7 @@ class ConfirmUpdateCase(unittest.TestCase):
                 patch.object(corpus, 'main',
                              lambda argv: (applications.append(argv), apply_code)[1]), \
                 patch.object(corpus, 'cache_path', lambda: cache or Path(os.devnull)), \
+                patch.object(self.start, 'input_ready', lambda timeout: True), \
                 patch('builtins.input', lambda prompt='': answer):
             self.start.confirm_corpus_update(args)
         return applications

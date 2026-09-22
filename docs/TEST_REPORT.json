@@ -1,5 +1,5 @@
 {
-  "verified_at_utc": "2026-09-22T15:05:37.565308+00:00",
+  "verified_at_utc": "2026-09-22T15:12:16.917328+00:00",
   "platform": "Windows",
   "python": "3.13.9",
   "commit_sha": "9d417d7ef783fd5198b35ae55675923f1cf24101",
@@ -8,12 +8,12 @@
   "FAILED": 0,
   "lossless_roundtrip": true,
   "symbols": 23057,
-  "startup_seconds": 0.739,
+  "startup_seconds": 0.713,
   "TESTS": {
-    "passed": 321,
+    "passed": 322,
     "failed": 0,
     "skipped": 0,
-    "total": 321
+    "total": 322
   },
   "CLI": "passed",
   "MCP": "started successfully",
@@ -105,6 +105,7 @@
     "test_corpus_update.VersionMarkerCase.test_no_marker_reports_none_instead_of_guessing",
     "test_corpus_update.YesNoCase.test_a_closed_stdin_is_no_not_a_crash",
     "test_corpus_update.YesNoCase.test_anything_else_is_no",
+    "test_corpus_update.YesNoCase.test_silence_is_no_and_never_asks",
     "test_corpus_update.YesNoCase.test_yes_in_every_spelling",
     "test_dynamic.DynamicCase.test_a_new_mod_entry_appears_without_restarting",
     "test_dynamic.DynamicCase.test_a_new_mod_entry_is_also_reachable_by_typo",
