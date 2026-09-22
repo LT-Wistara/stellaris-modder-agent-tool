@@ -1,0 +1,254 @@
+================================================================
+ Stellaris Agent Tool 1.1.1 —— 使用说明
+================================================================
+
+这是一个离线工具：给 AI Agent 查询真实 CWT 规则、并在写完 Mod 代码后
+做检查用的 MCP 服务器。它自带 173 个 CWT 文件，不联网、不需要 pip、
+不需要下载语料、不需要建索引。
+
+
+一、环境要求
+----------------------------------------------------------------
+* Windows 10 / 11（Linux / macOS 见第六节，同样只用 start.py）
+* Python 3.9 或更新版本
+
+检查是否已安装：按 Win+R，输入 cmd 回车，然后输入
+
+    python --version
+
+能显示 3.9 以上就说明可以了。没装的话去 https://www.python.org/downloads/
+下载安装，安装时务必勾选 "Add python.exe to PATH"，装完重开一个 cmd。
+
+本工具只用 Python 标准库，不需要 pip install 任何东西。
+
+
+二、解压（重要：必须解压进你的 Mod 根目录）
+----------------------------------------------------------------
+把 zip 解压到**你自己的 Mod 根目录**，也就是和 descriptor.mod 同级的那一层，
+例如：
+
+    D:\Documents\Paradox Interactive\Stellaris\mod\239854621\stellaris-agent-tool\
+
+请特别注意两点：
+
+1) 是解压进 Mod 文件夹**里面**，不是解压到存放 Mod 的 "mod" 文件夹里
+   （那里是你的多个 Mod 文件夹并列的地方）。
+   工具靠"从自己所在位置向上找 descriptor.mod"确认 Mod 根目录，
+   位置放错就读不到你 Mod 自己的脚本与动态接口。
+
+2) 解压后目录里应该能直接看到 start.cmd 这个文件。
+   请保持整个文件夹完整，不要把 start.cmd 单独复制出去。
+   放在 Mod 根目录的下一级（例如现在这样）也可以，它会自己向上找到
+   descriptor.mod。
+
+如果放错了位置，启动时会打印一行 [注意]，说明它没有找到 descriptor.mod；
+此时它只能查内置 CWT 规则，无法识别你 Mod 自己声明的接口。手动指定也可以：
+
+    set STELLARIS_MOD_ROOT=D:\...\mod\239854621
+
+
+三、启动（只要一步）
+----------------------------------------------------------------
+双击 start.cmd。就这么简单——它会自动完成全部流程：
+
+    1. 检查 Python 版本、内置语料是否完整
+    2. 找到游戏本体和本工具所在的 Mod
+    3. 建立索引并打印统计
+    4. 在 http://127.0.0.1:8765/mcp 启动 MCP 服务器
+    5. 打印可以直接复制粘贴的客户端配置片段
+
+启动成功的输出大致是这样（第一行会立刻出现，不会让你干等着）：
+
+    正在启动 Stellaris Agent MCP，正在读取内置语料与索引…
+    Starting: reading the bundled corpus and building the index...
+
+    ==================================================================
+      Stellaris Agent MCP - 启动器 / launcher
+    ==================================================================
+      Python      : 3.13.9  (C:\...\python.exe)
+      工具目录    : D:\...\mod\239854621\stellaris-agent-tool
+      内置 CWT    : 173 个文件, 23057 个符号
+      游戏本体    : d:\program files (x86)\steam\steamapps\common\Stellaris
+      Mod 目录    : D:\...\mod\239854621
+
+    ==================================================================
+      服务器已启动，保持本窗口开着（关闭窗口 = 停止服务器）
+    ==================================================================
+      ...（下面就是给你的配置片段）
+
+**保持这个黑色窗口开着**：它就是服务器进程，关掉窗口 = 停止服务器，
+按 Ctrl+C 也可以停。
+
+小提示：
+* 重复双击不会起第二个进程，它会检测到已有服务并直接把片段再打一遍。
+* 想看配置但不想启动服务器：在 cmd 里运行 python start.py --print-only
+* 想换端口：set STELLARIS_MCP_PORT=8900 后再双击，或
+  python start.py --port 8900
+* 万一启动失败，窗口里会打印原因，完整堆栈写在 start-error.log 里。
+
+
+四、把片段贴进你的客户端
+----------------------------------------------------------------
+start.py 已经把两种方式都算好了，复制对应的一段即可。
+
+方式 A：HTTP（推荐，服务器已经在跑，客户端只要连地址）
+
+    地址：http://127.0.0.1:8765/mcp
+
+  通用 mcp.json（Claude Desktop / Cursor / Cline 等）：
+
+      {
+        "mcpServers": {
+          "stellaris": { "url": "http://127.0.0.1:8765/mcp" }
+        }
+      }
+
+  支持自定义 MCP 地址的客户端（例如 DSH 云工具插件）：
+      填 endpoint = http://127.0.0.1:8765/mcp
+
+  **没有认证，也不需要填任何密码或请求头。** 安全性来自"只监听 127.0.0.1"：
+  只有这台电脑能连上，别的机器连不到，所以不需要 token。
+  代价是：想从别的机器访问，必须用隧道或 HTTPS 反向代理转发（见 deploy/ 目录），
+  而不能直接把监听地址改成 0.0.0.0——那样会被程序拒绝（除非显式加 --allow-remote）。
+
+方式 B：stdio（让客户端自己拉起服务器，不用手动开窗口）
+
+  通用 mcp.json：
+
+      {
+        "mcpServers": {
+          "stellaris": {
+            "command": "C:\\...\\python.exe",
+            "args": ["D:\\...\\stellaris-agent-tool\\start.py", "serve"]
+          }
+        }
+      }
+
+  Codex（codex.toml）：
+
+      [mcp_servers.stellaris]
+      command = "C:/.../python.exe"
+      args = ["D:/.../stellaris-agent-tool/start.py", "serve"]
+      startup_timeout_sec = 60
+
+  这些片段里的路径是 start.py 按本机实际情况算出来的绝对路径，
+  含空格和中文都没问题，直接粘贴即可。
+
+
+五、关于"一个脚本"
+----------------------------------------------------------------
+以前需要 start-mcp-http.cmd、start-mcp.cmd、install.cmd、diagnose.cmd
+好几个文件；现在全部合并进 start.py，start.cmd 只是双击用的 Windows 外壳
+（它只负责找一个可用的 Python 3，然后交给 start.py）。
+
+同一个 start.py 既能给人用也能给 Agent 用，模式自动判断：
+
+    双击 / 有控制台            -> HTTP 模式，启动服务器并打印片段
+    python start.py serve      -> stdio 模式（客户端拉起时用）
+    被客户端用管道启动         -> 自动进入 stdio 模式，stdout 只输出 JSON-RPC
+
+可选参数：
+
+    python start.py --print-only       只打印配置片段，不启动服务器
+    python start.py --port 8900        换端口
+    python start.py --host 0.0.0.0 --allow-remote   换监听地址（服务无认证，谨慎）
+    python start.py --no-game-data     只读内置 CWT，不碰游戏和 Mod
+    python start.py --no-watch         不监视游戏/Mod 文件变化
+
+环境变量：
+
+    STELLARIS_MCP_PORT      端口（默认 8765）
+    STELLARIS_MCP_HOST      监听地址（默认 127.0.0.1）
+    STELLARIS_MCP_PYTHON    指定 Python 解释器（start.cmd 用）
+    STELLARIS_GAME_ROOT     手动指定游戏本体目录
+    STELLARIS_MOD_ROOT      手动指定 Mod 目录
+
+
+六、Linux / macOS
+----------------------------------------------------------------
+解压后直接：
+
+    python3 start.py            # HTTP 模式，打印片段
+    python3 start.py serve      # stdio 模式
+
+不需要任何 .cmd 文件。想生成落盘的片段文件可以运行
+python3 scripts/configure.py，结果在 client-config/ 目录。
+
+
+七、常见问题
+----------------------------------------------------------------
+Q: 双击后窗口一闪就没了。
+A: 启动前就失败了。窗口里会打印原因并停下等按键；如果完全看不到，
+   请在 cmd 里手动运行：
+       cd /d 解压目录
+       start.cmd
+   或者直接看目录里的 start-error.log。最常见原因是没装 Python 3
+   或 Python 没加入 PATH。
+
+Q: 提示 No Python 3 was found。
+A: 装了但没进 PATH。重装时勾选 "Add python.exe to PATH"，
+   或手动指定解释器：
+       set STELLARIS_MCP_PYTHON=C:\Path\to\python.exe
+
+Q: 提示端口被占用 / 服务器起不来。
+A: 换端口：set STELLARIS_MCP_PORT=8900 再启动。
+   如果提示"已经有一个 MCP 服务器在运行"，那是正常的——它会直接把
+   配置片段再打印一遍，不需要起第二个。
+
+Q: 客户端报"授权未完成/已超时"或 401 Unauthorized。
+A: 本版服务已经完全没有认证机制，正常不会再出现。若仍看到这类提示，
+   说明你用的是旧版本（旧版会读 STELLARIS_MCP_TOKEN 并要求认证头）。
+   直接换上当前这版即可；顺便确认系统里已经没有这个环境变量。
+
+Q: 客户端报"MCP 进程启动失败 / Connection closed"。
+A: 这种情况是客户端拉起 stdio 服务器时，握手之前就放弃了。已修复：
+   现在 initialize 在 1 秒内就会响应（以前要等索引游戏数据，约 5 秒）。
+   如果你还在用旧版本的包，请换用当前这版；另外确认片段里的
+   command 路径确实存在（python.exe 被卸载或移动过就会这样）。
+   想看详细原因，可手动运行同一段命令，例如：
+       "C:\...\python.exe" "D:\...\start.py" serve
+   正常时会打印 Stellaris MCP ready 并等待客户端发送 JSON-RPC。
+
+Q: 客户端报连接超时 / 无法连接。
+A: 确认黑窗口还开着、并且客户端填的是 http://127.0.0.1:8765/mcp。
+
+Q: 启动时出现 [注意] 说没找到 descriptor.mod。
+A: 位置放错了，最常见的是解压到了存放 Mod 的 "mod" 文件夹里。
+   把整个文件夹移进你自己的 Mod 文件夹（和 descriptor.mod 同级）即可。
+   如果你的 Mod 确实没有 descriptor.mod，就显式指定：
+       set STELLARIS_MOD_ROOT=D:\...\mod\你的Mod文件夹
+
+Q: stellaris_doctor 显示 "game_data_enabled": false。
+A: 没探测到 Stellaris 游戏本体。工具会自动在注册表、Steam 库目录和
+   各平台默认路径里查找；找不到时它仍然可以查 CWT 规则，
+   只是无法确认游戏生成的动态名称。可以手动指定：
+       set STELLARIS_GAME_ROOT=D:\Steam\steamapps\common\Stellaris
+   注意：只读游戏本体和"本工具所在的 Mod 目录"，不读启动器数据库、
+   playset 和其他 Mod。
+
+
+八、注意事项
+----------------------------------------------------------------
+* 启动窗口必须保持开着，关闭窗口就等于关闭服务器。
+* 它不会自动启动游戏，也不会修改游戏或 Mod 文件，只是只读地读取和检查。
+* 移动文件夹后通常不用改客户端配置：HTTP 方式地址不变；stdio 方式若用的是
+  portable 片段（走 start.cmd）也不用改，只有固定解释器路径的片段需要重新
+  运行 python scripts/configure.py 生成。
+* 语料快照声明的目标版本是 4.5；如果你的游戏版本不同，
+  stellaris_doctor 会报出版本差异，这是提示，不是错误。
+
+
+九、文件说明
+----------------------------------------------------------------
+    start.cmd                 双击启动（Windows 外壳，只负责找 Python）
+    start.py                  全部逻辑：检查、探测、索引、启动、打印片段
+    stellaris_tool.py         命令行入口（search / get / validate / doctor 等）
+    stellaris_agent\          程序本体与内置 173 个 CWT 语料
+    scripts\configure.py      生成落盘的客户端配置片段（可选）
+    scripts\build_release.py  重新打这个懒人包
+    client-config\            运行 configure.py 后生成的配置片段
+    docs\                     架构、动态数据、检索与测试报告
+    deploy\                   公网部署参考（nginx / systemd / certbot）
+    README.md                 完整技术文档
+    start-error.log           仅在启动失败时出现
+    LICENSE                   本工具 MIT 许可证

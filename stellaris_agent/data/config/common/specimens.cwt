@@ -1,0 +1,39 @@
+types = {
+	type[specimen] = {
+		path = "game/common/specimens"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc_short = "$_desc_short"
+			desc_details = "$_desc_details"
+		}
+		images = {
+			icon = icon # filepath
+		}
+	}
+}
+
+specimen = {
+
+	icon = <sprite>
+
+	type = enum[specimen_type]
+
+	rarity = enum[specimens_rarity]
+
+	is_tradable = bool
+
+	is_sellable = bool
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = country root = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_by_pop_group_clause]
+
+}

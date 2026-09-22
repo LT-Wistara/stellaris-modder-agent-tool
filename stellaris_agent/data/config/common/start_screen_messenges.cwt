@@ -1,0 +1,16 @@
+types = {
+	## type_key_filter = part
+	type[start_screen_message] = {
+		path = "game/common/start_screen_messages"
+		path_extension = .txt
+		name_field = localization
+	}
+}
+
+start_screen_message = {
+	location = int
+	localization = localisation
+
+	## replace_scopes = { root = country this = country }
+	trigger = single_alias_right[trigger_clause]
+}

@@ -1,0 +1,305 @@
+types = {
+	type[situation_type] = {
+		path = "game/common/situations"
+		path_extension = .txt
+		subtype[bidirectional] = {
+			progress_direction = bidirectional
+		}
+        subtype[dynamic_progress] = {
+            total_progress = {}
+        }
+		localisation = {
+			## required
+			name = "$"
+			type_name = "$_type"
+			title ="$"
+			title = title
+			desc = "$_desc"
+			desc = desc
+			## optional
+			active_tooltip = active_tooltip
+		}
+	}
+}
+
+## replace_scopes = { root = situation this = situation }
+situation_type = {
+	## cardinality = 0..inf
+	picture = <sprite>
+	## cardinality = 0..inf
+	picture = {
+		picture = <sprite>
+		trigger = single_alias_right[trigger_clause]
+	}
+	## cardinality = 0..1
+	category = enum[situation_category]
+
+	## cardinality = 0..1
+	situation_log_category = <situation_log_category>
+
+	## cardinality = 0..1
+	title = localisation
+	## cardinality = 0..inf
+	title = {
+		trigger = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		text = localisation
+	}
+	## cardinality = 0..1
+	desc = localisation
+	## cardinality = 0..inf
+	desc = single_alias_right[triggered_desc_clause]
+	## cardinality = 0..1
+	active_tooltip = localisation
+
+    ## cardinality = 0..1
+    override_active_title = localisation
+    ## cardinality = 0..1
+    override_active_desc = localisation
+    ## cardinality = 0..1
+    override_finisher_title = localisation
+    ## cardinality = 0..1
+	override_finisher_desc = localisation
+    ## cardinality = 0..1
+	override_progress_current_desc = localisation
+
+    ## cardinality = 0..1
+    custom_tooltip = localisation
+    ## cardinality = 0..1
+    custom_tooltip_with_modifiers = localisation
+
+	## replace_scopes = { this = country root = country }
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	on_start = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	on_fail = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	on_abort = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	on_progress_complete = single_alias_right[effect_clause]
+
+	## cardinality = 0..inf
+	triggered_blocked_desc = single_alias_right[triggered_desc_clause]
+	## cardinality = 0..1
+	abort_trigger = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## push_scope = country
+	modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	## push_scope = planet
+	target_modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..inf
+	## push_scope = country
+	triggered_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+	## cardinality = 0..inf
+	## push_scope = planet
+	triggered_target_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+
+	## cardinality = 0..1
+	on_monthly = {
+		## cardinality = 0..1
+		events = {
+			## cardinality = 0..inf
+			<event.scopeless>
+			## cardinality = 0..inf
+			<event.situation>
+		}
+		## cardinality = 0..1
+		random_events = {
+			## cardinality = 0..inf
+			int = 0
+			## cardinality = 0..inf
+			int = <event.scopeless>
+			## cardinality = 0..inf
+			int = <event.situation>
+		}
+	}
+
+	monthly_progress = {
+		alias_name[modifier_rule_with_loc] = alias_match_left[modifier_rule_with_loc]
+	}
+
+	## cardinality = 0..inf
+	approach = {
+		name = localisation
+		icon = <sprite>
+		icon_background = <sprite>
+		## cardinality = 0..1
+		default = yes
+		## cardinality = 0..1
+		allow = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		potential = single_alias_right[trigger_clause]
+
+		## cardinality = 0..1
+		## push_scope = country
+		modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		## push_scope = planet
+		target_modifier = single_alias_right[modifier_clause]
+
+		## cardinality = 0..inf
+		## push_scope = country
+		triggered_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+		## cardinality = 0..inf
+		## push_scope = planet
+		triggered_target_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+
+		## cardinality = 0..1
+		custom_tooltip_with_modifiers = localisation
+
+		## cardinality = 0..inf
+		resources = {
+			## cardinality = 0..1
+			category = <economic_category>
+			alias_name[economic_template] = alias_match_left[economic_template]
+		}
+		## cardinality = 0..1
+		on_select = single_alias_right[effect_clause]
+		## cardinality = 0..1
+		ai_weight = int
+		## cardinality = 0..1
+		ai_weight = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+	}
+
+	### Situation will start at this number. Default is 0
+	## cardinality = 0..1
+	start_value = int
+	### The value the situation progress is going to have when starting. Important for bidirectional situations. if it is lower than start_value, it will be changed to start_value
+	## cardinality = 0..1
+	initial_progress = int
+
+	#### Scriptable value (scope: situation). Total length of the bar from start_value to completion.
+	#### Setting this switches the Situation into SECTION WEIGHTS mode: every stage must then use
+	#### `section_weight` and none may use `end` (the game logs an error if you mix the two).
+	## cardinality = 0..1
+	total_progress = value_int_field
+	#### Scriptable value (scope: situation). Total length of the bar from start_value to completion.
+	#### Setting this switches the Situation into SECTION WEIGHTS mode: every stage must then use
+	#### `section_weight` and none may use `end` (the game logs an error if you mix the two).
+	## cardinality = 0..1
+	total_progress = {
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    ### monodirectional/bidirectional (defaults to monodirectional)
+	## cardinality = 0..1
+	progress_direction = monodirectional
+	### monodirectional/bidirectional (defaults to monodirectional)
+	## cardinality = 0..1
+	progress_direction = bidirectional
+	subtype[bidirectional] = {
+		### Only for progress_direction = bidirectional - only affects progress towards completetion (right)
+		## cardinality = 0..1
+		complete_category = enum[situation_category]
+		### Only for progress_direction = bidirectional - only affects progress towards fail (left)
+		## cardinality = 0..1
+		fail_category = enum[situation_category]
+	}
+
+	### If yes, the situation does not end automatically when it reaches either extreme. It needs to be finished manually if needed.
+	### Default: no
+	## cardinality = 0..1
+	permanent = bool
+
+	## cardinality = 0..1
+	show_in_outliner = bool
+
+	## cardinality = 0..1
+	complete_icon = <sprite>
+	## cardinality = 0..1
+	complete_icon_frame = <sprite>
+	## cardinality = 0..1
+	fail_icon = <sprite>
+	## cardinality = 0..1
+	fail_icon_frame = <sprite>
+
+	## cardinality = 0..1
+	stages = {
+		## cardinality = 1..inf
+	 	scalar = {
+            subtype[!dynamic_progress] = {
+                ## cardinality = 0..1
+                end = int_value_field
+                ## cardinality = 0..1
+                end = {
+                    ## replace_scopes = { this = situation root = situation }
+                    alias_name[modifier_rule] = alias_match_left[modifier_rule]
+                }
+            }
+            subtype[dynamic_progress] = {
+                ## cardinality = 0..1
+                section_weight = int_value_field
+                ## cardinality = 0..1
+                section_weight = {
+                    alias_name[modifier_rule] = alias_match_left[modifier_rule]
+                }
+            }
+			icon = <sprite>
+			icon_background = <sprite>
+			### Color for UI elements associated with this stage. Can be:
+			### - A key from the named colors database (e.g. "red")
+			### - A numeric RGBA vector (e.g. { 255 100 0 255 } or { 1.0 0.3 0.0 1.0 })
+			### Defaults to SITUATION_STAGE_DEFAULT_COLOR
+			## cardinality = 0..1
+			color = single_alias_right[color_type_rgba]
+			## cardinality = 0..1
+			color = <named_color>
+			## cardinality = 0..1
+			custom_tooltip = localisation
+			## cardinality = 0..1
+			on_first_enter = single_alias_right[effect_clause]
+			## cardinality = 0..1
+			on_enter = single_alias_right[effect_clause]
+			## cardinality = 0..1
+			potential = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			## push_scope = country
+			modifier = single_alias_right[modifier_clause]
+			## cardinality = 0..inf
+			## push_scope = country
+			triggered_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+			
+			### Target is typically a single colony carrier, your whole empire, or no target
+			## cardinality = 0..1
+			## push_scope = any
+			target_modifier = single_alias_right[modifier_clause]
+			### Target is typically a single colony carrier, your whole empire, or no target
+			## cardinality = 0..inf
+			## push_scope = any
+			triggered_target_modifier = single_alias_right[triggered_modifier_by_situation_clause]
+	    }
+	}
+}
+
+enums = {
+	complex_enum[situation_approach] = {
+		path = "game/common/situations"
+		name = {
+			approach = {
+				name = enum_name
+			}
+		}
+	}
+	complex_enum[situation_stage] = {
+		path = "game/common/situations"
+		name = {
+			stages = {
+				enum_name = {}
+			}
+		}
+	}
+	enum[situation_category] = {
+		positive
+		negative
+		neutral
+	}
+}

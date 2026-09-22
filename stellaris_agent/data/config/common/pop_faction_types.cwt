@@ -1,0 +1,208 @@
+types = {
+	type[pop_faction] = {
+		path = "game/common/pop_faction_types"
+		path_extension = .txt
+		localisation = {
+			name = "pft_$"
+			desc = "pft_$_desc"
+		}
+		images = {
+			icon = "GFX_faction_icon_$" # inferred
+			election_header = election_header # <sprite>
+		}
+	}
+}
+
+# parameters
+enums = {
+	## per_definition
+	complex_enum[pop_faction_parameter] = {
+		path = "game/common/pop_faction_types"
+		name = {
+			parameters = {
+				enum_name = {}
+			}
+		}
+	}
+}
+
+# actions
+enums = {
+	complex_enum[pop_faction_action] = {
+		path = "game/common/pop_faction_types"
+		name = {
+			actions = {
+				enum_name = {}
+			}
+		}
+	}
+}
+
+## replace_scopes = { this = pop_faction root = pop_faction from = country }
+pop_faction = {
+	### Allows to have multiple of this faction type within a single country
+	unique = bool
+
+	## cardinality = 0..1
+	### How much extra weight will receive a candidate from this faction
+	support_multiplier = float
+
+	### Primary ethic for this faction
+	## cardinality = 0..1
+	guiding_ethic = <ethic>
+
+	## cardinality = 0..1
+	visual_ethic = localisation
+
+	## cardinality = 0..1
+	use_guiding_ethic_as_pop_filter = bool
+
+	### UI color for candidate header
+	## cardinality = 0..1
+	election_header =  <sprite>
+
+	### Existence requirements for this faction
+	## push_scope = country
+	## cardinality = 0..1
+	is_potential = single_alias_right[trigger_clause]
+
+	#### Parameters, tied to this faction
+	## push_scope = country
+	## cardinality = 0..1
+	parameters = {
+		## cardinality = 0..1
+		scalar = {
+			## cardinality = 1..1
+			type = enum[scope_type_token]
+			## cardinality = 0..1
+			valid_objects = single_alias_right[trigger_clause]
+		}
+	}
+
+	### Existence requirements for defined parameter
+	## cardinality = 0..1
+	valid = single_alias_right[trigger_clause]
+
+	### Determines which pops are able to join this faction. Only uses certain simple triggers.
+	## push_scope = pop_group
+	## cardinality = 0..1
+	can_join_pre_triggers = {
+		alias_name[pop_pre_trigger] = alias_match_left[pop_pre_trigger]
+	}
+
+	### Determines which pops are able to join this faction
+	## push_scope = pop_group
+	can_join_faction = single_alias_right[trigger_clause]
+
+	### Pop's willingness weight to join this faction
+	## push_scope = pop_group
+	## cardinality = 0..1
+	attraction = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	### Pop's willingness weight to join this faction
+	## push_scope = leader
+	## cardinality = 0..1
+	leader = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+
+	}
+
+	### Some effects, immediately after faction has been established.
+	## cardinality = 0..1
+	on_create = single_alias_right[effect_clause]
+
+	### Some effects, immediately after faction has been removed.
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	on_destroy = single_alias_right[effect_clause]
+
+	### Faction dynamic requests & issues.
+	## cardinality = 0..inf
+	demand = {
+		### Issue title, shown in faction manager screen
+		## cardinality = 0..1
+		title = localisation
+
+		### Unfulfilled issue title, shown in faction manager screen
+		## cardinality = 0..1
+		unfulfilled_title = localisation
+
+		### Issue full description, shown in faction manager screen
+		## cardinality = 0..1
+		desc = localisation
+
+		### Positive happiness effect on faction, if demand is satisfied
+		## cardinality = 0..1
+		fulfilled_effect = float
+
+		### Negative happiness effect on faction, if demand is not satisfied
+		## cardinality = 0..1
+		unfulfilled_effect = float
+
+		### default: no
+		## cardinality = 0..1
+		council_demand = bool
+
+		## cardinality = 0..1
+		potential = single_alias_right[trigger_clause]
+
+		## cardinality = 1..1
+		trigger = single_alias_right[trigger_clause]
+	}
+
+	### Actions for this pop_group faction type (buttons)
+	## cardinality = 0..1
+	actions = {
+		## cardinality = 0..inf
+		scalar = {
+			## cardinality = 0..1
+			title = localisation
+			## cardinality = 0..1
+			description = localisation
+
+			## cardinality = 0..1
+			cost = {
+				<resource> = int
+			}
+
+			## cardinality = 0..1
+			potential = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			valid = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			effect = single_alias_right[effect_clause]
+
+			## cardinality = 0..1
+			ai_weight = {
+				alias_name[modifier_rule] = alias_match_left[modifier_rule]
+			}
+
+		}
+	}
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	### Resource generated when the faction is being extorted
+	extortion_resource = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	### Persistent factions will keep at least 1 pop_group in the faction until the faction fails the potential trigger
+	## cardinality = 0..1
+	persistent_faction = bool
+
+	### default = yes; Stops factions from being renamable
+	## cardinality = 0..1
+	can_rename = bool
+}

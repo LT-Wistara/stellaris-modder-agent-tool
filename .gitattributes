@@ -1,0 +1,9 @@
+# The bundled corpus is data, not source: keep the exact bytes upstream published.
+# This machine has core.autocrlf=true, which rewrote all 173 .cwt files to CRLF on
+# a previous checkout and made them look changed against the pinned commit.
+stellaris_agent/data/config/** -text
+stellaris_agent/data/LICENSE.cwt -text
+
+# Generated evaluation output (about 460 KB); `python scripts/evaluate_fuzzy.py`
+# rebuilds it, and none of the shipped code reads it.
+docs/FUZZY_EVALUATION.json -text

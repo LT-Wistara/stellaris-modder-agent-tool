@@ -1,0 +1,46 @@
+types = {
+	type[agenda] = {
+		path = "game/common/council_agendas"
+		path_extension = .txt
+		localisation = {
+			name = "council_agenda_$_name"
+			desc = "council_agenda_$_desc"
+			council_agenda_name = "council_agenda_$_name"
+			council_agenda_desc = "council_agenda_$_desc"
+		}
+		images = {
+			icon = GFX_council_agenda_icon_$
+		}
+	}
+}
+
+## replace_scopes = { this = country root = country }
+agenda = {
+	agenda_cost = value_field
+	## cardinality = 0..1
+	agenda_cooldown = value_field
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	allow = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	initial_effect_custom_loc = localisation
+	## cardinality = 0..1
+	init_effect = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	modifier = {
+		## cardinality = 0..1
+		custom_tooltip = localisation
+		## cardinality = 0..1
+		show_only_custom_tooltip = bool
+		alias_name[modifier] = alias_match_left[modifier]
+	}
+	## cardinality = 0..1
+	finish_modifier = <static_modifier>
+	## cardinality = 0..1
+	effect = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}

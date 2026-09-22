@@ -1,0 +1,340 @@
+types = {
+	type[megastructure] = {
+		path = "game/common/megastructures"
+		path_extension = .txt
+		subtype[base_level] = {
+			placement_rules = {}
+		}
+		subtype[has_prereqs] = {
+			prerequisites = {}
+		}
+		localisation = {
+			name = "$"
+			desc = "$_DESC"
+			subtype[base_level] = {
+				details = "$_MEGASTRUCTURE_DETAILS"
+				## optional
+				delayed_info = "$_CONSTRUCTION_INFO_DELAYED"
+			}
+		}
+		images = {
+			## optional
+			portrait = portrait # <sprite>
+		}
+	}
+
+	type[megastructure_overclock_type] = {
+		path = "game/common/megastructure_overclock_types"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_DESC"
+		}
+		images = {
+			## optional
+			icon = icon # <sprite>
+		}
+	}
+
+}
+
+megastructure = {
+    entity = <model_entity>
+    entity = scalar # TODO entity suffixes
+
+    ## cardinality = 0..1
+    entity = <model_entity>
+    ## cardinality = 0..1
+    construction_entity = scalar # TODO entity suffixes
+
+	## cardinality = 0..1
+	rotate_to_center = bool
+	## cardinality = 0..1
+	scale_offset = bool
+	## cardinality = 0..1
+	is_grand_archive = bool
+	### to avoid z-fighting of construction entity with the base entity
+	## cardinality = 0..1
+	construction_scale = float
+	## cardinality = 0..1
+	portrait = <sprite>
+
+	### If specified, fleets that can potentially build the megastructure will have a separate order button with this icon.
+	### The icon should also have a version with the "_selected" suffix.
+	### Only shown for ships that can build megastructures via construction_capabilities, not scripted actions.
+	### Not currently supported for megastructures with must_select_ship_design = yes.
+	## cardinality = 0..1
+	order_icon = <sprite>
+	## cardinality = 0..1
+	is_shroud_seal = bool
+	### default: yes
+	## cardinality = 0..1
+	place_entity_on_planet_plane = bool
+	## cardinality = 0..1
+	entity_offset = { x = float y = float }
+	## cardinality = 0..1
+	plane_offset = float
+	## cardinality = 0..1
+	construction_blocks_others = bool
+	### deprecated, replaced with `build_type = inside_gravity_well/outside_gravity_well/around_planet'
+	## cardinality = 0..1
+	build_outside_gravity_well = bool
+	### inside_gravity_well/outside_gravity_well/around_planet default = around_planet, decided how and where the MS is built
+	## cardinality = 0..1
+	build_type = enum[mega_build_type]
+	### default: yes
+	## cardinality = 0..1
+	show_galactic_map_icon = bool
+	### default: no
+	## cardinality = 0..1
+	hide_name = bool
+	### default = no, means the mega structure should offer a choice of design when becoming a starbase (only applies to megastructure that become starbases )
+	## cardinality = 0..1
+	must_select_ship_design = bool
+	### default: yes
+	## cardinality = 0..1
+	show_in_outliner = bool
+	## cardinality = 0..1
+	bypass_type = <bypass>
+	### also possible to use here upgrade_desc = hide, and localisations are not required in that case
+	## cardinality = 0..1
+	upgrade_desc = localisation
+	### also possible to use here upgrade_desc = hide, and localisations are not required in that case
+	## cardinality = 0..1
+	upgrade_desc = hide
+	## cardinality = 0..1
+	upgrade_from = {
+		## cardinality = 0..inf
+		<megastructure>
+	}
+	## cardinality = 0..1
+	custom_tooltip_requirements = localisation
+	## cardinality = 0..1
+	build_system_tooltip = <system_tooltip>
+
+	#### MTTH-style block, scope: galactic object, from: country. Higher score = higher rank. Mutually exclusive with
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system }
+	tooltip_system_score = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	#### optional: systems scoring at or below this value are shown in red
+	## cardinality = 0..1
+	tooltip_system_score_low_threshold = int
+
+	#### optional: systems scoring at or above this value are shown in green; between thresholds is yellow
+	## cardinality = 0..1
+	tooltip_system_score_high_threshold = int
+
+	#### alternative to tooltip_system_score: ranks systems by the star's deposit resource output
+	####
+	#### (weighted by culling conversion values) and displays resource icons instead of a numeric score.
+	## cardinality = 0..1
+	tooltip_show_star_resources = bool
+
+	#### loc key for the header shown above the list (e.g. "§ESystems with highest potential:§!")
+	## cardinality = 0..1
+	tooltip_best_systems_header = localisation
+
+	#### trigger block, scope: galactic object, from: country. Systems that fail this trigger are excluded from the list entirely.
+	####
+	#### Use this to filter out systems that are fundamentally ineligible (e.g. already have this megastructure).
+	####
+	#### Prefer this over repeating the full possible = {} block, which includes infrastructure checks unsuitable for ranking.
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country }
+	tooltip_system_filter = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+	subtype[has_prereqs] = {
+		## cardinality = 0..1
+		show_prereqs = bool
+		## cardinality = 0..1
+		prereq_name = localisation
+	}
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	potential = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country }
+	possible = single_alias_right[trigger_clause]
+
+	#### If true, fleets that can potentially build the megastructure will show a separate option for it in the system right-click context menu.
+	####
+	#### If this is not specified, the option is never shown.
+	####
+	#### Not currently supported for megastructures with build_type = around_planet or must_select_ship_design = yes.
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country }
+	context_menu_potential = single_alias_right[trigger_clause]
+
+	### Use for megastructures that have their own dedicated context_menu_potential shortcut and order_icon, so the general picker is redundant.
+	## cardinality = 0..1
+	## replace_scopes = { this = fleet root = fleet from = country }
+	build_menu_potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	build_time = int
+	## cardinality = 0..1
+	starbase = <starbase_level>
+
+	### an extra trigger to allow scripted reasons to hide the megastructure. if defined both show_in_outliner and this trigger need to be true for the megastructure to show in the outliner. scope: megastructure
+	## cardinality = 0..1
+	## replace_scopes = { this = megastructure root = megastructure }
+	outliner_trigger = single_alias_right[trigger_clause]
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..1
+	overlord_can_upgrade = bool
+
+	### default = no; decides if the megastructure will mine the underlying resources if its on top of a planet/star
+	## cardinality = 0..1
+	use_planet_resource = bool
+
+	## cardinality = 0..1
+	scales_with_planet = bool
+	## cardinality = 0..1
+	is_ruined_orbital_ring = bool
+	### accepts country modifiers
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	country_modifier = {
+		## cardinality = 0..1
+		custom_tooltip = localisation
+		## cardinality = 0..1
+		show_only_custom_tooltip = bool
+		## cardinality = 0..inf
+		alias_name[modifier] = alias_match_left[modifier]
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { this = ship root = ship }
+	ship_modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { this = megastructure root = megastructure }
+	station_modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..1
+	placement_rules = {
+		## cardinality = 0..inf
+		alias_name[trigger] = alias_match_left[trigger]
+		## replace_scopes = { this = planet root = planet }
+		## cardinality = 0..1
+		planet_possible = single_alias_right[trigger_clause]
+	}
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = fleet }
+	on_build_queued = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = fleet }
+	on_build_unqueued = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	on_build_start = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country }
+	on_build_cancel = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	on_build_complete = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..1
+	overclock_types = {
+		## cardinality = 0..inf
+		<megastructure_overclock_type>
+	}
+	## cardinality = 0..1
+	cycle_length_in_days = value_field
+	## cardinality = 0..1
+	cycle_title = localisation
+	## cardinality = 0..1
+	cycle_desc = localisation
+	## cardinality = 0..1
+	cycle_icon = <sprite>
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	on_cycle_complete = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	sensor_range = int
+	## cardinality = 0..1
+	hyperlane_range = int
+	### the type of constructions that block (and are in turn blocked by) this construction, default: multi_stage_type
+	## cardinality = 0..1
+	construction_blocks_and_blocked_by = enum[megastructure_block_type]
+	## cardinality = 0..1
+	build_megastructure_no_cost_localization_key = localisation
+
+	## cardinality = 0..1
+	victory_score = int
+
+	## cardinality = 0..1
+	dismantle_cost = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+	## cardinality = 0..1
+	dismantle_time = int
+	## cardinality = 0..1
+	## replace_scopes = { this = megastructure root = megastructure from = country }
+	dismantle_potential = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	can_be_dismantled_by_non_owner = bool
+	## cardinality = 0..1
+	## replace_scopes = { this = megastructure root = megastructure from = country }
+	dismantle_possible = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	on_dismantle_start = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country fromfrom = megastructure }
+	on_dismantle_cancel = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system from = country }
+	on_dismantle_complete = single_alias_right[effect_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = megastructure root = megastructure from = country }
+	should_ai_dismantle = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	scripted_action = {
+		<scripted_action>
+	}
+}
+
+megastructure_overclock_type = {
+	icon = <sprite>
+	## replace_scopes = { this = country root = country }
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## replace_scopes = { this = country root = country }
+	modifier = single_alias_right[modifier_clause]
+
+}

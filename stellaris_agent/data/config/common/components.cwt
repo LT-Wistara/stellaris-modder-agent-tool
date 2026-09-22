@@ -1,0 +1,682 @@
+
+types = {
+	## type_key_filter = component_set
+	type[component_set] = {
+		name_field = "key"
+    	path = "game/common/component_sets"
+		path_extension = .txt
+		subtype[required_component] = {
+			required_component_set = yes
+		}
+		localisation = {
+			subtype[!required_component] = {
+				name = "$"
+				## optional
+				desc = "$_DESC"
+				## optional
+				ship_desc = "ship_$_DESC"
+				## optional
+				station_desc = "station_$_DESC"
+			}
+		}
+		images = {
+			subtype[!required_component] = {
+				icon = icon|icon_frame # <sprite>
+			}
+		}
+	}
+	type[component_slot_template] = {
+		path = "game/common/component_slot_templates"
+		path_extension = .txt
+	}
+	type[component_template] = {
+		name_field = "key"
+		path = "game/common/component_templates"
+		path_extension = .txt
+		## type_key_filter = utility_component_template
+		subtype[utility_component_template] = {}
+		## type_key_filter = weapon_component_template
+		subtype[weapon_component_template] = {}
+		## type_key_filter = strike_craft_component_template
+		subtype[strike_craft_component_template] = {}
+		## type_key_filter = weapon_component_template
+		subtype[planet_killer] = {
+			type = planet_killer
+		}
+		localisation = {
+			name = "$"
+		}
+		images = {
+			## primary
+			## required
+			icon = icon|icon_frame # <sprite>
+		}
+	}
+}
+
+component_set = {
+	## cardinality = 0..1
+	required_component_set = bool
+	## cardinality = 0..1
+	is_core_component_set = bool
+	## cardinality = 0..1
+	is_space_fauna_component_set = bool
+	### default = yes
+	## cardinality = 0..1
+	affects_target_type = bool
+	### default = yes
+	## cardinality = 0..1
+	affects_target_focus = bool
+	## cardinality = 0..1
+	is_default_space_fauna_component_set = bool
+	subtype[required_component] = {
+		key = scalar
+		## cardinality = 0..1
+		icon = scalar
+		## cardinality = 0..1
+		icon_frame = scalar
+	}
+	subtype[!required_component] = {
+		key = localisation
+		icon = <sprite>
+		## cardinality = 0..1
+		icon_frame = int
+	}
+}
+
+component_slot_template = {
+	size = enum[weapon_slot_size]
+	component = weapon
+	component = strike_craft
+	component = any
+	## cardinality = 0..1
+	is_fixed = yes
+	## cardinality = 0..1
+	entities = {
+		## cardinality = 1..inf
+		enum[weapon_type] = scalar # TODO <model_entity>, but that doesn't work
+	}
+}
+
+component_template = {
+	key = scalar
+
+	icon = <sprite>
+	## cardinality = 0..1
+	icon_frame = int
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+    ## cardinality = 0..1
+	component_set = <component_set>
+	## cardinality = 0..1
+	hidden = bool
+	### (DEPRECATED: use "potential" trigger instead) The ship class(es) that the component is restricted to.
+	## cardinality = 0..1
+	class_restriction = {
+		## cardinality = 1..inf
+		enum[ship_class]
+	}
+	## cardinality = 0..1
+	upgrades_to = <component_template>
+	### For core components, components that have the same upgrade path are shown on the same row.
+	## cardinality = 0..1
+	upgrade_path = value_set[upgrade_path]
+	## cardinality = 0..1
+	upgrade_path = value[upgrade_path]
+
+	## cardinality = 0..1
+	tags = {
+		## cardinality = 0..inf
+		enum[component_tag]
+	}
+	## cardinality = 0..1
+	ai_tags = {
+		## cardinality = 0..inf
+		enum[component_tag]
+	}
+	## cardinality = 0..1
+	ai_tag_weight = int
+	## cardinality = 0..1
+	ship_limit = int
+	## cardinality = 0..1
+	size_restriction = {
+		## cardinality = 0..inf
+		<ship_size>
+
+		## cardinality = 0..1
+		null
+	}
+	## cardinality = 0..1
+	blocked_by = {
+		## cardinality = 0..inf
+		<component_template>
+	}
+	## cardinality = 0..1
+	custom_tooltip = localisation
+	## cardinality = 0..1
+	custom_tooltip = {
+		## cardinality = 0..1
+		text = ""
+		## cardinality = 0..1
+		text = localisation
+		## cardinality = 0..1
+		fail_text = default
+		## cardinality = 0..1
+		fail_text = localisation
+		## cardinality = 0..1
+		success_text = localisation
+		alias_name[trigger] = alias_match_left[trigger]
+	}
+	## cardinality = 0..1
+	should_ai_use = bool
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+ 	valid_for_country = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	subtype[weapon_component_template] = {
+		## cardinality = 0..inf
+		## replace_scopes = { root = ship this = ship }
+		resources = {
+			## cardinality = 0..1
+			category = <economic_category>
+			alias_name[economic_template_no_produce] = alias_match_left[economic_template_no_produce]
+		}
+		## cardinality = 0..1
+		power = float
+		size = enum[weapon_slot_size]
+		type = enum[weapon_type2]
+		## cardinality = 0..1
+		hide_damage_values_from_tooltip = bool
+		## cardinality = 0..1
+		targetable_ship_sizes = {
+			## cardinality = 0..inf
+			<ship_size>
+
+			## cardinality = 0..1
+			null
+		}
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		ship_modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		## replace_scopes = { this = design root = design }
+		ship_design_modifier = single_alias_right[modifier_clause]
+
+		## cardinality = 0..inf
+		## replace_scopes = { this = ship root = ship }
+		triggered_ship_modifier = single_alias_right[triggered_modifier_clause]
+		## cardinality = 0..inf
+		## replace_scopes = { this = design root = design }
+		triggered_ship_design_modifier = single_alias_right[triggered_modifier_clause]
+
+		## cardinality = 0..1
+		projectile_gfx = <projectile>
+		## cardinality = 0..1
+		## color_type = hsv
+		color = {
+			## cardinality = 3..4
+			float
+		}
+		## cardinality = 0..1
+		ai_tag_weight = int
+        ## cardinality = 0..1
+        can_destroy_stars = bool
+
+        ## cardinality = 0..1
+        entity = <model_entity>
+        ## cardinality = 0..1
+        entity = scalar # TODO entity suffixes
+
+		## cardinality = 0..1
+		use_ship_main_target = bool
+		## cardinality = 0..1
+		target_type = <target_type>
+		## cardinality = 0..1
+		target_focus = enum[target_focus]
+		## cardinality = 0..1
+		injected_modifier = {
+			modifier = {
+				modifier = <modifier>
+				modifier = <static_modifier>
+				## cardinality = 0..1
+				days = int
+			}
+			## cardinality = 0..1 # not sure
+			stack_info = {
+				id = scalar
+				priority = int
+			}
+		}
+		## cardinality = 0..1
+		firing_arc = float
+		## cardinality = 0..1
+		min_range = float
+		## cardinality = 0..1
+		prio_projectile = bool
+		## replace_scopes = { this = design from = country }
+		## cardinality = 0..1
+		possible = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		static_rotation = bool #link to a GFX_ link defined under /interface
+		## cardinality = 0..1
+		planet_destruction_gfx = <planet_killer_animation>
+		## cardinality = 0..1
+		target_weights = {
+			## cardinality = 1..inf
+			scalar = float
+		}
+
+		#these are optional, vanilla uses an .csv file to create these
+		## cardinality = 0..1
+		damage = { min = float max = float }
+		## cardinality = 0..1
+		hull_damage = float
+		## cardinality = 0..1
+		armor_damage = float
+		## cardinality = 0..1
+		shield_damage = float
+		## cardinality = 0..1
+		armor_penetration = float
+		## cardinality = 0..1
+		shield_penetration = float
+		## cardinality = 0..1
+		size_damage_factor = float
+
+		## cardinality = 0..1
+		collateral_damage = float
+		## cardinality = 0..1
+		collateral_range = float
+
+		## cardinality = 0..1
+		windup = { min = float max = float }
+		## cardinality = 0..1
+		total_fire_time = float
+		## cardinality = 0..1
+		range = float
+		## cardinality = 0..1
+		accuracy = float
+		## cardinality = 0..1
+		tracking = float
+		## cardinality = 0..1
+		#missiles only
+		## cardinality = 0..1
+		missile_speed = float
+		## cardinality = 0..1
+		missile_evasion = float
+		## cardinality = 0..1
+		missile_health = float
+		## cardinality = 0..1
+		missile_armor = float
+		## cardinality = 0..1
+		missile_shield = float
+		## cardinality = 0..1
+		missile_retarget_range = int
+		## cardinality = 0..1
+		point_defence_targets = { enum[point_defence_target] }
+		### apply effects to target on hit. Scope = ship (target), from = ship (shooter)
+		## replace_scopes = { this = ship from = ship }
+		## cardinality = 0..inf
+		on_hit = single_alias_right[effect_clause]
+	}
+
+	subtype[strike_craft_component_template] = {
+		## cardinality = 0..inf
+		## replace_scopes = { root = ship this = ship }
+		resources = {
+			## cardinality = 0..1
+			category = <economic_category>
+			alias_name[economic_template_no_produce] = alias_match_left[economic_template_no_produce]
+		}
+
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		ship_modifier = single_alias_right[modifier_clause]
+
+        entity = <model_entity>
+        entity = scalar # TODO entity suffixes
+
+		size = enum[weapon_slot_size]
+		weapon_type = enum[weapon_type2]
+		## cardinality = 0..1
+		ship_behavior = <ship_behavior>
+		## cardinality = 0..1
+		projectile_gfx = <projectile>
+		## cardinality = 0..1
+		power = float
+		count = float
+		regeneration_per_day = float
+		launch_time = float
+
+		#these are optional, vanilla uses an .csv file to create these
+		## cardinality = 0..1
+		damage = { min = float max = float }
+		## cardinality = 0..1
+		hull_damage = float
+		## cardinality = 0..1
+		armor_damage = float
+		## cardinality = 0..1
+		shield_damage = float
+		## cardinality = 0..1
+		armor_penetration = float
+		## cardinality = 0..1
+		shield_penetration = float
+		## cardinality = 0..1
+		size_damage_factor = float
+
+		## cardinality = 0..1
+		range = float
+		## cardinality = 0..1
+		accuracy = float
+		## cardinality = 0..1
+		tracking = float
+
+		cooldown = float
+		## cardinality = 0..1
+		engagement_range = float
+		health = float
+		armor = float
+		shield = float
+		evasion = float
+		speed = float
+		rotation_speed = float
+		acceleration = float
+		## cardinality = 0..1
+		attack_range = float
+		## cardinality = 0..1
+		point_defence_targets = { enum[point_defence_target] }
+	}
+
+	subtype[utility_component_template] = {
+		## cardinality = 0..inf
+		## replace_scopes = { root = ship this = ship }
+		resources = {
+			## cardinality = 0..1
+			category = <economic_category>
+			alias_name[economic_template] = alias_match_left[economic_template]
+		}
+		## cardinality = 0..1
+		is_default_component = bool
+		## cardinality = 0..1
+		power = int
+		size = enum[utility_slot_size]
+
+		### only valid if component_set has affects_target_type = yes. affects_target_type Default yes
+		## cardinality = 0..1
+		target_type = <target_type>
+		### only valid if component_set has affects_target_focus = yes affects_target_focus Default = yes
+		## cardinality = 0..1
+		target_focus = enum[target_focus]
+
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		ship_modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		## replace_scopes = { this = design root = design }
+		ship_design_modifier = single_alias_right[modifier_clause]
+
+		## cardinality = 0..inf
+		## replace_scopes = { this = ship root = ship }
+		triggered_ship_modifier = single_alias_right[triggered_modifier_clause]
+		## cardinality = 0..inf
+		## replace_scopes = { this = design root = design }
+		triggered_ship_design_modifier = single_alias_right[triggered_modifier_clause]
+
+		## cardinality = 0..1
+		ftl = bool
+		## cardinality = 0..1
+		ftl_inhibitor = bool
+		## cardinality = 0..1
+		jumpdrive = bool
+		## cardinality = 0..1
+		ship_behavior = <ship_behavior>
+		## cardinality = 0..1
+		sensor_range = int
+		## cardinality = 0..1
+		hyperlane_range = int
+	}
+
+	## cardinality = 0..inf
+	scripted_action = {
+		## cardinality = 0..inf
+		<scripted_action>
+	}
+
+	## replace_scopes = { this = ship from = country }
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	## replace_scopes = { this = country from = country }
+	## cardinality = 0..1
+	show_tech_unlock_if = single_alias_right[trigger_clause]
+
+	## cardinality = 0..inf
+	friendly_aura = single_alias_right[component_template_friendly_aura]
+	## cardinality = 0..inf
+	hostile_aura = single_alias_right[component_template_hostile_aura]
+}
+
+single_alias[component_template_friendly_aura] = {
+	name = scalar
+	## cardinality = 0..1
+	## push_scope = ship
+	limit = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	system_wide = bool
+	## cardinality = 0..1
+	radius = int
+	## cardinality = 0..1
+	system_wide = bool
+	## cardinality = 0..1
+	apply_on = enum[aura_type]
+	stack_info = {
+		id = scalar
+		## cardinality = 0..1
+		priority = int
+	}
+	## cardinality = 0..1
+	## replace_scopes = { this = ship root = ship }
+	modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..1
+	graphics = {
+		## cardinality = 0..inf
+		area_effect = {
+			entity = <model_entity>
+			dynamic_scale = bool
+		}
+		## cardinality = 0..inf
+		ship_effect = {
+			entity = <model_entity>
+			dynamic_scale = bool
+		}
+	}
+}
+
+single_alias[component_template_hostile_aura] = {
+	name = scalar
+	## cardinality = 0..1
+	## push_scope = ship
+	limit = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	system_wide = bool
+	## cardinality = 0..1
+	radius = int
+	## cardinality = 0..1
+	system_wide = bool
+	## cardinality = 0..1
+	apply_on = enum[aura_type]
+	stack_info = {
+		id = scalar
+		## cardinality = 0..1
+		priority = int
+	}
+	## cardinality = 0..1
+	## replace_scopes = { this = ship root = ship }
+	modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..1
+	graphics = {
+		## cardinality = 0..inf
+		area_effect = {
+			entity = <model_entity>
+			dynamic_scale = bool
+		}
+		## cardinality = 0..inf
+		ship_effect = {
+			entity = <model_entity>
+			dynamic_scale = bool
+		}
+	}
+	## cardinality = 0..1
+	damage_per_day = {
+		## cardinality = 0..1
+		accuracy = float
+
+		## cardinality = 0..1
+		damage = { min = float max = float }
+		## cardinality = 0..1
+		hull_damage = float
+		## cardinality = 0..1
+		armor_damage = float
+		## cardinality = 0..1
+		shield_damage = float
+		## cardinality = 0..1
+		armor_penetration = float
+		## cardinality = 0..1
+		shield_penetration = float
+		## cardinality = 0..1
+		size_damage_factor = float
+	}
+}
+
+rows = {
+	row[component_template] = {
+		path = "game/common/component_templates"
+		path_extension = .csv
+        skip_last_column = yes
+		columns = {
+            # TODO [chronicle 3.0.0+] use `<component_template>|$,BIO_$` here when location-aware data types are supported
+			key = <component_template>
+			cost = float
+			power = float
+			min_damage = float
+			max_damage = float
+			hull_damage = float
+			shield_damage = float
+			shield_penetration = float
+			armor_damage = float
+			armor_penetration = float
+			min_windup = float
+			max_windup = float
+			cooldown = float
+			range = float
+			accuracy = float
+			tracking = float
+			size_damage_factor = float
+			military_power_multiplier = float
+			missile_speed = float
+			missile_evasion = float
+			missile_shield = float
+			missile_armor = float
+			missile_health = float
+			missile_retarget_range = float
+		}
+	}
+}
+
+# a component tag causes the game to autogenerate three modifiers:
+# component_tag_energy_weapon_damage_mult, component_tag_energy_weapon_fire_rate_mult and component_tag_energy_speed_mult
+# these modifiers require localisation and a GFX (gfx/interface/icons/modifiers - same name as the component_tag key)
+enums = {
+	complex_enum[component_tag] = {
+		path = "game/common/component_tags"
+		path_extension = .txt
+		start_from_root = yes
+		name = {
+			enum_name
+		}
+	}
+}
+
+enums = {
+	enum[weapon_type] = {
+		weapon_type_energy
+		weapon_type_kinetic
+		weapon_type_explosive
+		weapon_type_strike_craft
+		weapon_type_point_defense
+	}
+	enum[weapon_type2] = {
+		instant
+		point_defence
+		missile
+		planet_killer
+		engulf
+	}
+	enum[weapon_slot_size] = {
+		extra_large
+		large
+		medium
+		small
+		torpedo
+		point_defence
+		planet_killer
+		titanic
+		engulf
+		any
+	}
+	enum[point_defence_target] = {
+		missile
+		strike_craft
+	}
+	enum[utility_slot_size] = {
+		extra_large
+		large
+		medium
+		small
+		aux
+	}
+	enum[mutation_components_size] = {
+		extra_large
+		large
+		medium
+		small
+	}
+	enum[aura_type] = {
+		ships
+		fleets
+	}
+	enum[ship_action_type] = {
+		galactic_object
+		planet
+		fleet
+		self
+	}
+	enum[ship_user_action_type] = {
+		fleet
+		megastructure
+	}
+	enum[ship_action_ai_minister] = {
+		none
+		interior
+		military
+	}
+	enum[ship_action_vfx_type] = {
+		survey_effect
+		harvest_effect
+	}
+	enum[target_focus] = {
+		single
+		spread
+	}
+}

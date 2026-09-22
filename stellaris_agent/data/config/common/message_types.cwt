@@ -1,0 +1,75 @@
+types = {
+	## type_key_filter = message_type
+	type[message_type] = {
+		path = "game/common/message_types"
+		path_extension = .txt
+		name_field = key
+		localisation = {
+			name = name
+			name = "MESSAGE_$_TITLE"
+		}
+		images = {
+			icon = icon
+		}
+	}
+}
+
+message_type = {
+	### Message key, used from code
+	key = scalar
+	### Sprite to use for gui item "message_icon_button"
+	icon =	<sprite>
+	### Frame index to use for gui item "message_frame"
+	## cardinality = 0..1
+	icon_frame = int
+
+	### Localization key to use for title, if empty it will use "MESSAGE_<key>_TITLE instead.
+	## cardinality = 0..1
+	name = localisation
+	### Sound to play on message creation
+	## cardinality = 0..1
+	sound = <sound_effect>
+
+	### Deprecated and does nothing.
+	## cardinality = 0..1
+	sound_is_advisor = bool
+	### Ping map to use for map visualization.
+	## cardinality = 0..1
+	ping = <pingmap>
+
+	### If yes, the message type is not shown in the message settings UI (default: no).
+	## cardinality = 0..1
+	hidden_in_message_settings = bool
+	### Filter category in message settings, valid: 'diplomacy', 'military', 'economy', 'government', 'science', 'fleets', 'planets', 'leaders', 'cosmic_storm', 'focuses', 'other' (default: 'other').
+	## cardinality = 0..1
+	category = enum[message_type_category]
+	### Localization key to use in message settings, if empty it will use name instead.
+	## cardinality = 0..1
+	message_setting_key = localisation
+	### Localization key to use in message settings, if empty it will use name instead.
+	## cardinality = 0..1
+	message_setting_key = scalar
+
+	### Is notification enabled by default (default: yes).
+	## cardinality = 0..1
+	default_notification = bool
+	### Is toast enabled by default (default: no).
+	## cardinality = 0..1
+	default_toast = bool
+	### Is popup enabled by default (default: no).
+	## cardinality = 0..1
+	default_popup = bool
+	### Is auto-pause enabled by default (default: no).
+	## cardinality = 0..1
+	default_autopause = bool
+
+	### default: yes?
+	## cardinality = 0..1
+	can_disable = bool
+}
+
+enums = {
+	enum[message_type_category] = {
+		diplomacy military economy government science fleets planets leaders cosmic_storm focuses other
+	}
+}

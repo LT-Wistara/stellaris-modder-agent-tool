@@ -1,0 +1,34 @@
+types = {
+	type[mandate] = {
+		path = "game/common/mandates"
+		path_extension = .txt
+		localisation = {
+			name = "MANDATE_$"
+			desc = "MANDATE_$_DESC"
+		}
+	}
+}
+
+mandate = {
+	## replace_scopes = { this = planet root = planet }
+	#im not 100% about the scopes here, this is what vanilla appear to be. It uses owner to scope to country
+	valid = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	parameters = {
+		## cardinality = 0..1
+		self = country
+		## cardinality = 0..1
+		enemy = country
+		## cardinality = 0..1
+		#these are targets or scopes. master = country, planet = planet, self = country, enemy = country are what appears in vanilla
+		master = country
+		## cardinality = 0..1
+		planet = planet
+	}
+	## replace_scopes = { this = planet root = planet } #im not 100% about the scopes here, this is what vanilla appear to be. It uses owner to scope to c ocountry
+	## cardinality = 0..1
+	on_term_started = single_alias_right[effect_clause]
+	## replace_scopes = { this = planet root = planet } #im not 100% about the scopes here, this is what vanilla appear to be. It uses owner to scope to c ocountry
+	## cardinality = 0..1
+	on_term_ended = single_alias_right[effect_clause]
+}

@@ -1,0 +1,76 @@
+{
+  "version": "1.5.0",
+  "baseline_version": "1.4.1",
+  "measurement": "UTF-8 json.dumps(reply, ensure_ascii=False) plus newline; complete tools/call JSON-RPC response. Same request ids and arguments.",
+  "detailed_results_unchanged": true,
+  "results": [
+    {
+      "case": "search fuzzy",
+      "request": {
+        "name": "stellaris_search",
+        "arguments": {
+          "query": "has_backgroud_job",
+          "type": "trigger"
+        }
+      },
+      "before_bytes": 4056,
+      "after_bytes": 605,
+      "reduction_percent": 85.1
+    },
+    {
+      "case": "get overloads",
+      "request": {
+        "name": "stellaris_get",
+        "arguments": {
+          "target": "has_background_job",
+          "type": "trigger"
+        }
+      },
+      "before_bytes": 1724,
+      "after_bytes": 650,
+      "reduction_percent": 62.3
+    },
+    {
+      "case": "get modifier",
+      "request": {
+        "name": "stellaris_get",
+        "arguments": {
+          "target": "<district.capped>_max_add",
+          "type": "modifier"
+        }
+      },
+      "before_bytes": 1608,
+      "after_bytes": 545,
+      "reduction_percent": 66.1
+    },
+    {
+      "case": "validate unknown",
+      "request": {
+        "name": "stellaris_validate",
+        "arguments": {
+          "code": "has_magic_planet = yes",
+          "context": "trigger"
+        }
+      },
+      "before_bytes": 1283,
+      "after_bytes": 701,
+      "reduction_percent": 45.4
+    },
+    {
+      "case": "validate known",
+      "request": {
+        "name": "stellaris_validate",
+        "arguments": {
+          "code": "has_unlocked_council_positions >= 2",
+          "context": {
+            "type": "trigger",
+            "scope": "country"
+          }
+        }
+      },
+      "before_bytes": 1091,
+      "after_bytes": 224,
+      "reduction_percent": 79.5
+    }
+  ]
+}

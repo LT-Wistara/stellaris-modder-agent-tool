@@ -1,0 +1,92 @@
+modifier_categories = {
+	All = {
+		supported_scopes = { any }
+	}
+	Pops = {
+		supported_scopes = { species pop_group planet sector galacticobject country colony }
+	}
+	Countries = {
+		supported_scopes = { country federation colony }
+	}
+	Colony = {
+		supported_scopes = { planet ship starbase colony sector galacticobject country }
+	}
+	Armies = {
+		supported_scopes = { army planet sector galacticobject country colony }
+	}
+	Leaders = {
+		supported_scopes = { leader country }
+	}
+	Planets = {
+		supported_scopes = { planet sector galacticobject country colony }
+	}
+	"Pop Factions" = {
+		supported_scopes = { pop_faction country }
+	}
+	"Military Ships" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector colony }
+	}
+	"Civilian Ships" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector colony }
+	}
+	"Science Ships" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector colony }
+	}
+	"Transport Ships" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector colony }
+	}
+	"Owned Ships" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector colony }
+	}
+	Ships = {
+		supported_scopes = { ship starbase fleet planet sector galacticobject country leader }
+	}
+	Fleets = {
+		supported_scopes = { fleet country }
+	}
+	Megastructures = {
+		supported_scopes = { megastructure country }
+	}
+	Habitability = {
+		supported_scopes = { species planet sector galacticobject country colony }
+	}
+	Starbases = {
+		supported_scopes = { starbase sector galacticobject country }
+	}
+	"Economic Units" = {
+		supported_scopes = { any }
+	}
+	"AI Economy" = {
+		supported_scopes = { } # leave empty for scope inspection
+	}
+	"Star Systems" = {
+		supported_scopes = { galacticobject }
+	}
+	Federations = {
+		supported_scopes = { federation }
+	}
+	Espionage = {
+		supported_scopes = { spynetwork country }
+	}
+	"Orbital Stations" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector }
+	}
+	"Space Stations" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector }
+	}
+	Deposits = {
+		supported_scopes = { deposit ship planet sector galacticobject country colony }
+	}
+	"Ship Design Stats" = {
+		supported_scopes = { design }
+	}
+	"Astral Rift" = {
+		supported_scopes = { astral_rift }
+	}
+	"Waystations" = {
+		supported_scopes = { ship starbase fleet galacticobject country sector }
+	}
+	"Galactic Community" = {
+		supported_scopes = { country }
+	}
+}

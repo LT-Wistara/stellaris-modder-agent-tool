@@ -1,0 +1,561 @@
+types = {
+	type[ship_size] = {
+		path = "game/common/ship_sizes"
+		path_extension = .txt
+		subtype[station] = {
+			is_space_station = yes
+		}
+		subtype[ship] = {
+			## cardinality = 0..1
+			is_space_station = no
+		}
+		subtype[space_fauna] = {
+			is_space_fauna_ship = yes
+		}
+		subtype[starbase] = {
+			class = shipclass_starbase
+		}
+		subtype[designable] = {
+			## cardinality = 0..1
+			is_designable = yes
+		}
+		subtype[bio_ship] = {
+			# is_bio_ship = yes
+			is_bio_ship = bool # compatible with fallen empire bio ships
+		}
+		subtype[hero_ship] = {
+			hero_ship = { }
+		}
+		subtype[arkship] = {
+			carries_colony = <planet_class>
+		}
+		subtype[accepts_all_modifiers] = {
+			accepts_all_modifiers = yes
+		}
+		localisation = {
+			name = "$"
+			plural = "$_plural"
+		}
+	}
+}
+
+
+ship_size = {
+
+	## cardinality = 0..2
+	graphical_culture = {
+		## cardinality = 1..inf
+		<graphical_culture>
+	}
+	## cardinality = 0..2
+	graphical_culture = bool
+	## cardinality = 0..1
+	is_space_object = bool
+	## cardinality = 0..1
+	is_reckoning_ship = bool
+	### Indicates that this ship is a type of entropy conduit ship used in the galactic hyperthermia crisis
+	## cardinality = 0..1
+	is_entropy_conduit = bool
+	## cardinality = 0..1
+	scales_with_planet = bool
+	## cardinality = 0..1
+	can_be_inspected = bool
+	## cardinality = 0..1
+	pre_communications_name = localisation
+	## cardinality = 0..1
+	entity = <model_entity>
+	## cardinality = 0..1
+	### reference to other ship_sizes + _entity, handled by manual validator
+	entity = scalar
+	### Used to filter ships sizes for graphical cultures
+	## cardinality = 0..1
+	ship_category = <ship_categories>
+	## cardinality = 0..1
+	formation_priority = int
+	## cardinality = 0..1
+	max_speed = float
+	## cardinality = 0..1
+	acceleration = float
+	## cardinality = 0..1
+	rotation_speed = float
+	## cardinality = 0..1
+	collision_radius = float
+	## cardinality = 0..1
+	max_hitpoints = int
+	## cardinality = 0..1
+	is_listed = bool
+	## cardinality = 0..1
+	components_add_to_cost = bool
+	## cardinality = 0..1
+	is_designable = bool
+	### default: no?
+	## cardinality = 0..1
+	never_mia = bool
+	## cardinality = 0..1
+	### may be deprecated, tell Dayshine and Caligula if yes
+	build_time = int
+	## cardinality = 0..1
+	is_civilian = bool
+	### default: no
+	## cardinality = 0..1
+	cloaking_forbidden = bool
+	## cardinality = 0..1
+	build_block_radius = int
+	## cardinality = 0..1
+	can_disable = bool
+	### Ship stays disabled until explicitly re-enabled from script
+	## cardinality = 0..1
+	stay_disabled = bool
+
+	subtype[accepts_all_modifiers] = {
+		## cardinality = 0..1
+		## replace_scopes = { this = any root = any }
+		modifier = single_alias_right[modifier_clause]
+	}
+	subtype[starbase&!accepts_all_modifiers] = {
+		## cardinality = 0..1
+		## replace_scopes = { this = starbase root = starbase }
+		modifier = single_alias_right[modifier_clause]
+	}
+	subtype[!starbase&!accepts_all_modifiers] = {
+		## cardinality = 0..1
+		## replace_scopes = { this = ship root = ship }
+		modifier = single_alias_right[modifier_clause]
+	}
+	## cardinality = 0..1
+	## replace_scopes = { this = ship root = ship }
+	ship_modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	size_multiplier = float
+	## cardinality = 0..1
+	map_counter_icon = scalar
+	## cardinality = 0..1
+	hull_scale = float
+	## cardinality = 0..1
+	fleet_slot_size = int
+	## cardinality = 0..1
+	section_slots = {
+		## cardinality = 1..inf
+		scalar = {
+			#this is connected to the section templates and global ship designs files!
+			## cardinality = 1..inf
+			locator = enum[model_locator] # this is connected to the ship asset files.
+			## cardinality = 1..inf
+			locator = $mesh_locator # locators in .mesh files (since chronicle 2.1.9)
+		}
+	}
+	## cardinality = 0..1
+	### Determines sprites. ship_size_military_1 is default. The following sprite keys are generated from it: GFX_text_<key>, GFX_<key>, GFX_<key>_top, GFX_<key>_top_damaged
+	icon = scalar
+	## cardinality = 0..1
+	### Determines sprites. ship_size_military_1 is default. The following sprite keys are generated from it: GFX_text_<key>, GFX_<key>, GFX_<key>_top, GFX_<key>_top_damaged
+	icon_cloned = scalar
+	## cardinality = 0..1
+	use_shipnames_from = <ship_size>
+	## cardinality = 0..1
+	combat_size_multiplier = int
+	## cardinality = 0..1
+	num_target_locators = int
+
+	subtype[!arkship] = {
+		## cardinality = 0..1
+		is_space_station = bool
+	}
+
+	#### Identifies this ship size as an orbital ring for UI tooltip selection
+	####
+	## cardinality = 0..1
+	is_orbital_ring = bool
+
+	## cardinality = 0..1
+	icon_frame = int
+	## cardinality = 0..1
+	base_buildtime = int
+	## cardinality = 0..1
+	can_have_federation_design = bool
+	## cardinality = 0..1
+	enable_default_design = bool
+	### If yes, ship design will have a 3d view in the shipset browser during empire customization
+	## cardinality = 0..1
+	enable_3dview_in_ship_browser = bool
+	## cardinality = 0..1
+	selectable = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	default_behavior = <ship_behavior>
+	## cardinality = 0..1
+	ship_roles = {
+		## cardinality = 0..inf
+		value_set[ship_role]
+	}
+	## cardinality = 0..1
+	triggered_ship_roles = {
+		## cardinality = 0..inf
+		{
+			name = value_set[ship_role]
+			trigger = single_alias_right[trigger_clause]
+		}
+	}
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+    ## cardinality = 1..1
+	class = enum[ship_class]
+	## cardinality = 0..1
+	construction_type = value_set[construction_type]
+	## cardinality = 0..1
+	construction_type = {
+		## cardinality = 0..inf
+		value_set[construction_type]
+	}
+	## cardinality = 0..1
+	## replace_scopes = { root = starbase this = starbase }
+	possible_starbase = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { root = starbase this = starbase }
+	potential_starbase = single_alias_right[trigger_clause]
+	## cardinality = 0..inf
+	required_component_set = <component_set.required_component> #this is linked to required components defined as such under component_sets, and is also linked to global_ship_designs!
+	## cardinality = 0..1
+	valid_target_aggressive_stance = bool
+	## cardinality = 0..1
+	auto_upgrade = bool
+
+	## cardinality = 0..1
+	ship_class_icon_frame = int
+	### If yes, the ship_class_icon_frame icon is shown on the galactic map even when the fleet is mobile.
+	### Default: no
+	## cardinality = 0..1
+	force_show_ship_class_icon_frame = bool
+
+	### Strategic resource to evaluate the cost of a ship design associated with this size. This is used to determine if a ship design is more advanced than another: the one that costs more is considered an upgrade compared to the cheaper one
+	### Default is energy
+	## cardinality = 0..1
+	evaluation_resource = <resource>
+
+	## cardinality = 0..1
+	uses_name_prefix = bool
+	## cardinality = 0..1
+	is_space_fauna_ship = bool
+	### default: no?
+	## cardinality = 0..1
+	is_reanimated = bool
+
+	subtype[space_fauna] = {
+		## cardinality = ~1..1
+		ship_category = <ship_categories>
+		## cardinality = ~1..1
+		mutation_components_size = enum[mutation_components_size]
+		## cardinality = ~1..1
+		space_fauna_values = {
+			## cardinality = 0..1
+			age_threshold = {
+				## cardinality = 0..1
+				min = int
+				## cardinality = 0..1
+				max = int
+			}
+			## cardinality = 0..inf
+			culling_value = {
+				category = <economic_category>
+				alias_name[economic_template] = alias_match_left[economic_template]
+			}
+			## cardinality = 0..1
+			monthly_initial_breeding_chance = int
+			## cardinality = 0..1
+			monthly_increased_breeding_chance = int
+			## cardinality = 0..1
+			breeding_cooldown_months = int
+			## cardinality = 0..1
+			merge_with_individuals_amount_to_upgrade = int
+			## cardinality = 0..1
+			reanimated_ship_design = <global_ship_design>
+			### default: no
+			## cardinality = 0..1
+			can_breed_alone = bool
+			## cardinality = 1..1
+			icon_frame = int
+
+		}
+	}
+
+	## cardinality = 0..1
+	takes_name_from_ship_design = bool
+	## cardinality = 0..1
+	flip_control_on_disable = bool
+	## cardinality = 0..1
+	combat_disengage_chance = float
+	## cardinality = 0..1
+	### if yes, ship design will have a 3d view in the ship browser
+	enable_3dview_in_ship_browser = yes
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	potential_country = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	possible_country = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { root = planet this = planet }
+	potential_planet = single_alias_right[trigger_clause]
+	## cardinality = 0..1
+	## replace_scopes = { root = planet this = planet }
+	possible_planet = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { root = any this = any }
+	potential_construction = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { root = any this = any }
+	possible_construction = single_alias_right[trigger_clause]
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..1
+	min_upgrade_cost = {
+		## cardinality = 1..inf
+		<resource> = float
+	}
+
+	### Removes the chance for the ship size to instantly get killed by emergency ftl. It can still be killed by the random Emergency FTL damage effect.
+	## cardinality = 0..1
+	never_lost = bool
+
+	## cardinality = 0..1
+	ai_ship_data = {
+		## cardinality = 0..1
+		min = int_value_field
+		## cardinality = 0..1
+		max = int_value_field
+		## cardinality = 0..1
+		system_mult = value_field
+		## cardinality = 0..1
+		planet_mult = value_field
+		## cardinality = 0..1
+		## replace_scopes = { this = country root = country }
+		fraction = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+		## cardinality = 0..1
+		## replace_scopes = { this = country root = country }
+		fraction = float
+	}
+
+	## cardinality = 0..1
+	available_to_everyone = bool
+
+	## cardinality = 0..1
+	role_background = <sprite>
+
+	## cardinality = 0..1
+	on_click_sound = <sound_effect>
+
+	## cardinality = 0..1
+	map_icon_override = {
+		## cardinality = 0..1
+		normal = <sprite>
+		## cardinality = 0..1
+		mixed = <sprite>
+		## cardinality = 0..1
+		cloaked = <sprite>
+		## cardinality = 0..1
+		encamped = <sprite>
+	}
+
+	## cardinality = 0..1
+	custom_state_loc_prefix = localisation
+
+	## cardinality = 0..1
+	is_bio_ship = bool
+
+	# note that subtype limitation here may be unnecessary according to vanilla
+	subtype[bio_ship] = {
+		## cardinality = 0..1
+		ship_family_name = localisation
+		## cardinality = 0..1
+		growth_stage_descriptor = localisation
+		evaluation_resource = <resource>
+		## cardinality = 0..1
+		bioship_growth_progress_required = int
+		## cardinality = 0..1
+		upgrades_to = <ship_size>
+	}
+
+	#### Default yes, if yes show attack neutral fleet button on military fleet UI
+	####
+	## cardinality = 0..1
+	display_attack_neutral_fleet_button = bool
+
+	#### distance multiplier for construction ships, will multiply the default construction distance between construction ship and construction site to adapt it to the size of the ship.
+	####
+	## cardinality = 0..1
+	construction_offset_mult = float
+
+	#### default: empty. If filled, ship is able to carry a colony of that class and a colony is created by default when the ship is created
+	####
+	#### (see create_ship effect for special case). Ships that are not carrying a colony when supposed to are killed on a daily basis.
+	####
+	#### The ship size must also have "class = shipclass_starbase".
+	## cardinality = 0..1
+	carries_colony = <planet_class>
+
+	#### Note: These variables only apply to ships collecting from other ships'/starbases' stockpiles, not to waystations collecting from the system (waystations ignore these variables).
+	####
+	#### To transfer resources to this ship, if it is not a waystation, collects_stockpile_from must be non-empty and collects_stockpile_to_country must be false.
+	####
+	#### List of ship classes that this ship can collect stockpiles from
+	## cardinality = 0..1
+	collects_stockpile_from = {
+		## cardinality = 0..inf
+		enum[ship_class]
+	}
+
+	#### If yes, resources collected from a stockpile go directly to the country; otherwise to this ship's own stockpile (default: no)
+	####
+	## cardinality = 0..1
+	collects_stockpile_to_country = bool
+
+	#### Maximum total resources in this ship's stockpile
+	####
+	## cardinality = 0..1
+	ship_stockpile_capacity = float
+
+	#### If class is shipclass_constructor, determines which construction orders are available and if the AI economic minister should use this ship size for the construction order.
+	####
+	## cardinality = 0..1
+	construction_capabilities = {
+		## cardinality = 0..1
+		starbase
+		## cardinality = 0..1
+		mining_station
+		## cardinality = 0..1
+		research_station
+		## cardinality = 0..1
+		observation_station
+		## cardinality = 0..1
+		automated_construction
+		## cardinality = 0..1
+		automated_collection
+		## cardinality = 0..1
+		megastructure
+	}
+
+	#### list of scripted actions enabled by this ship size
+	## cardinality = 0..1
+	scripted_action = {
+		## cardinality = 0..inf
+		<scripted_action>
+	}
+
+	#### GFX sprite key for the automation button icon. The selected state uses <key>_selected automatically.
+	####
+	#### default: GFX_fleet_order_automate / GFX_fleet_order_automate_selected
+	## cardinality = 0..1
+	automation_icon = <sprite>
+
+	### If yes, transitioning between movement loop states (idle, moving and their combat variants) keeps the current animation progress instead of restarting the loop. Prevents large hulls such as arkships and behemoths from visibly snapping their move/idle animation on state changes (including script-driven ones).
+	### Default: no.
+	## cardinality = 0..1
+	preserve_movement_animation_progress = bool
+
+	subtype[arkship] = {
+		## cardinality = 0..1
+		is_starting_arkship = bool
+
+		#### will set a base ship size for a ship size; it is used for ark ships so higher tier ark ships can be downgraded to the base version in empire creation
+		####
+		## cardinality = 0..1
+		base_ship_size = <ship_size>
+
+		## cardinality = 0..1
+		accepts_all_modifiers = bool
+
+		#### default: 100.0. Base required progress for arkship encampment/going mobile transition.
+		####
+		## cardinality = 0..1
+		encampment_required_progress = float
+
+		#### Image from gfx/portraits/arkships/ships used in portrait background for arkships
+		####
+		## cardinality = 1..1
+		arkship_picture = filepath[gfx/portraits/arkships/ships/,.dds]
+
+		## cardinality = 0..1
+		planet_view_header = <sprite>
+
+		## cardinality = 1..1
+		is_space_station = no
+	}
+
+	## cardinality = 0..1
+	hero_ship = {
+		#### Name of sprite to use as a background for Fleet UI for single-ship hero-ship fleets.
+		#### default: empty (uses default background)
+		## cardinality = 0..1
+		hero_ship_fleet_background = <sprite>
+
+		#### If class is shipclass_constructor, determines which construction orders are available and if the AI economic minister should use this ship size for the construction order.
+		####
+		#### ai_ship_data should be set appropriately to ensure the AI has sufficient ships for their construction orders.
+		## cardinality = 0..1
+		capabilities = {
+			## cardinality = 0..1
+			can_repair
+			## cardinality = 0..1
+			can_upgrade
+			## cardinality = 0..1
+			can_turn_into_mercenary_enclave
+			## cardinality = 0..1
+			can_transfer
+			## cardinality = 0..1
+			can_split
+			## cardinality = 0..1
+			can_reinforce
+		}
+
+		#### Accepts a text color code for displaying the color of the ship class.
+		####
+		## cardinality = 0..1
+		custom_class_text_color = <text_color>
+
+		## cardinality = 0..1
+		custom_state_loc_prefix = localisation
+	}
+
+	subtype[hero_ship] = {
+		## cardinality = 0..1
+		bioship_growth_progress_required = int
+	}
+}
+
+enums = {
+    enum[ship_class] = {
+        shipclass_military
+        shipclass_constructor
+        shipclass_colonizer
+        shipclass_science_ship
+        shipclass_transport
+        shipclass_mining_station
+        shipclass_research_station
+        shipclass_military_station
+        shipclass_habitat_station
+        shipclass_observation_station
+        shipclass_starbase
+        shipclass_military_special
+        shipclass_gravity_snare
+        shipclass_entropy_conduit
+    }
+	complex_enum[section_slot] = {
+		path = "game/common/ship_sizes"
+		name = {
+			section_slots = {
+				enum_name = {
+				}
+			}
+		}
+	}
+}
+

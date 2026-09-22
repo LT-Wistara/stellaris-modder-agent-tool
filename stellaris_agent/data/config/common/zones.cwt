@@ -1,0 +1,176 @@
+types = {
+    type[zone] = {
+        path = "game/common/zones"
+        path_extension = .txt
+        localisation = {
+            name = $
+            desc = $_desc
+        }
+        images = {
+            icon = icon
+        }
+    }
+}
+
+zone = {
+    ## cardinality = 0..1
+    icon = <sprite>
+    ## cardinality = 0..1
+    icon = icon[gfx/interface/icons/zones]
+    ## cardinality = 0..1
+    base_buildtime = int
+
+    ### optional: default is no limit. Don't set base to less than 0, it will ignore it (for performance optimisation reasons) Mult by -1 to remove limit
+    ## cardinality = 0..1
+    ## replace_scopes = { root = country this = country }
+    empire_limit = {
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    ## cardinality = 0..1
+    planet_limit = float
+
+    ### optional: default is no limit Mult by -1 to remove limit (still affected by is_capped_by_modifier = yes)
+    ## replace_scopes = { root = colony this = colony }
+    ## cardinality = 0..1
+    planet_limit = {
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    ## cardinality = 0..1
+    swap_type = <district>
+    ## cardinality = 0..1
+    swap_type_weight = int_value_field[0..inf]
+
+    ## cardinality = 0..1
+    max_buildings_planet_class = bool
+
+    ## replace_scopes = { this = colony root = colony }
+    ## cardinality = 0..1
+    potential = single_alias_right[trigger_clause]
+
+    ## replace_scopes = { this = colony root = colony }
+    ## cardinality = 0..1
+    unlock = single_alias_right[trigger_clause]
+
+    ## cardinality = 0..inf
+    resources = {
+        ## cardinality = 0..1
+        category = <economic_category>
+        alias_name[economic_template] = alias_match_left[economic_template]
+    }
+
+    ## cardinality = 0..1
+    convert_to = {
+        ## cardinality = 0..inf
+        <zone>
+    }
+
+    ## cardinality = 0..1
+    zone_sets = {
+        ## cardinality = 0..inf
+        value_set[zone_set]
+    }
+
+    ## cardinality = 0..1
+    max_buildings = int
+
+    ## cardinality = 0..1
+    include = {
+        ## cardinality = 0..1
+        all
+        ## cardinality = 0..inf
+        <building>
+    }
+
+    ## cardinality = 0..1
+    exclude = {
+        ## cardinality = 0..inf
+        <building>
+    }
+
+    ## cardinality = 0..~1
+    included_building_sets = {
+        ## cardinality = 0..inf
+        value[building_set]
+    }
+
+    ## cardinality = 0..~1
+    excluded_building_sets = {
+        ## cardinality = 0..inf
+        value[building_set]
+    }
+
+    ## cardinality = 0..1
+    on_queued = single_alias_right[effect_clause]
+    ## cardinality = 0..1
+    on_unqueued = single_alias_right[effect_clause]
+    ## cardinality = 0..1
+    on_built = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = colony root = colony }
+    planet_modifier = single_alias_right[modifier_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = colony root = colony }
+    district_planet_modifier = single_alias_right[modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = colony root = colony }
+    triggered_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = colony root = colony }
+    triggered_district_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    country_modifier = single_alias_right[modifier_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    district_country_modifier = single_alias_right[modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = country root = country }
+    triggered_country_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = country root = country }
+    triggered_district_country_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = pop_group root = pop_group }
+    triggered_planet_pop_group_modifier_for_all = single_alias_right[triggered_modifier_by_planet_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = pop_group root = pop_group }
+    triggered_planet_pop_group_modifier_for_species = single_alias_right[triggered_modifier_by_pop_group_clause]
+
+    ## replace_scopes = { this = colony root = colony }
+    ## cardinality = 0..inf
+    triggered_desc = single_alias_right[triggered_desc_clause]
+
+    ## cardinality = 0..1
+    show_in_tech = <technology>
+
+    ## cardinality = 0..1
+    ## replace_scopes = { root = country this = country }
+    show_tech_unlock_if = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	ai_resource_production = {
+		## cardinality = 0..inf
+		<resource> = float
+		## replace_scopes = { this = colony root = colony }
+		trigger = single_alias_right[trigger_clause]
+	}
+	## cardinality = 0..1
+	ai_weight_coefficient = float
+	## cardinality = 0..1
+	ai_priority = int
+}
+
+
+

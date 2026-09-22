@@ -1,0 +1,40 @@
+types = {
+	type[first_contact_stage] = {
+		path = "game/common/first_contact"
+		path_extension = .txt
+		images = {
+			## optional
+			icon = icon # <sprite>
+			picture = picture # <sprite>
+		}
+	}
+}
+
+## push_scope = first_contact
+first_contact_stage = {
+	## cardinality = 0..1
+	picture = <sprite>
+	## cardinality = 0..1
+	icon = <sprite>
+	difficulty = int[-inf..inf]
+	difficulty = {
+		min = int[-inf..inf]
+		max = int[-inf..inf]
+	}
+
+	## cardinality = 1..inf
+	stage_event = {
+		## cardinality = 0..1
+		icon = <sprite>
+		## cardinality = 0..1
+		summary = localisation
+		# this has to be there or it won't work
+		## cardinality = 1..1
+		event_weight = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+		event = <event.first_contact>
+	}
+
+	on_roll_failed = single_alias_right[effect_clause]
+}

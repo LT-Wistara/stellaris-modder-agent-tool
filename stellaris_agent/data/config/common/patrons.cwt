@@ -1,0 +1,441 @@
+types = {
+    type[patron_type] = {
+        path = "game/common/patrons"
+        path_extension = .txt
+        path_strict = yes
+        subtype[great_patron]= {
+            category = great_patron
+        }
+        subtype[major_patron]= {
+            category = major_patron
+        }
+        subtype[add_modifier]= {
+            add_modifier = yes
+        }
+        subtype[minor_patron]= {
+            category = minor_patron
+        }
+        localisation = {
+            name = "$"
+            desc = "$_desc"
+        }
+        images = {
+            icon = "GFX_$_icon"
+            subtype[!minor_patron] = {
+                ## optional
+                background = "GFX_$_bg"
+                ## optional
+                quadrant_1 = "GFX_$_quadrant_1"
+                ## optional
+                quadrant_2 = "GFX_$_quadrant_2"
+                ## optional
+                quadrant_3 = "GFX_$_quadrant_3"
+                ## optional
+                quadrant_selected_1 ="GFX_$_quadrant_selected_1"
+                ## optional
+                quadrant_selected_2 ="GFX_$_quadrant_selected_2"
+                ## optional
+                quadrant_selected_3 ="GFX_$_quadrant_selected_3"
+                ## optional
+                calling_anim = "GFX_$_calling_anim"
+                ## optional
+                calling_1_bg = "GFX_$_calling_1_bg"
+                ## optional
+                calling_2_bg = "GFX_$_calling_2_bg"
+                ## optional
+                calling_3_bg = "GFX_$_calling_3_bg"
+                ## optional
+                accords_bg = "GFX_$_accords_bg"
+                ## optional
+                active_accords_bg = "GFX_$_active_accords_bg"
+                ## optional
+                covenant_bg = "GFX_$_covenant_bg"
+            }
+        }
+    }
+    type[calling] = {
+        path = "game/common/patrons/callings"
+        path_extension = .txt
+        localisation = {
+            name = "$"
+            desc = "$_desc"
+            ## optional
+            ###text simplifying the trigger conditions, not needed when the trigger is empty
+            tier1 = "$_tier1_trigger_desc"
+            ## optional
+            ###text simplifying the trigger conditions, not needed when the trigger is empty
+            tier2 = "$_tier2_trigger_desc"
+            ## optional
+            ###text simplifying the trigger conditions, not needed when the trigger is empty
+            tier3 = "$_tier3_trigger_desc"
+        }
+    }
+    type[deed] = {
+        path = "game/common/patrons/deeds"
+        path_extension = .txt
+        subtype[has_desc] = {
+            has_desc = yes
+        }
+        localisation = {
+            name = "$"
+            subtype[has_desc] = {
+                desc = "$_desc"
+            }
+        }
+    }
+    type[psionic_aura] = {
+        path = "game/common/patrons/psionic_auras"
+        path_extension = .txt
+        localisation = {
+            name = "$"
+            effect = "$_effect_tt"
+        }
+    }
+}
+
+enums = {
+    complex_enum[deed_counter] = {
+        path = "game/common/patrons/deeds"
+        name = {
+            counter = {
+                enum_name = {}
+            }
+        }
+    }
+    complex_enum[calling_counter] = {
+        path = "game/common/patrons/callings"
+        name = {
+			tier = {
+				counter = {
+					enum_name = {}
+				}
+			}
+        }
+    }
+}
+
+patron_type = {
+    ## cardinality = 1..1
+    category = enum[parton_type_category]
+
+    ## cardinality = 1..1
+    color = {
+        ## cardinality = 3..4
+        float
+    }
+
+    text_color_code = <text_color>
+
+    ## cardinality = 0..1
+    first_contact_event = <event.country>
+
+    ## cardinality = 0..1
+    covenant_event = <event.country>
+
+    ## cardinality = 0..1
+    covenant_confirmation_time = int
+
+    ## cardinality = 0..1
+    add_modifier = bool
+
+    ## cardinality = 0..1
+    pre_communications_name_format = name_format[pre_communications]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { root = country this = country }
+    potential = single_alias_right[trigger_clause]
+
+    ## cardinality = 1..1
+    position = { x = float y = float }
+
+    ## cardinality = 0..1
+    callings = {
+        ## cardinality = 0..inf
+        <calling>
+    }
+
+    ## cardinality = 0..1
+    deeds = {
+        ## cardinality = 0..inf
+        <deed>
+    }
+
+    ## cardinality = 0..1
+    covenant = {
+        name = localisation
+        icon = <sprite>
+        desc = localisation
+
+        ## cardinality = 0..1
+        custom_tooltip = localisation
+        ## cardinality = 0..1
+        show_only_custom_tooltip = yes
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = country root = country }
+        triggered_modifier = single_alias_right[triggered_modifier_clause]
+    }
+
+    ## cardinality = 0..inf
+    passive_accord = {
+        name = localisation
+
+        ## cardinality = 0..1
+        icon = <sprite>|_locked,_unlocked
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { root = country this = country }
+        desc = {
+            trigger = single_alias_right[trigger_clause]
+            text = localisation
+        }
+
+        ## cardinality = 0..1
+        hide_desc = yes
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = country root = country }
+        on_unlock = {
+            ## cardinality = 0..1
+            potential = {
+                alias_name[trigger] = alias_match_left[trigger]
+            }
+            alias_name[effect] = alias_match_left[effect]
+        }
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        on_revert = single_alias_right[effect_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = country root = country }
+        triggered_modifier = single_alias_right[triggered_modifier_clause]
+
+    }
+    ## cardinality = 0..inf
+    active_accord = {
+        name = localisation
+        icon = <sprite>
+        sound = <sound_effect>
+
+        cooldown = int
+        ## cardinality = 0..1
+        first_cooldown = int
+
+        ## cardinality = 0..1
+        activation_cost = {
+            cost = {
+                ## cardinality = 0..inf
+                <resource> = int
+            }
+        }
+
+        ## cardinality = 0..1
+        cost_override_key = localisation
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        potential = single_alias_right[trigger_clause]
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        possible = single_alias_right[trigger_clause]
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        effect = single_alias_right[effect_clause]
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        on_revert = single_alias_right[effect_clause]
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        ai_will_do = {
+            ## cardinality = 0..1
+            factor = float
+            alias_name[trigger] = alias_match_left[trigger]
+        }
+    }
+
+
+}
+
+calling = {
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    potential = single_alias_right[trigger_clause]
+
+    ## cardinality = 0..1
+    first_tier = int
+
+    ###min and max define in 00_define.txt: "CALLINGS_TIER_MIN" and "CALLINGS_TIER_MAX"
+    ## cardinality = 0..inf
+    tier = {
+        attunement = int(0..inf]
+
+        ## cardinality = 0..1
+        ## replace_scopes = { this = country root = country }
+        trigger = single_alias_right[trigger_clause]
+
+        ## cardinality = 0..inf
+        counter = {
+            ## cardinality = 0..inf
+            localisation = {
+                ## cardinality = 0..1
+                max = int
+            }
+        }
+
+    }
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    on_start = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    on_dismissed = single_alias_right[effect_clause]
+
+}
+
+deed = {
+    ## cardinality = 1..1
+    ### must be >0
+    attunement = float(0..inf]
+
+    ###Does the deed has a description describing a specific case for the given attunement (ex: attunement multiplied by a certain value) (Can be empty and no by default)
+    ## cardinality = 0..1
+    has_desc = bool
+
+    ## cardinality = 0..inf
+    counter = {
+        ## cardinality = 0..inf
+        localisation = {
+            ## cardinality = 0..1
+            max = int
+        }
+    }
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    potential = single_alias_right[trigger_clause]
+
+}
+
+psionic_aura = {
+    ## cardinality = 0..1
+    patron = <patron_type>
+    ## cardinality = 0..1
+    background = <sprite>
+
+    ## cardinality = 0..inf
+    intensity_level = {
+        end = int_value_field
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = fleet root = fleet }
+        owner_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = colony root = colony }
+        owner_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = fleet root = fleet }
+        neutral_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = planet root = planet }
+        neutral_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = fleet root = fleet }
+        rival_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+        ## cardinality = 0..inf
+        ## replace_scopes = { this = colony root = colony }
+        rival_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+		## cardinality = 0..1
+		ai_weight_coefficient = float
+    }
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = fleet root = fleet }
+    owner_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = colony root = colony }
+    owner_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = fleet root = fleet }
+    neutral_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = planet root = planet }
+    neutral_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = fleet root = fleet }
+    rival_fleet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = colony root = colony }
+    rival_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_start = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_monthly = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_gain_level = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_lose_level = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_progress_complete = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_type_change = single_alias_right[effect_clause]
+
+    ## cardinality = 0..1
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    on_vanish = single_alias_right[effect_clause]
+
+    ## cardinality = 0..inf
+    ## replace_scopes = { this = system root = system }
+    triggered_system_modifier = single_alias_right[triggered_modifier_clause]
+
+    daily_decrease = {
+        ## replace_scopes = { this = galactic_object root = galactic_object }
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    monthly_decrease = {
+        ## replace_scopes = { this = galactic_object root = galactic_object }
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    ## replace_scopes = { this = galactic_object root = galactic_object }
+    increase_trigger = single_alias_right[trigger_clause]
+
+    monthly_increase = {
+        ## replace_scopes = { this = galactic_object root = galactic_object }
+        alias_name[modifier_rule] = alias_match_left[modifier_rule]
+    }
+
+    ## file_extensions = { png dds tga }
+    aura_galaxy_texture = filepath
+    ## file_extensions = { png dds tga }
+    aura_hyperlane_texture = filepath
+
+}

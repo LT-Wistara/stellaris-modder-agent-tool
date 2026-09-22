@@ -1,0 +1,16 @@
+types = {
+	type[button_effect] = {
+		path = "game/common/button_effects"
+		path_extension = .txt
+	}
+}
+
+button_effect = {
+	## replace_scopes = { this = any root = any from = country }
+	potential = single_alias_right[trigger_clause]
+	## replace_scopes = { this = any root = any from = country }
+	allow = single_alias_right[trigger_clause]
+	## replace_scopes = { this = any root = any from = country }
+	## cardinality = 0..1
+	effect = single_alias_right[effect_clause]
+}

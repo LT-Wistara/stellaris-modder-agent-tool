@@ -1,0 +1,294 @@
+#Add branch office subtype
+types = {
+	## graph_related_types = { technology }
+	type[building] = {
+		path = "game/common/buildings"
+		path_extension = .txt
+		subtype[capped] = {
+			## cardinality = 0..1
+			is_capped_by_modifier = yes
+		}
+		subtype[uncapped] = {
+			is_capped_by_modifier = no
+		}
+		subtype[corporate] = {
+			owner_type = corporate
+		}
+		subtype[holding] = {
+			owner_type = subject_holding
+		}
+		subtype[capital] = {
+			capital = yes
+		}
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## optional
+			icon = icon # icon[gfx/interface/icons/buildings] | <building>
+			## optional
+			icon = "gfx/interface/icons/buildings/$.dds" # inferred
+			## optional
+			ruined_icon = ruined_icon
+		}
+	}
+}
+
+enums = {
+	enum[building_category] = {
+		planet_buildings
+		army
+		manufacturing
+		government
+		pop_assembly
+		resource
+		resources
+		unity
+		research
+		trade
+		amenity
+		amenities
+	}
+}
+
+
+## push_scope = colony
+building = {
+	## cardinality = 0..inf
+	## replace_scopes = { this = colony root = colony }
+	desc = single_alias_right[triggered_desc_clause]
+	## cardinality = 0..1
+	district_limit = float
+	### optional: default is no limit Mult by -1 to remove limit (still affected by is_capped_by_modifier = yes)
+	## replace_scopes = { root = colony this = colony }
+	## cardinality = 0..1
+	district_limit = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	## cardinality = 0..1
+	owner_type = corporate
+	## cardinality = 0..1
+	owner_type = subject_holding
+	## cardinality = 0..1
+	ruined_icon = icon[gfx/interface/icons/buildings]
+	## cardinality = 0..1
+	ruined_icon = <sprite>
+	### used to match with a planet class' building set, can be assigned to multiple sets. Used to remove from construction lists
+	## cardinality = 0..1
+	building_sets = {
+		## cardinality = 0..inf
+		value_set[building_set]
+	}
+
+	## cardinality = 0..1
+	base_buildtime = int
+
+	## cardinality = 0..1
+	empire_limit = float
+
+	### optional: default is no limit. Don't set base to less than 0, it will ignore it (for performance optimisation reasons) Mult by -1 to remove limit
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	empire_limit = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..1
+	planet_limit = float
+
+	### optional: default is no limit Mult by -1 to remove limit (still affected by is_capped_by_modifier = yes)
+	## replace_scopes = { root = planet this = planet }
+	## cardinality = 0..1
+	planet_limit = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	### whether this building is exempt from being swapped into groups by the AI; default: no
+	## cardinality = 0..1
+	exempt_from_ai_planet_specialization = bool
+
+	## cardinality = 0..1
+	category = enum[building_category]
+
+	## cardinality = 0..1
+	icon = icon[gfx/interface/icons/buildings]
+	## cardinality = 0..1
+	icon = <building>
+	## cardinality = 0..1
+	capital = bool
+	## cardinality = 0..1
+	can_demolish = bool
+	## cardinality = 0..1
+	can_be_ruined = bool
+	## cardinality = 0..1
+	can_be_disabled = bool
+	## cardinality = 0..1
+	can_build = bool
+	## cardinality = 0..1
+	base_cap_amount = int
+	## cardinality = 0..1
+	add_to_first_building_slot = yes
+	## cardinality = 0..1
+	is_capped_by_modifier = bool
+	## cardinality = 0..1
+	planetary_ftl_inhibitor = bool
+	## cardinality = 0..1
+	position_priority = int
+	### colony automation will not try to upgrade this
+	## cardinality = 0..1
+	skip_automation_upgrading = bool
+
+	### trigger for allowing/graying out building construction
+	## cardinality = 0..1
+	allow = single_alias_right[trigger_clause]
+
+	subtype[capital] = {
+		capital_tier = int
+	}
+
+	### an action when queued
+	## cardinality = 0..1
+	on_queued = single_alias_right[effect_clause]
+
+	### an action when unqueued
+	## cardinality = 0..1
+	on_unqueued = single_alias_right[effect_clause]
+
+	### an action when built
+	## cardinality = 0..1
+	on_built = single_alias_right[effect_clause]
+
+	### an action when enabled
+	## cardinality = 0..1
+	on_enabled = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	custom_storm_ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	### an action when destroyed
+	## cardinality = 0..1
+	on_destroy = single_alias_right[effect_clause]
+
+	### an action when repaired
+	## cardinality = 0..1
+	on_repaired = single_alias_right[effect_clause]
+
+	### don't know whether it have quantity limit
+	## cardinality = 0..inf
+	show_in_tech = <technology>
+
+	### trigger for displaying building in construction list
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	### ongoing construction will be canceled if this trigger returns true
+	## cardinality = 0..1
+	abort_trigger = single_alias_right[trigger_clause]
+
+	### ongoing construction will be canceled if this trigger returns true
+	## cardinality = 0..1
+	abort_construction_trigger = single_alias_right[trigger_clause]
+
+	### set building to ruined if this trigger returns true
+	## cardinality = 0..1
+	ruined_trigger = single_alias_right[trigger_clause]
+
+	### building will be destroyed (more likely converted, see below) if this trigger returns true
+	## cardinality = 0..1
+	destroy_trigger = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	show_tech_unlock_if = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { this = colony root = colony }
+	planet_modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	country_modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = army root = army }
+	army_modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = system root = system }
+	system_modifier  = single_alias_right[modifier_clause]
+	## cardinality = 0..inf
+	## replace_scopes = { this = pop_group root = pop_group }
+	triggered_planet_pop_group_modifier_for_species = single_alias_right[triggered_modifier_by_pop_group_clause]
+	## cardinality = 0..inf
+	## replace_scopes = { this = pop_group root = pop_group }
+	triggered_planet_pop_group_modifier_for_all = single_alias_right[triggered_modifier_by_planet_clause]
+	## cardinality = 0..inf
+	## replace_scopes = { this = colony root = colony }
+	triggered_planet_modifier = single_alias_right[triggered_modifier_clause]
+	## cardinality = 0..inf
+	## replace_scopes = { this = country root = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_by_planet_clause]
+	## cardinality = 0..inf
+	## replace_scopes = { this = army root = army }
+	triggered_army_modifier = single_alias_right[triggered_modifier_by_planet_clause]
+
+	## cardinality = 0..inf
+	triggered_desc = single_alias_right[triggered_desc_clause]
+
+	## cardinality = 0..1
+	auto_generate_description = bool
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	### building(s) this can be upgraded to
+	## cardinality = 0..1
+	upgrades = {
+		## cardinality = 0..1
+		<building>
+	}
+
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+
+	### not used anymore unless you overwrite economic_plans to not be used.
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..inf
+	ai_resource_production = {
+		## cardinality = 1..inf
+		<resource> = float
+		## cardinality = 0..1
+		trigger = single_alias_right[trigger_clause]
+		## cardinality = 0..inf
+		enum[complex_maths_enum] = value_field
+	}
+
+	### lists candidates this can be converted to if destroy_trigger returns true (e.g. post-conquest)
+	## cardinality = 0..1
+	convert_to = {
+		## cardinality = 1..inf
+		<building>
+	}
+
+	## cardinality = 0..1
+	### Property on buildings which when added to the AI build queue will remove all non essential build tasks.
+	is_essential = bool
+
+	## cardinality = 0..1
+	ai_estimate_without_unemployment = bool
+	## cardinality = 0..1
+	additional_ai_weight = float
+	## cardinality = 0..1
+	ai_weight_coefficient = float
+	## cardinality = 0..1
+	custom_tooltip = localisation
+
+}

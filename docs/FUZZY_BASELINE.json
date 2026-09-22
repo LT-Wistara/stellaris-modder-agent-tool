@@ -1,0 +1,94 @@
+{
+  "version": "1.1.0",
+  "cases": 513,
+  "groups": {
+    "calibration": {
+      "queries": 253,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 12
+    },
+    "calibration/missing_token": {
+      "queries": 44,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 6
+    },
+    "calibration/extra_token": {
+      "queries": 51,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "calibration/typo": {
+      "queries": 52,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 2
+    },
+    "calibration/transposition": {
+      "queries": 52,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 2
+    },
+    "calibration/separator": {
+      "queries": 54,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "holdout": {
+      "queries": 250,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 10
+    },
+    "holdout/missing_token": {
+      "queries": 49,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 6
+    },
+    "holdout/extra_token": {
+      "queries": 50,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "holdout/typo": {
+      "queries": 50,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "holdout/transposition": {
+      "queries": 50,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "holdout/separator": {
+      "queries": 51,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 1
+    },
+    "negative": {
+      "queries": 10,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 0
+    },
+    "negative/unrelated": {
+      "queries": 10,
+      "hit_at_1": 0,
+      "hit_at_5": 0,
+      "returned": 0
+    }
+  },
+  "latency_ms": {
+    "median": 3.42,
+    "p95": 7.41
+  }
+}

@@ -1,0 +1,66 @@
+types = {
+    type[dust_clouds] = {
+        path = "game/common/dust_clouds"
+        path_extension = .txt
+    }
+}
+
+dust_clouds = {
+
+    textures = {
+        ## file_extensions = { png dds tga }
+        opacity_texture = filepath
+        ## file_extensions = { png dds tga }
+        diffuse_texture = filepath
+        ## file_extensions = { png dds tga }
+        lightning_texture_atlas = filepath
+        lightning_horisontal_tiles = int
+        lightning_vertical_tiles = int
+    }
+
+    parameters = {
+        min_size = float
+        max_size = float
+        size_change_speed = float
+        rotation_speed = float
+        counter_rotation_speed = float
+        min_opacity = float
+        max_opacity = float
+        opacity_change_speed = float
+        lightning_intencity_min = float
+        lightning_intencity_max = float
+        lightning_duration_min = float
+        lightning_duration_max = float
+        lightning_switch_interval_min = float
+        lightning_switch_interval_max = float
+        size_change_reversion = bool
+        opacity_change_reversion = bool
+    }
+
+    ambient_object = {
+        type = <ambient_object>
+        scale = float
+        ### If yes, the ambient object is placed at the center of the system.
+        ### In other case the object is placed at a random position.
+        centric = bool
+    }
+
+    ### Effect firing when a new galactic object is covered with fog
+	### This = galactic object
+	### From = Country owning the galactic object
+    ## replace_scope = { this = galactic_object from = country }
+	## cardinality = 0..1
+    on_system_added = single_alias_right[effect_clause]
+
+    ### Effect firing when a galactic object is uncovered from fog
+	### This = galactic object
+	### From = Country owning the galactic object
+    ## replace_scope = { this = galactic_object from = country }
+	## cardinality = 0..1
+    on_system_removed = single_alias_right[effect_clause]
+
+	## replace_scope = { this = galactic_object from = country } # inferred
+	## cardinality = 0..1
+	condition = single_alias_right[trigger_clause]
+}
+

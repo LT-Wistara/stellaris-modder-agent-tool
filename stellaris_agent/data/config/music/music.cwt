@@ -1,0 +1,28 @@
+types = {
+	## type_key_filter = song
+	type[song] = {
+		name_field = name
+		path = "game/music"
+		path_extension = .txt
+	}
+	## type_key_filter = music
+	type[music] = {
+		name_field = name
+		path = "game/music"
+		path_extension = .asset
+		localisation = {
+			name = "$"
+		}
+	}
+}
+
+song = {
+	name = scalar
+}
+music = {
+	name = <song>
+	## file_extensions = { ogg }
+	file = filepath[./]
+	## cardinality = 0..1
+	volume = float
+}

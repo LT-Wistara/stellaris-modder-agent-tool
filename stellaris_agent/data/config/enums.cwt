@@ -1,0 +1,535 @@
+enums = {
+	enum[days_months_year] = {
+		days
+		months
+		years
+	}
+	enum[weight_or_base] = {
+		weight
+		base
+	}
+	enum[weight_or_factor] = {
+		weight
+		factor
+	}
+	enum[relative_power_category] = {
+		all
+		fleet
+		technology
+		economy
+	}
+	enum[relative_power_value] = {
+		pathetic
+		inferior
+		equivalent
+		superior
+		overwhelming
+	}
+	enum[research_area] = {
+		physics
+		society
+		engineering
+	}
+	enum[gender] = {
+		female
+		male
+		indeterminable
+	}
+	enum[genders_not_set] = {
+		male
+		female
+		indeterminable
+		not_set
+		random
+	}
+	enum[hyperlane_euclidean] = {
+		hyperlane
+		euclidean
+	}
+	enum[election_type] = {
+		none
+		democratic
+		oligarchic
+	}
+	enum[war_side] = {
+		attackers
+		defenders
+	}
+	enum[scope_type_token] = {
+		none
+		megastructure
+		planet
+		country
+		ship
+		pop
+		pop_group
+		job
+		pop_job
+		fleet
+		galactic_object
+		leader
+		army
+		ambient_object
+		species
+		design
+		pop_faction
+		war
+		federation
+		starbase
+		deposit
+		sector
+		no_scope
+		archaeological_site
+		first_contact
+		spy_network
+		espionage_operation
+		espionage_asset
+		agreement
+		situation
+		cosmic_storm
+		cosmic_storm_influence_field
+		galactic_community
+		exhibit
+		ship_growth_stage
+		trait
+		storms
+		mission
+		colony
+	}
+	enum[intel_level] = {
+		none
+		low
+		medium
+		high
+		full
+	}
+	enum[tutorial_level] = {
+		0
+		1
+		2
+		full
+		medium
+		none
+	}
+	enum[fleet_stance] = {
+		aggressive
+		passive
+		evasive
+	}
+	enum[action_type] = {
+		positive
+		negative
+		aggressive
+		neutral
+	}
+	enum[truce_type] = {
+		war
+		liberation
+		alliance
+		guarantee
+		none
+	}
+	enum[fleet_order] = {
+		move_to_system_point_order
+		orbit_planet_order
+		build_orbital_station_order
+		build_space_station_order
+		colonize_planet_order
+		survey_planet_order
+		research_discovery_order
+		research_anomaly_order
+		collect_data_fleet_order
+		upgrade_design_at_starbase_fleet_order
+		upgrade_design_at_orbitable_fleet_order
+		return_fleet_order
+		repair_fleet_order
+		evade_hostiles_order
+		follow_order
+		assist_research_order
+		land_armies_order
+		merge_fleet_order
+		aggressive_stance_fleet_order
+		auto_explore_order
+		auto_patrol_order
+		build_megastructure_fleet_order
+		destroy_planet_order
+		planet_killer_weapon_windup_order
+		planet_killer_weapon_fire_order
+		explore_bypass_order
+		explore_astral_rift_fleet_order
+		use_bypass_order
+		jumpdrive_order
+		jumpdrive_windup
+		experimental_subspace_navigation_fleet_order
+		excavate_archaeological_site_fleet_order
+		initiate_cosmic_storm_order
+		terraform_fleet_order
+	}
+	enum[galaxy_setup_value] = {
+		num_empires
+		num_advanced_empires
+		num_fallen_empires
+		num_marauder_empires
+		mid_game_year
+		end_game_year
+		victory_year
+		num_stars
+		num_guaranteed_colonies
+		num_gateways
+		num_wormhole_pairs
+		num_hyperlanes
+		habitable_worlds_scale
+		primitive_worlds_scale
+		crisis_strength_scale
+		tech_costs_scale
+		fallen_empire_strength_scale
+		# undocumented
+        logistic_ceiling_v2
+        growth_scale
+        logistics_fleet_upkeep_costs
+        logistics_planet_deficit_costs
+        num_nomad_empires
+	}
+	enum[federation_succession_type] = {
+		strongest
+		diplomatic_weight
+		rotation
+		challenge
+		random
+		tech
+		fleet
+	}
+	enum[federation_succession_term] = {
+		status_change
+		years_10
+		years_20
+		years_30
+		years_40
+	}
+	enum[federation_setting] = {
+		research_sharing
+		failed_vote_half_price
+	}
+	enum[vote_type] = {
+		unanimous_vote
+		majority_vote
+		leader
+	}
+	enum[acceptance_type] = {
+		default
+		leader
+	}
+	enum[opinion_level] = {
+		terrible
+		poor
+		neutral
+		good
+		excellent
+	}
+	enum[envoy_task] = {
+		improve_relations
+		harm_relations
+		federation
+		galactic_community
+		spy_network
+		first_contact
+		strengthen_imperial_authority
+		undermine_imperial_authority
+        patron_attunement
+		none
+	}
+	enum[planet_resource_compare_type] = {
+		produces
+		upkeep
+		balance
+	}
+	enum[contact_rule] = {
+		always
+		never
+		on_action_only
+		does_first_contact_sites
+		auto
+	}
+	enum[math] = {
+		add
+		subtract
+		multiply
+		divide
+		modulo
+	}
+	enum[crisis_type] = {
+		prethoryn
+		unbidden
+		contingency
+		synth_queen
+		all
+        # undocumented
+        any
+	}
+	enum[ship_owner_type] = {
+		country
+		federation
+		galactic_community
+		global_ship_design
+	}
+	enum[trade_type] = {
+		market_buy
+		market_sell
+		not_set
+	}
+	enum[espionage_operation_target] = {
+		none
+		megastructure
+		country
+		fleet
+		army
+		pop_faction
+		federation
+		starbase
+		spynetwork
+	}
+	enum[scripted_modifier_category] = {
+		all
+		none
+		## modifier_categories = { "Pop Group" "AI Economy" }
+		pop_group
+		## modifier_categories = { Job "AI Economy" }
+		pop_job
+		## modifier_categories = { "Orbital Stations" "Space Stations" "Military Ships" "Civilian Ships" "Science Ships" "Transport Ships" "AI Economy" }
+		ship
+		## modifier_categories = { "Orbital Stations" "Space Stations" "AI Economy" }
+		station
+		## modifier_categories = { Fleets "AI Economy" }
+		fleet
+		## modifier_categories = { Countries "AI Economy" }
+		country
+		## modifier_categories = { Armies "AI Economy" }
+		army
+		## modifier_categories = { Leaders "AI Economy" }
+		leader
+		## modifier_categories = { Planets "AI Economy" }
+		planet
+		component
+		## modifier_categories = { "Pop Factions" "AI Economy" }
+		pop_faction
+		## modifier_categories = { Deposits "AI Economy" }
+		deposit
+		## modifier_categories = { Megastructures "AI Economy" }
+		megastructure
+		## modifier_categories = { Habitability "AI Economy" }
+		habitability
+		## modifier_categories = { Starbases "AI Economy" }
+		starbase
+		## modifier_categories = { "Economic Units" "AI Economy" }
+		economic_unit
+		## modifier_categories = { "Star Systems" "AI Economy" }
+		system
+		## modifier_categories = { Federations "AI Economy" }
+		federation
+		## modifier_categories = { Espionage "AI Economy" }
+		espionage
+		## modifier_categories = { Colony "AI Economy" }
+		colony
+	}
+	enum[job_trigger] = {
+		can_fill_ruler_job
+		can_fill_specialist_job
+		can_fill_worker_job
+		can_fill_drone_job
+		can_fill_precursor_job
+	}
+	enum[agreement_subject_expand] = {
+		can_expand
+		can_expand_with_tithe
+		cannot_expand
+	}
+	enum[agreement_war] = {
+		none
+		defensive
+		offensive
+		all
+	}
+	enum[megastructure_block_type] = {
+		none
+		self_type
+		multi_stage_type
+	}
+	enum[ai_attitude_behaviour] = {
+		attack
+		weaken
+		alliance
+		vassalize
+		trade
+		coexist
+	}
+	enum[game_stage] = {
+		early
+		middle
+		end
+	}
+	enum[country_relation] = {
+		commercial_pact
+		migration_access
+		research_agreement
+		defensive_pact
+		is_under_societal_enlightenment
+		is_under_open_technological_enlightenment
+		is_under_stratified_technological_enlightenment
+		has_pre_ftl_trade
+	}
+	enum[hardcoded_map_mode_tooltip] = {
+		opinion
+		country
+		intel
+	}
+	enum[hardcoded_map_mode_filter] = {
+		exploration
+		expansion
+		exploitation
+		details
+		unions
+		players
+		sectors
+		trade_routes
+	}
+	enum[refresh_portraits] = {
+		planet
+		room
+		character
+		all
+	}
+	enum[mia_type] = {
+		mia_return_home
+		mia_emergency_ftl
+		mia_fleet_eaten
+	}
+	enum[range_components] = {
+		weapon
+		strike_craft
+	}
+	enum[any_or_bool] = {
+		any
+		yes
+		no
+	}
+	enum[any_or_none_or_bool] = {
+		any
+		none
+		yes
+		no
+	}
+	enum[mission_status] = {
+		success
+		stop
+	}
+	enum[type_or_resource] = {
+		resource
+		type
+	}
+	enum[ship_rarity] = {
+		common
+		rare
+		epic
+		exceptional
+		highest
+	}
+	enum[specimens_rarity] = {
+		common
+		rare
+		epic
+		exceptional
+	}
+	enum[growth_stance] = {
+		controlled
+		excessive
+		none
+	}
+	enum[specimen_type] = {
+		aesthetic_wonder
+		historical_item
+		xeno_geology
+	}
+	enum[mutations_type] = {
+		offensive
+		defensive
+		aux
+	}
+	enum[country_focus_rewards_mode] = {
+		right
+		left
+		end
+	}
+	enum[wiki_key] = {
+		"barren world"
+		"frozen world"
+		"gaia world"
+		"orbital habitat"
+		"machine world"
+		"molten world"
+		"tomb world"
+		"ocean world"
+		"relic world"
+		"main interface"
+		"trade"
+		"starbase"
+	}
+	enum[trigger_custom_progress] = {
+		normal
+		simplified
+		clamped
+	}
+	enum[target_type] = {
+		enemy
+		ally
+		controlled
+		owned
+	}
+	enum[mega_build_type] = {
+		inside_gravity_well
+		outside_gravity_well
+		around_planet
+	}
+	enum[onclick] = {
+		market
+		discoveries
+		technology
+		traditions
+		situation
+		claims
+		crisis
+	}
+	enum[parton_type_category] = {
+		major_patron
+		minor_patron
+		great_patron
+	}
+	enum[patron_contact_state] = {
+		none
+		in_progress
+		completed
+	}
+	enum[system_direction] = {
+		left
+		right
+		corewards
+		rimwards
+	}
+	enum[starbase_type] = {
+		starbase
+		orbital_ring
+		waystation
+        arkship
+		all
+	}
+    enum[carrier_type] = {
+        planet
+        ship
+    }
+    # from interface/customize_species_editors.gui:2416
+    enum[customize_species_editor_header] = {
+        TYPE_HEADER_01
+        TYPE_HEADER_02
+        TYPE_HEADER_03
+        TYPE_HEADER_04
+    }
+}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stellaris-agent-tool"
+version = "1.1.1"
+description = "Offline, provenance-first Stellaris CWT search and validation MCP server"
+requires-python = ">=3.9"
+dependencies = []
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.scripts]
+stellaris-agent-tool = "stellaris_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["stellaris_agent*"]
+
+[tool.setuptools.package-data]
+stellaris_agent = ["data/config/*.cwt", "data/config/**/*.cwt", "data/LICENSE.cwt", "data/UPSTREAM.json"]

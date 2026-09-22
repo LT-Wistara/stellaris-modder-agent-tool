@@ -1,0 +1,89 @@
+types = {
+	type[edict] = {
+		path = "game/common/edicts"
+		path_extension = .txt
+		subtype[wartime] = {
+			is_wartime_edict = yes
+		}
+		localisation = {
+			name = "edict_$"
+			description = "edict_$_desc"
+		}
+		images = {
+			icon = icon # <sprite>
+		}
+	}
+}
+
+## replace_scopes = { this = country root = country }
+edict = {
+	### number of days the trigger is active.
+	length = int
+	icon = <sprite>
+
+	## cardinality = 0..1
+	is_wartime_edict = yes
+
+	## cardinality = 0..1
+	edict_lock_in_months = int
+	## cardinality = 0..1
+	edict_cap_usage = int
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	### cost multiplier for a specific ambition ( 0.1 = 90% discount of the total unity cost etc).
+	## cardinality = 0..1
+	unity_cost_mult = float
+
+	### a list of modifiers.
+	## cardinality = 0..1
+	modifier = {
+		## cardinality = 0..1
+		custom_tooltip = localisation
+		## cardinality = 0..1
+		show_only_custom_tooltip = bool
+		alias_name[modifier] = alias_match_left[modifier]
+	}
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = country root = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	relay_network_modifier = single_alias_right[modifier_clause]
+
+	### country trigger to decide whether the edict should be shown.
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	### country trigger to decide if whether this edict can be activated.
+	## cardinality = 0..1
+	allow = single_alias_right[trigger_clause]
+
+	### tech requirements for this trigger.
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+
+	## cardinality = 0..1
+	show_tech_unlock_if = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	### an effect that is executed when this trigger activates.
+	## cardinality = 0..1
+	effect = single_alias_right[effect_clause]
+
+	### an effect that is executed when this trigger activates.
+	## cardinality = 0..1
+	on_disabled = single_alias_right[effect_clause]
+
+}
+

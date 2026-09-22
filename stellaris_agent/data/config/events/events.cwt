@@ -1,0 +1,537 @@
+types = {
+	## graph_related_types = { special_project anomaly_category }
+	type[event] = {
+		name_field = id
+		path = "game/events"
+		path_extension = .txt
+
+		subtype[inherited] = {
+			base = <event>
+		}
+
+		## group = event_attribute
+		subtype[triggered] = {
+			is_triggered_only = yes
+		}
+		subtype[mean_time_to_happen] = {
+			mean_time_to_happen = {}
+		}
+		## group = event_attribute
+		subtype[hidden] = {
+			hide_window = yes
+		}
+		## group = event_attribute
+		subtype[major] = {
+			major = yes
+		}
+		## group = event_attribute
+		subtype[diplomatic] = {
+			diplomatic = yes
+		}
+
+		## group = event_type
+		## type_key_filter = event
+		## push_scope = any
+		subtype[scopeless] = {}
+		## group = event_type
+		## type_key_filter = country_event
+		## push_scope = country
+		## display_name = Country Event
+		subtype[country] = {}
+		## group = event_type
+		## type_key_filter = observer_event
+		## push_scope = country
+		## display_name = Observer Event
+		subtype[observer] = {}
+		## group = event_type
+		## type_key_filter = pop_group_event
+		## push_scope = pop_group
+		## display_name = Pop Group Event
+		subtype[pop_group] = {}
+		## group = event_type
+		## type_key_filter = pop_faction_event
+		## push_scope = pop_faction
+		## display_name = Pop Faction Event
+		subtype[pop_faction] = {}
+		## group = event_type
+		## type_key_filter = planet_event
+		## push_scope = planet
+		## display_name = Planet Event
+		subtype[planet] = {}
+		## group = event_type
+		## type_key_filter = first_contact_event
+		## push_scope = first_contact
+		## display_name = First Contact Event
+		subtype[first_contact] = {}
+		## group = event_type
+		## type_key_filter = ship_event
+		## push_scope = ship
+		## display_name = Ship Event
+		subtype[ship] = {}
+		## group = event_type
+		## type_key_filter = fleet_event
+		## push_scope = fleet
+		## display_name = Fleet Event
+		subtype[fleet] = {}
+		## group = event_type
+		## type_key_filter = system_event
+		## push_scope = system
+		## display_name = System Event
+		subtype[system] = {}
+		## group = event_type
+		## type_key_filter = starbase_event
+		## push_scope = starbase
+		## display_name = Starbase Event
+		subtype[starbase] = {}
+		## group = event_type
+		## type_key_filter = bypass_event
+		## push_scope = bypass
+		## display_name = Bypass Event
+		subtype[bypass] = {}
+		## group = event_type
+		## type_key_filter = astral_rift_event
+		## push_scope = astral_rift
+		## display_name = Astral Rift Event
+		subtype[astral_rift] = {}
+		## group = event_type
+		## type_key_filter = espionage_operation_event
+		## push_scope = espionage_operation
+		## display_name = Espionage Operation Event
+		subtype[espionage_operation] = {}
+		## group = event_type
+		## type_key_filter = leader_event
+		## push_scope = leader
+		## display_name = Leader Event
+		subtype[leader] = {}
+		## group = event_type
+		## type_key_filter = situation_event
+		## push_scope = situation
+		## display_name = Situation Event
+		subtype[situation] = {}
+		## group = event_type
+		## type_key_filter = agreement_event
+		## push_scope = agreement
+		## display_name = Agreement Event
+		subtype[agreement] = {}
+		## group = event_type
+		## type_key_filter = cosmic_storm_event
+		## push_scope = cosmic_storm
+		## display_name = Cosmic Storm Event
+		subtype[cosmic_storm] = {}
+		## group = event_type
+		## type_key_filter = cosmic_storm_influence_field_event
+		## push_scope = cosmic_storm_influence_field
+		## display_name = Cosmic Storm Influence Field Event
+		subtype[cosmic_storm_influence_field] = {}
+		## group = event_type
+		## type_key_filter = carrier_event
+		## push_scope = carrier
+		## display_name = Carrier Event
+		subtype[carrier] = {}
+		## group = event_type
+		## type_key_filter = colony_event
+		## push_scope = colony
+		## display_name = Colony Event
+		subtype[colony] = {}
+
+		localisation = {
+			subtype[!hidden] = {
+				title = title
+				desc = desc
+			}
+		}
+		images = {
+			subtype[!hidden] = {
+				## primary
+				## optional
+				picture = picture # <sprite>, can be triggered or/and multiple
+				## primary
+				## optional
+				picture = picture_event_data
+			}
+		}
+	}
+}
+
+event = {
+	id = scalar
+
+	subtype[inherited] = {
+		base = <event>
+		## cardinality = 0..1
+		desc_clear = yes
+		## cardinality = 0..1
+		option_clear = yes
+		## cardinality = 0..1
+		picture_clear = yes
+		## cardinality = 0..1
+		show_sound_clear = yes
+		## cardinality = 0..1
+		trigger_clear = yes
+	}
+
+	subtype[hidden] = {
+		## severity = info
+		## cardinality = 0..1
+		title = OK
+		## severity = info
+		## cardinality = 0..1
+		desc = OK
+
+		## severity = info
+		## cardinality = 0..0
+		picture = scalar
+		## severity = info
+		## cardinality = 0..0
+		location = scalar
+		## severity = info
+		## cardinality = 0..0
+		show_sound = scalar
+	}
+
+	subtype[!hidden] = {
+		title = localisation
+		desc = localisation
+
+		## cardinality = 0..1
+		diplomatic_title = localisation
+
+		## cardinality = 0..inf
+		desc = {
+			## cardinality = 0..1
+			trigger = single_alias_right[trigger_clause]
+			## cardinality = 0..1
+			exclusive_trigger = single_alias_right[trigger_clause]
+			## cardinality = 0..inf
+			text = localisation
+			## cardinality = 0..1
+			show_sound = <sound_effect>
+		}
+
+		subtype[!diplomatic] = {
+			## cardinality = 1..inf
+			picture = <sprite>
+			## cardinality = 0..inf
+			picture = {
+				## cardinality = 0..1
+				trigger = single_alias_right[trigger_clause]
+				picture = <sprite>
+			}
+		}
+
+		subtype[diplomatic] = {
+			## cardinality = 0..inf
+			picture = <sprite>
+			## cardinality = 0..inf
+			picture = {
+				## cardinality = 0..1
+				trigger = single_alias_right[trigger_clause]
+				picture = <sprite>
+			}
+		}
+
+		## cardinality = 0..inf
+		picture_event_data = {
+			## cardinality = 0..1
+			trigger = single_alias_right[trigger_clause]
+			#only one of each of these!
+			## cardinality = 0..1
+			room = <asset_selector.room>
+			## cardinality = 0..1
+			room = scope[country]
+			## cardinality = 0..1
+			room = scope[species]
+			## cardinality = 0..1
+			room = scope[leader]
+			## cardinality = 0..1
+			room = icon[gfx/portraits/city_sets]
+			## cardinality = 0..1
+			room = icon[gfx/portraits/city_sets]
+			## cardinality = 0..1
+			portrait = <portrait>
+			## cardinality = 0..1
+			portrait = scope[country]
+			## cardinality = 0..1
+			portrait = scope[species]
+			## cardinality = 0..1
+			portrait = scope[leader]
+			## cardinality = 0..1
+			planet_background = scope[country]
+			## cardinality = 0..1
+			planet_background = scope[species]
+			## cardinality = 0..1
+			planet_background = scope[planet]
+			## cardinality = 0..1
+			planet_background = scope[ship]
+			## cardinality = 0..1
+			planet_background = scope[carrier]
+			## cardinality = 0..1
+			planet_background = <planet_class>
+			## cardinality = 0..1
+			graphical_culture = <graphical_culture>
+			## cardinality = 0..1
+			graphical_culture = scope[country]
+			## cardinality = 0..1
+			graphical_culture = scope[species]
+			## cardinality = 0..1
+			city_level = scope[country]
+			## cardinality = 0..1
+			city_level = scope[species]
+			## cardinality = 0..1
+			city_level = scope[planet]
+			### default: yes
+			## cardinality = 0..1
+			tooltip = bool
+		}
+		## cardinality = 0..1
+		event_window_type = enum[event_window_type]
+		## cardinality = 0..1
+		event_picture_background = <sprite>
+		## cardinality = 0..1
+		notification_event_icon = <sprite>
+
+		## cardinality = 0..inf
+		show_sound = <sound_effect>
+		## cardinality = 0..inf
+		show_sound = {
+			sound = <sound_effect>
+			## cardinality = 0..1
+			sound_is_advisor = bool
+			## cardinality = 0..1
+			trigger = single_alias_right[trigger_clause]
+		}
+		### Force a diplomatic event to be viewed
+		## cardinality = 0..1
+		force_open = bool
+
+		## cardinality = 0..1
+		location = scope_field
+
+		## cardinality = 0..1
+		diplomatic = bool
+
+		### Forces the event to pop_group-up even if player has suppressed pop_group ups
+		## cardinality = 0..1
+		auto_opens = bool
+
+		## cardinality = 0..1
+		is_test_event = bool
+
+		## cardinality = 0..inf
+		option = {
+			## cardinality = 1..inf
+			name = localisation
+			## cardinality = 1..inf
+			name = {
+				trigger = single_alias_right[trigger_clause]
+				## cardinality = 0..1
+				text = localisation
+			}
+			## cardinality = 1..inf
+			name = {
+				exclusive_trigger = single_alias_right[trigger_clause]
+				## cardinality = 0..1
+				text = localisation
+			}
+
+			## cardinality = 0..1
+			icon = {
+				icon = <sprite>
+				## cardinality = 0..1
+				icon_background = <sprite>
+				## cardinality = 0..1
+				text = localisation
+			}
+
+			## cardinality = 0..1
+			sound = scalar
+
+			## cardinality = 0..1
+			trigger = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			allow = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			exclusive_trigger = single_alias_right[trigger_clause]
+
+			## cardinality = 0..1
+			ai_chance = {
+				alias_name[modifier_rule] = alias_match_left[modifier_rule]
+			}
+
+			## cardinality = 0..1
+			response_text = localisation
+
+			## cardinality = 0..1
+			is_dialog_only = bool
+
+			subtype[diplomatic] = {
+				## cardinality = 0..1
+				custom_gui = scalar #points to a gui_type, currently all are defined as aliases but this needs to be updated
+				### Binds this option to the "dismiss" action
+				## cardinality = 0..1
+				default_hide_option = bool
+			}
+
+			### default: no
+			## cardinality = 0..1
+			hide_option_if_not_allowed = bool
+			## cardinality = 0..1
+			default_hide_option = bool
+			## cardinality = 0..1
+			custom_gui = scalar #points to a gui_type, currently all are defined as aliases but this needs to be updated
+
+			## cardinality = 0..1
+			tag = value_set[event_option_tag]
+
+			alias_name[effect] = alias_match_left[effect]
+		}
+	}
+
+	## cardinality = 0..1
+	event_message_type = <message_type>
+
+	## cardinality = 0..1
+	event_chain = <event_chain>
+
+	## cardinality = 0..1
+	situation = scope[situation]
+
+	## cardinality = 0..1
+	message_desc = localisation
+
+	## cardinality = 0..1
+	hide_window = bool
+
+	## cardinality = 0..1
+	is_triggered_only = bool
+
+	## cardinality = 0..1
+	auto_opens = bool
+
+	## cardinality = 0..1
+	is_test_event = bool
+
+	## cardinality = 0..1
+	specimen = <specimen>
+
+	### Event will show for other countries if this is set to yes. Those countries can be narrowed down with major_trigger.
+	## cardinality = 0..1
+	major = yes
+	subtype[major] = {
+		### Triggers for other countries on whether a major event should show for them. I.e. if it reads has_ethic = ethic_materialist, then all materialist countries will see the event.
+		## cardinality = 0..1
+		major_trigger = single_alias_right[trigger_clause]
+	}
+	### Event will cancel (disappear without executing any of the effects in the options) if these triggers return true.
+	## cardinality = 0..1
+	abort_trigger = single_alias_right[trigger_clause]
+	### Effects executed when abort_trigger returns true.
+	## cardinality = 0..1
+	abort_effect = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	fire_only_once = bool
+
+	## cardinality = 0..1
+	trackable = bool
+
+	## cardinality = 0..1
+	is_advisor_event = bool
+
+	## cardinality = 0..1
+	auto_select = bool
+
+	subtype[triggered] = {
+		## cardinality = 0..1
+		weight_multiplier = {
+			factor = float
+			## cardinality = 0..100
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+	}
+	subtype[!triggered] = {
+		## cardinality = 0..1
+		mean_time_to_happen = {
+			## cardinality = 0..1
+			years = int
+
+			## cardinality = 0..1
+			months = int
+
+			## cardinality = 0..1
+			days = int
+
+			## cardinality = 0..100
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+	}
+
+	subtype[diplomatic] = {
+		### The title that shows at the top of the diplomatic screen (above the portrait/room, not above the event text)
+		## cardinality = 0..1
+		diplomatic_title = localisation
+		## cardinality = 0..1
+		custom_gui = scalar #same as previous, needs to be gui_type
+		## cardinality = 0..1
+		custom_gui_option = scalar #same as previous, needs to be gui_type
+	}
+	subtype[colony] = {
+		### Like trigger, but only uses certain simple triggers
+		## cardinality = 0..1
+		pre_triggers = {
+			alias_name[colony_pre_trigger] = alias_match_left[colony_pre_trigger]
+		}
+	}
+	subtype[carrier] = {
+		### Like trigger, but only uses certain simple triggers
+		## cardinality = 0..1
+		pre_triggers = {
+			alias_name[colony_pre_trigger] = alias_match_left[colony_pre_trigger]
+		}
+	}
+	subtype[country] = {
+		### Like trigger, but only uses certain simple triggers
+		## cardinality = 0..1
+		pre_triggers = {
+			alias_name[country_pre_trigger] = alias_match_left[country_pre_trigger]
+		}
+	}
+	subtype[fleet] = {
+		## cardinality = 0..1
+		archaeology = bool
+	}
+	subtype[first_contact] = {
+		## cardinality = 0..1
+		first_contact = bool
+	}
+	subtype[espionage_operation] = {
+		## cardinality = 0..1
+		espionage_operation = bool
+	}
+	subtype[astral_rift] = {
+		## cardinality = 0..1
+		astral_rift = bool
+		## cardinality = 0..1
+		difficulty = int
+	}
+
+	## cardinality = 0..1
+	trigger = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	immediate = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	after = single_alias_right[effect_clause]
+}
+
+enums = {
+	enum[event_window_type] = {
+		leader_recruit
+		leader_story
+		leader_conversation
+		crisis_leader_conversation
+	}
+}

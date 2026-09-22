@@ -1,0 +1,80 @@
+{
+  "measured_at_utc": "2026-09-19T08:56:39.299247+00:00",
+  "python": "3.9.7",
+  "method": "Actual stdout UTF-8 bytes including trailing newline; CLI keeps indent=2. MCP measures each complete tools/call JSON-RPC response including envelope and newline, excluding initialize and stderr. Same arguments and Python before/after.",
+  "cases": [
+    {
+      "label": "get has_background_job",
+      "cli_args": [
+        "get",
+        "has_background_job"
+      ],
+      "mcp_tool": "stellaris_get_definition",
+      "mcp_arguments": {
+        "name": "has_background_job"
+      },
+      "cli": {
+        "before_bytes": 8980,
+        "after_bytes": 2066,
+        "reduction_percent": 76.99
+      },
+      "semantic_payload_equal_after_resolving_references": true,
+      "mcp": {
+        "before_bytes": 15004,
+        "after_bytes": 1724,
+        "reduction_percent": 88.51
+      },
+      "mcp_content_summary": "CONFIRMED_CWT: has_background_job (2 definitions)"
+    },
+    {
+      "label": "get <district.capped>_max_add",
+      "cli_args": [
+        "get",
+        "<district.capped>_max_add"
+      ],
+      "mcp_tool": "stellaris_get_definition",
+      "mcp_arguments": {
+        "name": "<district.capped>_max_add"
+      },
+      "cli": {
+        "before_bytes": 8580,
+        "after_bytes": 2058,
+        "reduction_percent": 76.01
+      },
+      "semantic_payload_equal_after_resolving_references": true,
+      "mcp": {
+        "before_bytes": 14024,
+        "after_bytes": 1608,
+        "reduction_percent": 88.53
+      },
+      "mcp_content_summary": "CONFIRMED_CWT: <district.capped>_max_add (1 definitions)"
+    },
+    {
+      "label": "validate has_magic_planet = yes",
+      "cli_args": [
+        "validate",
+        "--code",
+        "has_magic_planet = yes",
+        "--context",
+        "trigger"
+      ],
+      "mcp_tool": "stellaris_validate",
+      "mcp_arguments": {
+        "code": "has_magic_planet = yes",
+        "context": "trigger"
+      },
+      "cli": {
+        "before_bytes": 8058,
+        "after_bytes": 1536,
+        "reduction_percent": 80.94
+      },
+      "semantic_payload_equal_after_resolving_references": true,
+      "mcp": {
+        "before_bytes": 13408,
+        "after_bytes": 1283,
+        "reduction_percent": 90.43
+      },
+      "mcp_content_summary": "UNKNOWN: 1 findings"
+    }
+  ]
+}

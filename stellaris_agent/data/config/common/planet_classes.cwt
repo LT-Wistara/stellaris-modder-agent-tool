@@ -1,0 +1,284 @@
+types = {
+	## type_key_filter <> random_list
+	type[planet_class] = {
+		path = "game/common/planet_classes"
+		path_extension = .txt
+		subtype[star] = {
+			star = yes
+		}
+		subtype[astral_scar] = {
+			astral_scar = yes
+		}
+		subtype[planet] = {
+			## cardinality = 0..1
+			star = no
+		}
+		subtype[habitable_planet] = {
+			## cardinality = 0..1
+			colonizable = yes
+		}
+		subtype[unhabitable_ringworld] = {
+			ringworld = yes
+			colonizable = no
+		}
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+			subtype[habitable_planet] = {
+				adjective = "$_adj"
+				habitability = "mod_$_habitability"
+				preference_trait = "trait_$_preference"
+				preference_trait_desc = "trait_$_preference_desc"
+			}
+		}
+		images = {
+			## optional
+			icon = icon # <sprite>
+		}
+	}
+	## type_key_filter = random_list
+	type[planet_class_random_list] = {
+		path = "game/common/planet_classes"
+		name_field = "name"
+	}
+
+}
+
+#TODO Confirm
+#TODO Expand to add colonizable subtype
+planet_class = {
+	## cardinality = 0..1
+	atmosphere_color = colour[hsv]
+	## cardinality = 0..1
+	atmosphere_intensity = float
+	## cardinality = 0..1
+	atmosphere_width = float
+
+	## cardinality = 0..1
+	climate = localisation
+
+	entity = <model_entity>
+	entity = scalar # TODO: entity somehow
+    ## cardinality = 0..1
+    preview_entity = <model_entity>
+	## cardinality = 0..1
+	preview_entity = scalar # TODO: entity somehow
+	## cardinality = 0..1
+	overlay_entity = <model_entity>
+    ## cardinality = 0..1
+    overlay_entity = scalar # TODO: entity somehow
+	## cardinality = 0..1
+	entity_scale = float
+	## cardinality = 0..1
+	outliner_planet_type = special
+	## cardinality = 0..1
+	fixed_entity_scale = bool
+	## cardinality = 0..1
+	icon = <sprite>
+	## cardinality = 1..1
+	icon_large = <sprite>
+
+	## cardinality = 0..inf
+	conditional_icon = {
+		## replace_scopes = { this = colony root = colony }
+		## cardinality = 0..1
+		trigger = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		icon = <sprite>
+		## cardinality = 1..1
+		icon_large = <sprite>
+	}
+
+	subtype[planet] = {
+		icon = <sprite>
+		## cardinality = 0..1
+		habitat = bool
+		## cardinality = 0..1
+		outliner_planet_type = special
+	}
+	subtype[star] = {
+		## cardinality = 0..1
+		star_gfx = bool
+	}
+	## cardinality = 0..1
+	astral_rift_gfx = bool
+	## cardinality = 0..1
+	spawn_odds = float
+	## cardinality = 0..1
+	production_spawn_chance = float
+	## cardinality = 0..1
+	#only for planets defined as colonizable!
+	city_color_lut = scalar
+	## cardinality = 0..1
+	extra_orbit_size = float
+	## cardinality = 0..1
+	extra_planet_count = float
+	## cardinality = 0..1
+	chance_of_ring = float
+	## cardinality = 0..1
+	min_distance_from_sun = int
+	## cardinality = 0..1
+	max_distance_from_sun = int
+	## cardinality = 0..1
+	planet_size = {
+		min = int
+		max = int
+	}
+
+	## cardinality = 0..1
+	planet_size = int
+	## cardinality = 0..1
+	moon_size = int
+	## cardinality = 0..1
+	moon_size = {
+		min = int
+		max = int
+	}
+	## cardinality = 0..1
+	enable_tilt = bool
+	## cardinality = 0..1
+	place_entity_on_planet_plane = bool
+	## cardinality = 0..1
+	entity_face_object = bool
+	## cardinality = 0..1
+	can_be_moon = bool #this should be checked against solar system initializers - only planets defined as can_be_mmon can be spawned as moons there!
+	## cardinality = 0..1
+	space_monster_target = bool
+	## cardinality = 0..1
+	asteroid = bool
+	## cardinality = 0..1
+	star = bool
+	## cardinality = 0..1
+	astral_scar = bool
+	## cardinality = 0..1
+	ringworld = bool
+	## cardinality = 0..1
+	synaptic_lathe = bool
+	## cardinality = 0..1
+	### (default: no)
+	can_have_no_pop_colony = bool
+	## cardinality = 0..1
+	can_be_invaded = bool
+	## cardinality = 0..1
+	orbit_lines = bool
+	### applies when within own borders only
+	## cardinality = 0..1
+	has_colonization_influence_cost = bool
+	## cardinality = 0..1
+	survey_time_factor = float
+	## cardinality = 0..1
+	colonization_tech = { <technology> }
+	### this is only required if using a picture defined for another planet
+	## cardinality = 0..1
+	picture = scalar
+	### this is only required if using a tile-set defined for another planet
+	## cardinality = 0..1
+	tile_set = <planet_class>
+	## cardinality = 0..1
+	## replace_scopes = { this = planet root = planet }
+	modifier = {
+		## cardinality = 0..inf
+		alias_name[modifier] = alias_match_left[modifier]
+	}
+	## cardinality = 0..1
+	allowed_archetypes = {
+		## cardinality = 0..100
+		<species_archetype>
+	}
+	### (default: no)
+	## cardinality = 0..1
+	uses_alternative_skies_for_moons = bool
+	## cardinality = 0..1
+	uses_alternative_skies_if_has_orbital_ring = bool
+
+	### Trigger for the planet class to spawn, no scope check
+	## cardinality = 0..1
+	## replace_scope = { this = no_scope root = no_scope }
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	auto_trait_prio = {
+		## cardinality = 0..inf
+		<trait.species_trait>
+	}
+
+	## cardinality = 0..1
+	fixed_city_level = int
+
+	## cardinality = 0..1
+	is_artificial_planet = bool
+
+	## cardinality = 0..1
+	colonizable = bool
+	## cardinality = 0..1
+	ideal = bool
+
+	subtype[habitable_planet] = {
+		## severity = warning
+		district_set = enum[district_set]
+
+		## cardinality = 0..1
+		starting_district = <district>
+
+		## cardinality = 0..1
+		climate = localisation
+		## cardinality = 0..1
+		habitat = bool
+		## cardinality = 0..1
+		starting_planet = bool
+		## cardinality = 0..1
+		show_city = bool
+
+		## cardinality = 0..1
+		initial = yes
+		## cardinality = 0..1
+		carry_cap_per_free_district = float
+	}
+	subtype[unhabitable_ringworld] = {
+		## severity = warning
+		## cardinality = 0..1
+		district_set = enum[district_set]
+	}
+	## cardinality = 0..1
+	colonizable_by_event = bool
+	## cardinality = 0..1
+	show_health_bar_in_planet_view = bool
+
+	## cardinality = 0..1
+	starting_planet = no
+	## cardinality = 0..1
+	show_city = no
+	## cardinality = 0..1
+	default_planet_selection = bool
+	## cardinality = 0..1
+	planet_custom_label_offset = float
+	### default = yes; Can be used to block all other additions of max building and district modifiers except the planet class specific ones.
+	## cardinality = 0..1
+	inherit_country_building_modifiers = bool
+
+	#### Default: no. If yes, merges all build queues from the colony and carrier into a single one
+	####
+	#### If the carrier is also a starbase, this includes build queues in the starbase as well
+	####
+	#### Build queues for external buildings like holdings ignore this parameter and are kept separate
+	## cardinality = 0..1
+	single_build_queue = bool
+
+}
+
+planet_class_random_list = {
+	name = scalar
+	planets = {
+		## cardinality = 1..inf
+		<planet_class>
+	}
+}
+
+enums = {
+	complex_enum[district_set] = {
+		path = "game/common/planet_classes"
+		name = {
+			district_set = enum_name
+		}
+	}
+}

@@ -1,0 +1,43 @@
+types = {
+	type[observation_station_mission] = {
+		path = "game/common/observation_station_missions"
+		path_extension = .txt
+		localisation = {
+			name = "mission_$"
+			desc = "mission_$_desc"
+		}
+		images = {
+			icon = icon # <sprite>
+		}
+	}
+}
+
+observation_station_mission = {
+	icon =  <sprite>
+	small_icon = int
+  	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+	## replace_scopes = { this = country root = country from = planet }
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+	## replace_scopes = { this = country root = country from = planet }
+	## cardinality = 0..1
+	valid = single_alias_right[trigger_clause]
+
+	#if you have monthly_progress you need completion_event and vice versa.
+	## cardinality = 0..1
+	monthly_progress = float[0.0..1.0]
+	## cardinality = 0..1
+	completion_event = <event.country>
+	## cardinality = 0..1
+	completion_sound = <sound_effect>
+
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}
+

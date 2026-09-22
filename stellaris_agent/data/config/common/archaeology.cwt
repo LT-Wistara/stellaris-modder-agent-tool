@@ -1,0 +1,176 @@
+types = {
+	type[archaeological_site_type] = {
+		path = "game/common/archaeological_site_types"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = desc
+		}
+		images = {
+			## primary
+			## optional
+			picture = picture # <sprite>
+		}
+	}
+	type[relic] = {
+		path = "game/common/relics"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## primary
+			portrait = "portrait" # <sprite>
+		}
+	}
+	type[artifact_action] = {
+		path = "game/common/artifact_actions"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+	}
+}
+
+## push_scope = archaeological_site
+archaeological_site_type = {
+	### GFX_* sprite key for the sites image
+	## cardinality = 0..1
+	picture = <sprite>
+	### Description generator for the site, with scope this=archaeological site.
+	## cardinality = 0..1
+	desc = localisation
+	### Description generator for the site, with scope this=archaeological site.
+	## cardinality = 0..inf
+	## replace_scopes = { this = archaeological_site root = archaeological_site }
+	desc = single_alias_right[triggered_desc_clause]
+
+	## cardinality = 0..1
+	situation_log_category = <situation_log_category>
+
+	### Max instances of this type a galaxy can have, only checked when using 'create_archaeological_site = random'
+	## cardinality = 0..1
+	max_instances = int[1..inf]
+	## cardinality = 0..1
+	notification_duration = int
+
+	### Weight used for random weight, only used when using 'create_archaeological_site = random'. scriptable value type is defined either by '<int>' or '<mean time to happen>'.
+	## cardinality = 0..1
+	## replace_scopes = { root = planet this = planet }
+	weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Weight used for random weight, only used when using 'create_archaeological_site = random'. scriptable value type is defined either by '<int>' or '<mean time to happen>'.
+	## cardinality = 0..1
+	weight = int
+	### Should match number of defined stages below.
+	stages = int[1..inf]
+
+	### Trigger checking if a scope with this=fleet,from=archaeological site is potential to excavate (this will add/remove this option without giving the player a reason).
+	## cardinality = 0..1
+	## replace_scopes = { root = fleet this = fleet from = archaeological_site }
+	potential = single_alias_right[trigger_clause]
+
+	### Trigger checking if a scope with this=fleet,from=archaeological site is allowed to excavate (this will toggle enable/disabled mode on buttons etc).
+	## replace_scopes = { root = fleet this = fleet from = archaeological_site }
+	allow = single_alias_right[trigger_clause]
+
+	### Trigger that checks if a scope with this=country can see the from=archaeological site
+	## replace_scopes = { root = country this = country from = archaeological_site }
+	visible = single_alias_right[trigger_clause]
+
+	### Stage definition, order dependent.
+	## cardinality = 0..inf
+	stage = {
+		### min max interval type. interval is defined either by '<int>' or '{ min = <int> max = <int> }' where the later will randomize a value between min and max.
+		difficulty = int[-inf..inf]
+		### min max interval type. interval is defined either by '<int>' or '{ min = <int> max = <int> }' where the later will randomize a value between min and max.
+		difficulty = {
+			min = int[-inf..inf]
+			max = int[-inf..inf]
+		}
+		### rune icon gfx type.
+		icon = <sprite>
+		### event to fire when the stage has been completed.
+		event = <event.fleet>
+	}
+
+	### Effect to fire when a roll fails, with scope this=fleet, from=archaeological site.
+	## replace_scopes = { root = fleet this = fleet from = archaeological_site }
+	on_roll_failed = single_alias_right[effect_clause]
+
+	### Effect to fire upon site creation, with scope this=archaeological site.
+	## cardinality = 0..1
+	## replace_scopes = { root = archaeological_site this = archaeological_site }
+	on_create = single_alias_right[effect_clause]
+
+	### Effect to fire upon site visible, with scope this=country, from=archaeological site.
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country from = archaeological_site }
+	on_visible = single_alias_right[effect_clause]
+}
+
+relic = {
+	## cardinality = 0..1
+	activation_duration = int[0..inf]
+	portrait = <sprite>
+	## cardinality = 0..1
+	sound = <sound_effect>
+	## cardinality = 0..1
+	score = int[0..inf]
+
+	### Possible check for activation
+	## replace_scopes = { root = country this = country }
+	possible = single_alias_right[trigger_clause]
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..1
+	can_be_stolen = bool
+
+	## cardinality = 0..inf
+	## replace_scopes = { root = country this = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	active_effect = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}
+
+## push_scope = country
+artifact_action = {
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..1
+	sound = <sound>
+
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	effect = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	allow = single_alias_right[trigger_clause]
+}

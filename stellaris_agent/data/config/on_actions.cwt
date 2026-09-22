@@ -1,0 +1,2510 @@
+on_actions = {
+	# region from 00_on_actions.txt
+
+	### Triggers when the game starts
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_game_start
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_game_start_country
+
+	### No scope, like on_game_start
+	### Does not run when loading MP saves due to OOS concerns
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_single_player_save_game_load
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_monthly_pulse
+
+	### Via pre_ftl_tech_progress_situation / preftl.50
+	### See also: on_monthly_pulse_pre_ftl_observation_broken_shackles (below)
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_monthly_pulse_pre_ftl_observation
+
+	### The following are considered valid for "Broken Shackles" empires observing their original civilizations; see also on_monthly_pulse_pre_ftl_observation (above)
+	### Via pre_ftl_tech_progress_situation / preftl.50
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_monthly_pulse_pre_ftl_observation_broken_shackles
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_yearly_pulse
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_bi_yearly_pulse
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_five_year_pulse
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_decade_pulse
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_mid_game_pulse
+
+	### No scope, like on_game_start
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = scopeless
+	on_late_game_pulse
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_monthly_pulse_country
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_yearly_pulse_country
+
+	### this = country, fired via action.2001 from on_yearly_pulse_country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_yearly_random_pulse_country_caravaneers_list
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_bi_yearly_pulse_country
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_pulse_country
+
+	### this = country, fired via action.220 from on_five_year_pulse_country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_country
+
+	### this = country, fired via action.220 from on_five_year_pulse_country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_years_communication_spread_country
+
+	### this = country, fired via action.420
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_overlord
+
+	### this = country, fired via action.620
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_pre_ftl
+
+	### this = country, fired via action.630
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_pre_ftl_tech_events
+
+	### Why do this, you might ask, and not just use a random_list? Because on_actions check the triggers of the event before they try to fire them and exclude them from the list if they are false, so a list with no 0 weight will always fire an event so long as any of them are able to be fired
+	### Used in operation_diplomatic_incident. Beware when changing.
+	### this = country, fired via action.2211 from on_five_year_random_pulse_country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_country_negative_list
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_five_year_random_pulse_country_fe_list
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_decade_pulse_country
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_decade_pulse_skrand_country
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_decade_random_pulse_country_payback_broken_shackles
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_mid_game_pulse_country
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_late_game_pulse_country
+
+	### setup advanced colony. So far it has a pop on the capital and a colony shelter building matching the is_colony trigger
+	### scope: colony
+	### from: country
+	## replace_scopes = { this = colony root = colony from = country }
+	## event_type = colony
+	on_initialize_advanced_colony
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_become_advanced_empire
+
+	### Triggers when pressing begin in the intro window
+	### This = country to press begin
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_press_begin
+
+	### Triggers when trying to open the diplomacy view for countries with custom diplomacy.
+	### Country scope
+	### This = target country (player)
+	### From = source country
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_custom_diplomacy
+
+	### Triggered when two empires discover each other
+	### This = Empire 1
+	### From = Empire 2
+	### Fromfromfrom = System where contact occurred
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = system }
+	## event_type = country
+	on_first_contact
+
+	### Triggered when a first contact process is finished
+	### This = first contact scope
+	### From = other country
+	## replace_scopes = { this = first_contact root = first_contact from = country }
+	## event_type = first_contact
+	on_first_contact_finished
+
+	### Triggered when an Empire has fleets within another Empire's borders.
+	### This = receiver
+	### From = sender
+	### FromFrom = fleet
+	### FromFromFrom = system
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = system }
+	## event_type = country
+	on_enforce_borders
+
+	### Triggers when ground combat starts
+	### This = planet
+	### From = country attacking
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_ground_combat_started
+
+	### Triggers country_event for the attacker upon victory (before controller is switched)
+	### This = country, lead attacker
+	### From = country, planet owner
+	### FromFrom = planet
+	### 'Attacker' is the side that "IsHostile" to the planet controller. For example: spawned monster armies are attackers, but if they win and the player attempts to retake the planet, the player is the attacker
+	## replace_scopes = { this = country root = country from = country fromfrom = planet }
+	## event_type = country
+	on_planet_attackers_win
+
+	### Triggers country_event for the attacker upon defeat
+	### This = country, attack leader
+	### From = country, planet owner
+	### FromFrom = planet
+	## replace_scopes = { this = country root = country from = country fromfrom = planet }
+	## event_type = country
+	on_planet_attackers_lose
+
+	### Triggers country_event for the defender upon victory
+	### Root = country, planet owner
+	### From = country, attack leader
+	### FromFrom = planet
+	## replace_scopes = { this = country root = country from = country fromfrom = planet }
+	## event_type = country
+	on_planet_defenders_win
+
+	### Triggers country_event for the defender upon defeat
+	### This = country, planet owner
+	### From = country, attack leader
+	### FromFrom = planet
+	## replace_scopes = { this = country root = country from = country fromfrom = planet }
+	## event_type = country
+	on_planet_defenders_lose
+
+	### Fires when you first get intel (_low and up) on a new system
+	### Scope = Country
+	### From = System
+	## replace_scopes = { this = country root = country from = system }
+	## event_type = country
+	on_system_first_visited
+
+	### Triggers event when each country first sends a ship into the system (once per country)
+	### Scope = Ship
+	### From = System
+	### FromFrom = Country
+	## replace_scopes = { this = ship root = ship from = system fromfrom = country }
+	## event_type = ship
+	on_entering_system_first_time
+
+	### Triggers event when ship enters a system. It's usually better to use on_entering_system_first_time or on_entering_system_fleet
+	### Scope = Ship
+	### From = System
+	### FromFrom = Country
+	## replace_scopes = { this = ship root = ship from = system fromfrom = country }
+	## event_type = ship
+	on_entering_system
+
+	### A fleet has entered a system | See also: on_fleet_auto_move_arrival
+	### Scope = Fleet
+	### From = System
+	## replace_scopes = { this = fleet root = fleet from = system }
+	## event_type = fleet
+	on_entering_system_fleet
+
+	### A fleet executes a move order to exit borders
+	### Scope = Fleet
+	### From = Origin System
+	### FromFrom = Destination System
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_crossing_border
+
+	### A ship has surveyed a planet.
+	### Scope = Ship
+	### From = Planet
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_survey_planet
+
+	### A ship has surveyed an Astral Rift.
+	### Scope = Ship
+	### From = Astral Rift
+	## replace_scopes = { this = ship root = ship from = astral_rift }
+	## event_type = ship
+	on_survey_astral_rift
+
+	### A country has gained a surveyed status on a planet. Happens after "on_survey_planet" if a science ship surveyed a planet. (Can also happen without a ship through changes in intel levels)
+	### Root = Planet
+	### From = Country
+	### FromFrom = Fleet of the science ship that surveyed it, if any
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = fleet }
+	## event_type = carrier
+	on_planet_surveyed
+
+	### A country has gained a surveyed status on an astral rift. Happens after "on_survey_astral_rift" if a science ship surveyed an astral rift. (Can also happen without a ship through changes in intel levels)
+	### Root = Astral Rift
+	### From = Country
+	### FromFrom = Fleet of the science ship that surveyed it, if any
+	## replace_scopes = { this = astral_rift root = astral_rift from = country fromfrom = fleet }
+	## event_type = astral_rift
+	on_astral_rift_surveyed
+
+	### A country has gained a surveyed status on a planet.
+	### Happens after "on_survey_planet" or "on_survey_astral_rift" if a science ship surveyed a planet or an Astral Rift.
+	### Root = Country
+	### From = system
+	### FromFrom = Fleet of the science ship that surveyed it, if any
+	## replace_scopes = { this = country root = country from = system fromfrom = fleet }
+	## event_type = country
+	on_system_survey
+
+	### A ship is done surveying the last unsurveyed planet in a system
+	### Scope = ship
+	### From = system
+	## replace_scopes = { this = ship root = ship from = system }
+	## event_type = ship
+	on_system_survey_ship
+
+	### A planet has begun the colonization process.
+	### Scope = Planet
+	## replace_scopes = { this = carrier root = planet }
+	## event_type = carrier
+	on_colonization_started
+
+	### A planet has been colonized.
+	### Scope = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colonized
+
+	### A colony has been destroyed. Called just before owner and controller is cleared
+	### Scope = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_destroyed
+
+	### A colony has been destroyed by bombardment. Called after the planet's colony status has been cleared
+	### This = Planet
+	### From = Bombarder
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_colony_destroyed_by_bombardment
+
+	### This = owner of fleet 1
+	### From = owner of fleet 2
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_entering_battle
+
+	### This = owner of ship 1 (destroyed)
+	### From = owner of ship 2 (combatant)
+	### FromFrom = ship 1
+	### FromFromFrom = ship 2
+	## replace_scopes = { this = country root = country from = country fromfrom = ship fromfromfrom = ship }
+	## event_type = country
+	on_ship_destroyed_victim
+
+	### This = owner of ship 1 (combatant)
+	### From = owner of ship 2 (destroyed)
+	### FromFrom = ship 1
+	### FromFromFrom = ship 2
+	## replace_scopes = { this = country root = country from = country fromfrom = ship fromfromfrom = ship }
+	## event_type = country
+	on_ship_destroyed_perp
+
+	### This = damaged ship
+	### From = attacker ship
+	## replace_scopes = { this = ship root = ship from = ship }
+	## event_type = ship
+	on_damage_taken
+
+	### This = starbase being destroyed (not ship!)
+	### From = fleet that destroyed the starbase
+	## replace_scopes = { this = starbase root = starbase from = fleet }
+	## event_type = starbase
+	on_starbase_destroyed
+
+	### This = starbase being disabled (not ship!)
+	### From = fleet that disabled the starbase
+	## replace_scopes = { this = starbase root = starbase from = fleet }
+	## event_type = starbase
+	on_starbase_disabled
+
+	### This = owner of ship 1 (destroyed)
+	### From = owner of ship 2 (combatant)
+	### FromFrom = ship 1
+	### FromFromFrom = ship 2
+	## replace_scopes = { this = country root = country from = country fromfrom = ship fromfromfrom = ship }
+	## event_type = country
+	on_ship_disengaged_victim
+
+	### This = owner of ship 1 (combatant)
+	### From = owner of ship 2 (destroyed)
+	### FromFrom = ship 1
+	### FromFromFrom = ship 2
+	## replace_scopes = { this = country root = country from = country fromfrom = ship fromfromfrom = ship }
+	## event_type = country
+	on_ship_disengaged_perp
+
+	### This = owner of fleet 1 (destroyed)
+	### From = owner of fleet 2 (combatant)
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_fleet_destroyed_victim
+
+	### This = owner of fleet 1 (combatant)
+	### From = owner of fleet 2 (destroyed)
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_fleet_destroyed_perp
+
+	### This = owner of fleet 1 (winner)
+	### From = owner of fleet 2 (loser)
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	### This fires whenever a fleet is finished with a combat through any means (emergency ftl, destroyed, disabled)
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_space_battle_won
+
+	### This = owner of fleet 1 (loser)
+	### From = owner of fleet 2 (winner)
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	### This fires whenever a fleet is finished with a combat through any means (emergency ftl, destroyed, disabled)
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_space_battle_lost
+
+	### This = owner of fleet 1 (winner)
+	### From = owner of fleet 2 (loser)
+	### FromFrom = fleet 1
+	### FromFromFrom = fleet 2
+	### Fires when a combat is finished from a lack of enemies
+	## replace_scopes = { this = country root = country from = country fromfrom = fleet fromfromfrom = fleet }
+	## event_type = country
+	on_space_battle_over
+
+	### This = fleet
+	### Fires when a fleet exits combat (either because it won, lost, or any reason)
+	### This is fired once for every fleet that was in combat (which is not the case for on_space_battle_won/lost)
+	## replace_scopes = { this = fleet root = fleet }
+	## event_type = fleet
+	on_fleet_exit_battle
+
+	### This = owner of fleet
+	### From = disbanded fleet
+	## replace_scopes = { this = country root = country from = fleet }
+	## event_type = country
+	on_fleet_disbanded
+
+	### This = owner of ship
+	### From = disbanded ship
+	## replace_scopes = { this = country root = country from = ship }
+	## event_type = country
+	on_ship_disbanded
+
+	### This = owner of army
+	### From = disbanded army
+	## replace_scopes = { this = country root = country from = army }
+	## event_type = country
+	on_army_disbanded
+
+	### This = owner of fleet
+	### From = fleet
+	### FromFrom = planet (if any)
+	## replace_scopes = { this = country root = country from = fleet fromfrom = planet }
+	## event_type = country
+	on_fleet_auto_move_arrival
+
+	### This = fleet
+	### From = country that borrowed the fleet
+	### FromFrom = country that owns the fleet
+	### Is fired immediately after fleet is leased out
+	## replace_scopes = { this = fleet root = fleet from = country fromfrom = country }
+	## event_type = fleet
+	on_fleet_contract_started
+
+	### This = fleet
+	### From = country that borrowed the fleet
+	### FromFrom = country that owns the fleet
+	### FromFromFrom = country that initiated the ending (the same as owner in a case of expiration)
+	### Is fired immediately after fleet contract is expired
+	## replace_scopes = { this = fleet root = fleet from = country fromfrom = country fromfromfrom = country }
+	## event_type = fleet
+	on_fleet_contract_expired
+
+	### This = fleet
+	### From = country that borrowed the fleet
+	### FromFrom = country that owns the fleet
+	### FromFromFrom = country that initiated the ending (trade deal actor when the contract cancellation is a part of trade deal)
+	### Is fired immediately after fleet contract is cancelled (when controller prematurely finishes the contract or when the contract cancellation is a part of trade deal)
+	## replace_scopes = { this = fleet root = fleet from = country fromfrom = country fromfromfrom = country }
+	## event_type = fleet
+	on_fleet_contract_cancelled
+
+	### This = fleet
+	### From = country that borrowed the fleet
+	### FromFrom = country that owns the fleet
+	### FromFromFrom = country that initiated the ending (main attacker in a case of war)
+	### Is fired immediately after fleet contract is broken (when country is attacked by someone of when a war is started)
+	## replace_scopes = { this = fleet root = fleet from = country fromfrom = country fromfromfrom = country }
+	## event_type = fleet
+	on_fleet_contract_broken
+
+	# The game will generate one on_building_X on_action for every station ship-size
+	# Orbital stations will get the planet in FROM, space stations only get they building ship
+
+	### This = construction ship
+	### From = planet it is built on
+	### Fires when construction is complete,
+	### immediately before station is created
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_building_<ship_size.station>
+
+	### This = ship (starbase)
+	### From = owner country
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_building_<ship_size.starbase>
+
+	### This = station
+	### From = planet/astral_rift it was built on
+	## replace_scopes = { this = ship root = ship from = any }
+	## event_type = ship
+	on_destroying_station
+
+	### This = station
+	### From = planet it was built on
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_losing_station_control
+
+	### This = station
+	### From = planet it was built on
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_gaining_station_control
+
+	### This = country
+	### From = opponent war leader
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_entering_war
+
+	### This = Country
+	### From = Fleet
+	## replace_scopes = { this = country root = country from = fleet }
+	## event_type = country
+	on_fleet_detected
+
+	### This = Ship
+	### From = Disabler Ship
+	## replace_scopes = { this = ship root = ship from = ship }
+	## event_type = ship
+	on_ship_disabled
+
+	### This = Ship
+	## replace_scopes = { this = ship root = ship }
+	## event_type = ship
+	on_ship_enabled
+
+	### Triggers when a Special Project to uplift a pre-sapient species is completed.
+	### Note that this will trigger once for each combination of planet & original \
+	### species (but for uplifting this should be only once).
+	### Scope = planet_event
+	### This = planet scope
+	### From = uplifted species (pre-modification)
+	## replace_scopes = { this = carrier root = carrier from = species }
+	## event_type = carrier
+	on_uplift_completion
+
+	### Planets starts being terraformed
+	### This = Planet
+	### From = Terraforming country
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_terraforming_begun
+
+	### Planets terraforming is 25% completed
+	### This = Planet
+	### From = Terraforming country
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_terraforming_progress_25
+
+	### Planet has been terraformed
+	### This = Planet
+	### From = Terraforming country
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_terraforming_complete
+
+	### Planet has changed planet class in whatever way. Note that this is also called during galaxy creation in some places.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_planet_class_changed
+
+	### Planet has taken damage from orbital bombardment - Damage is applied daily
+	### This = Planet
+	### From = Bombarder (country)
+	### local_devastation = variable of daily devastation
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_planet_bombarded
+
+	### Planet has reached 0 pops from orbital bombardment
+	### This = Planet
+	### From = Bombarder
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_colony_zero_pops
+
+	### Planet has taken damage from ground combat - Damage is applied daily
+	### This = Planet
+	### From = damaging country
+	### local_devastation = variable of daily devastation
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_ground_combat_devastation
+
+	### Planet has reached 0 pops from collateral damage
+	### This = Planet
+	### From = Army owner
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_colony_zero_pops_ground_combat
+
+	### Planet has reached a new ascension tier.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_planet_ascension_tier_increased
+
+	### Pop Group is abducted by raiding stance
+	### This = Pop Group scope
+	### From = planet abducted from
+	## replace_scopes = { this = pop_group root = pop_group from = planet }
+	## event_type = pop_group
+	on_pop_group_abducted
+
+	### Pop Group is resettled
+	### From is previous planet
+	### planet = { } is new planet
+	## replace_scopes = { this = pop_group root = pop_group from = planet }
+	## event_type = pop_group
+	on_pop_group_resettled
+
+	### Executed right before a country has established communications with another country. Does not fire if comms are established with establish_communications_no_message
+	### This = Country which established the communications
+	### From = Country which communications were established with
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_pre_communications_established
+
+	### Executed right after country has established communications with another country. Does not fire if comms are established with establish_communications_no_message
+	### This = Country which established the communications
+	### From = Country which communications were established with
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_post_communications_established
+
+	### Executed right after country has established communications with another country. Always fires, even if comms are established with establish_communications_no_message
+	### This = Country which established the communications
+	### From = Country which communications were established with
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_post_communications_established_always_fire
+
+	### Serves to reveal presence to pre-ftl country
+	### This = Country which is revealing its presence
+	### From = Pre-ftl country
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_presence_revealed
+
+	### Executed whenever a pop is killed due to bombardment damages
+	### This = Planet where the pop was bombed to death
+	### From = Country which is raining down fire and brimstone
+	### FromFrom = Biggest fleet bombarding the planet (the one we used the bombardment stance from)
+	### local_kill_pop_amount = amount of pop killed
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = fleet }
+	## event_type = carrier
+	on_pop_bombed_to_death
+
+	### Executed whenever a pop is killed by its planet devastation, caused by another country (not by bombarbment)
+	### This = Planet where the pop died
+	### From = Attacker country
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_pop_collateral_casualty
+
+	### Executed whenever a pop is sacrificed
+	### This = Pop killed
+	### From = Planet where the pop was killed
+	### FromFrom = Country intentionally killing the pop
+	## replace_scopes = { this = pop_group root = pop_group from = planet fromfrom = country }
+	## event_type = pop_group
+	on_pop_sacrificed
+
+	### Executed when a new heir is appointed
+	### This = Heir
+	## replace_scopes = { this = leader root = leader }
+	## event_type = leader
+	on_new_heir
+
+	### Executed when an heir is promoted to ruler
+	### This = Heir
+	## replace_scopes = { this = leader root = leader }
+	## event_type = leader
+	on_heir_promoted_to_ruler
+
+	### Executed when a ruler is created. Called after the leader is set as ruler of the country
+	### This = Country
+	### FROM = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_ruler_created
+
+	### Executed just before on_leader_death if show_notification = yes (default)
+	### This = Country
+	### From = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_death_notify
+
+	### Executed just before on_leader_death if show_notification = no (explicitly set)
+	### This = Country
+	### From = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_death_no_notify
+
+	### Executed as a leader has died
+	### This = Country
+	### From = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_death
+
+	### Executed as a leader is hired
+	### This = Leader
+	## replace_scopes = { this = leader root = leader }
+	## event_type = leader
+	on_leader_hired
+
+	### Executed as a leader has been fired
+	### This = Country
+	### From = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_fired
+
+	### A leader leveled up.
+	### Scope = Country
+	### From = Leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_level_up
+
+	### Scope: Leader (after assignment)
+	## replace_scopes = { this = leader root = leader }
+	## event_type = leader
+	on_leader_assigned
+
+	### Scope: Leader (just before unassignment)
+	### Fires if a leader is unassigned from their position for any reason (including being assigned elsewhere)
+	## replace_scopes = { this = leader root = leader }
+	## event_type = leader
+	on_leader_unassigned
+
+	### Executed as new ruler has been set
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_ruler_set
+
+	### Executed when a ruler has been removed
+	### From = Previous Ruler
+	### This = Country
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_ruler_removed
+
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_blocker_cleared
+
+	### A ship has started a new order
+	### Root = Ship
+	### From = Country
+	## replace_scopes = { this = ship root = ship from = country }
+	## event_type = ship
+	on_ship_order
+
+	### Executes after a policy has been changed
+	### use last_changed_policy to identify which policy it was
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_policy_changed
+
+	### Scope: Ship Event
+	### A ship has been built
+	### Root = Ship
+	### From = Planet
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	on_ship_built
+
+	### A ship design has been finished
+	### Root = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_ship_designed
+
+	### A ship has been upgraded
+	### Root = Ship
+	## replace_scopes = { this = ship root = ship }
+	## event_type = ship
+	on_ship_upgraded
+
+	### A war is beginning, executed for every country in the war.
+	### Root = Country
+	### From = War
+	## replace_scopes = { this = country root = country from = war }
+	## event_type = country
+	on_war_beginning
+
+	### A war has ended
+	### Root = Loser
+	### From = Main Winner
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_war_ended
+
+	### A country has been released through a peace deal in a war
+	### Root = new country
+	### From = country forcing the release
+	### FromFrom = country they are released from
+	### FromFromFrom = war
+	## replace_scopes = { this = country root = country from = country fromfrom = country fromfromfrom = war }
+	## event_type = country
+	on_country_released_in_war
+
+	### A Proxy War was started. To access the different wars it spawned, use on_war_beginning and is_from_proxy_war trigger
+	### Root = instigator
+	### From = victim
+	### local_num_attackers = how many attackers were sent to war
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_proxy_war_started
+
+	### A country has claimed one or more systems
+	### This = Country
+	### From = Country owning the system
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_claim_system
+
+	### A country has increased the level of a tech, use last_increased_tech trigger to check tech and level.
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_tech_increased
+
+	### Triggers when a Special Project to apply a species modification template has completed.
+	### Note that this will trigger once for each combination of planet & original species.
+	### This = Country
+	### From = Species ( Post Modification )
+	### FromFrom = Species ( Original )
+	### Prev = Planet
+	## replace_scopes = { this = country root = country from = species fromfrom = species prev = planet }
+	## event_type = country
+	on_modification_complete
+
+	### Triggers when a Special Project applying a species modification template is completed.
+	### Note that this will trigger only once.
+	### This = Country
+	### From = Species ( Post Modification )
+	## replace_scopes = { this = country root = country from = species }
+	## event_type = country
+	on_modification_completion
+
+	### Triggers when a Sub-Species Integration performs a single step.
+	### Note that this will trigger once for each combination of planet & original species.
+	### This = Country
+	### From = Species ( Post Modification )
+	### FromFrom = Species ( Original )
+	### Prev = Planet
+	## replace_scopes = { this = country root = country from = species fromfrom = species prev = planet }
+	## event_type = country
+	on_subspecies_integration_step
+
+	### Triggers when a Sub-Species Integration fully finishes upgrading a species template.
+	### Note that this will trigger once for each combination of planet & original species.
+	### This = Country
+	### From = Species ( Post Modification )
+	### FromFrom = Species ( Original )
+	### Prev = Planet
+	## replace_scopes = { this = country root = country from = species fromfrom = species prev = planet }
+	## event_type = country
+	on_subspecies_integration_complete
+
+	### Triggers when a Country gets a new always available tech as a research option.
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_research_option_added
+
+	### Triggers when a Country gains a favor.
+	### This = Country that receives a favor
+	### From = Country a favor is from
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_favor_gained
+
+	### A planets controller becomes a country not the same as the owner.
+	### Root = Planet
+	### From = Planet Owner
+	### FromFrom = Planet Controller (the one occupying)
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = country }
+	## event_type = carrier
+	on_planet_occupied
+
+	### A planets controller becomes the owner of the planet.
+	### Root = Planet
+	### From = Planet Owner
+	### FromFrom = Previous Planet Controller (the one who was occupying)
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = country }
+	## event_type = carrier
+	on_planet_returned
+
+	### A planet decision is enacted.
+	### Root = Planet
+	### From = Planet Owner
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_decision_enacted
+
+	### An edict is enacted.
+	### Root = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_edict_activated
+
+	### A fleet has successfully escaped from combat, executed right before the fleet enters FTL
+	### This = escaping fleet
+	### From = system escaped from
+	### FromFrom = system escaping to
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_emergency_ftl
+
+	### An army construction has been completed.
+	### This = Planet
+	### From = Army
+	## replace_scopes = { this = carrier root = country from = army }
+	## event_type = carrier
+	on_army_recruited
+
+	### An army has been killed in ground combat
+	### This = owner
+	### From = army
+	### FromFrom = opponent
+	### FromFromFrom = planet
+	## replace_scopes = { this = country root = country from = army fromfrom = country fromfromfrom = planet }
+	## event_type = country
+	on_army_killed_in_combat
+
+	### An army has ceased to exist for any other reason
+	### This = country
+	### From = army
+	## replace_scopes = { this = country root = country from = army }
+	## event_type = country
+	on_army_killed_no_combat
+
+	### A building construction has been completed.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_complete
+
+	### A building construction has been queued.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_queued
+
+	### A building construction has been unqueued.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_unqueued
+
+	### A building construction has been completed, which is an upgrade of previous building.
+	### This = Planet
+	## replace_scopes = { this = carrier root = colony }
+	## event_type = carrier
+	on_building_upgraded
+
+	### A building construction has demolished.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_demolished
+
+	### A building repair has finished
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_repaired
+
+	### A district construction has been completed.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_district_complete
+
+	### A zone construction has been completed.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_zone_complete
+
+	### A building construction has finished, replacing another building.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_replaced
+
+	### A building construction has been downgraded and replaced.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_building_downgraded
+
+	### A building has been wrecked by a enemy and is now ruined.
+	### This = Planet
+	### From = Enemy country
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_building_ruined
+
+	### A district construction has been queued.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_district_queued
+
+	### A district construction has been unqueued.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_district_unqueued
+
+	### A district construction has demolished.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_district_demolished
+
+	### Auto-designation has changed the planet's designation.
+	### This = Planet
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_auto_colony_type_changed
+
+	### Tutorial level for a country has changed
+	### This = Country
+	## replace_scopes = { this = country root = country from = country fromfrom = war }
+	## event_type = country
+	on_tutorial_level_changed
+
+	### A war has been won
+	### Root = Winner Warleader
+	### From = Loser Warleader
+	### FromFrom = War
+	## replace_scopes = { this = country root = country from = country fromfrom = war }
+	## event_type = country
+	on_war_won
+
+	### A war has been lost
+	### Root = Loser Warleader
+	### From = Winner Warleader
+	### FromFrom = War
+	## replace_scopes = { this = country root = country from = country fromfrom = war }
+	## event_type = country
+	on_war_lost
+
+	### A status quo has been signed
+	### Root = Actor
+	### From = Recipient
+	### FromFrom = Main Attacker
+	### FromFromFrom = Main Defender
+	### FromFromFromFrom = War
+	## replace_scopes = { this = country root = country from = country fromfrom = country fromfromfrom = country fromfromfromfrom = war }
+	## event_type = country
+	on_status_quo
+
+	### A status quo has been signed, by force
+	### Root = Recipient
+	### From = Actor
+	### FromFrom = Main Attacker
+	### FromFromFrom = Main Defender
+	### FromFromFromFrom = War
+	## replace_scopes = { this = country root = country from = country fromfrom = country fromfromfrom = country fromfromfromfrom = war }
+	## event_type = country
+	on_status_quo_forced
+
+	### A new species is hosted in the empire
+	### Launched when:
+	### - a pop with a new species joined our empire
+	### - a pre-ftl species has been uplifted
+	### - a species template has been applied
+	### This = Country
+	### From = Newly added species
+	## replace_scopes = { this = country root = country from = species }
+	## event_type = country
+	on_host_new_species
+
+	### A pop has been added to the planet
+	### Root = pop
+	### From = planet
+	### local_pop_amount = variable of how much was grown
+	## replace_scopes = { this = root root = pop_group from = planet }
+	## event_type = pop_group
+	on_pop_group_added
+
+	### We changed a species right
+	### This = pop group
+	## replace_scopes = { this = pop_group root = pop_group }
+	## event_type = pop_group
+	on_pop_group_rights_change
+
+	### A pop amount has been grown
+	### This = Planet scope
+	### From = Country
+	### FromFrom = Pop group
+	### local_pop_amount = variable of how much was grown
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = pop_group }
+	## event_type = carrier
+	on_pop_growth
+
+	### A pop amount has been assembled
+	### This = Planet scope
+	### From = Country
+	### FromFrom = Pop group
+	### local_pop_amount = variable of how much was assembled
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = pop_group }
+	## event_type = carrier
+	on_pop_assembly
+
+	### A pop has finished purging
+	### This = Planet scope
+	### From = Country
+	### FromFrom = Pop group
+	### local_pop_amount = variable of how many pops were purged
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = pop_group }
+	## event_type = carrier
+	on_pop_purged
+
+	### A pop has been displaced
+	### This = Planet scope
+	### From = Country
+	### FromFrom = Pop group
+	### local_pop_amount = variable of how many pops were displaced
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = pop_group }
+	## event_type = carrier
+	on_pop_displaced
+
+	### Initial rebels manage to take control of the planet, happens before the new owner is set, after the war is created.
+	### This = Rebel Country
+	### From = Planet
+	### FromFrom = War
+	## replace_scopes = { this = country root = country from = planet fromfrom = war }
+	## event_type = country
+	on_rebels_take_planet
+
+	### Initial rebels manage to take control of the planet, happens after the new owner is set, after the war is created.
+	### This = Rebel Country
+	### From = Planet
+	### FromFrom = War
+	## replace_scopes = { this = country root = country from = planet fromfrom = war }
+	## event_type = country
+	on_rebels_take_planet_owner_switched
+
+	### FromFrom = Former Owner
+	### From = Country scope (new owner, so invalid)
+	### This = Planet scope
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = country }
+	## event_type = carrier
+	on_planet_ownerless
+
+	### Fired whenever a new owner is set for a planet, following a war or through trade
+	### This = Planet scope
+	### From = Country scope (new owner)
+	### FromFrom = Country scope (previous owner, if any)
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = country }
+	## event_type = carrier
+	on_planet_transfer
+
+	### Fired whenever a new owner is set for a planet, and the planet was aggressively conquered
+	### NOTE: fired in ADDITION to on_planet_transfer
+	### This = Planet scope
+	### From = Country scope (new owner)
+	### FromFrom = Former Owner
+	## replace_scopes = { this = carrier root = carrier from = country fromfrom = country }
+	## event_type = carrier
+	on_planet_conquer
+
+	### You have changed the location of your capital. Also called when a country's capital is first set e.g. during galaxy creation (but then FROM is not set)
+	### this/root = new capital
+	### from = old capital
+	## replace_scopes = { this = carrier root = carrier from = colony }
+	## event_type = carrier
+	on_capital_changed
+
+	### From = Planet/Starbase/Megastructure/Astral Rift scope
+	### This = Fleet scope
+	## replace_scopes = { this = fleet root = fleet from = any }
+	## event_type = fleet
+	on_fleet_enter_orbit
+
+	### This = Fleet scope
+	### From = Planet/Starbase/Megastructure/Astral Rift scope
+	## replace_scopes = { this = fleet root = fleet from = any }
+	## event_type = fleet
+	on_fleet_leave_orbit
+
+	### Called when a ship is added to a fleet (for any reason)
+	### this/root = fleet
+	### from = ship
+	## replace_scopes = { this = fleet root = fleet from = ship }
+	## event_type = fleet
+	on_ship_enter_fleet
+
+	### Called when a ship is removed from a fleet (for any reason including it being destroyed, but the event fires before it completely dies)
+	### this/root = fleet
+	### from = ship
+	## replace_scopes = { this = fleet root = fleet from = ship }
+	## event_type = fleet
+	on_ship_leave_fleet
+
+	### This = Federation leader
+	### From = Joining member
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_join_federation
+
+	### This = Federation leader
+	### From = Leaving member
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_leave_federation
+
+	### This = Country scope, federation leader
+	### From = Country to initiate the vote
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_federation_law_vote_succeed
+
+	### This = Country scope, federation leader
+	### From = Country to initiate the vote
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_federation_law_vote_failed
+
+	### This = Country scope, federation leader
+	### From = Country to exclude from the federation elections
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_federation_leader_elections
+
+	### This = Country scope, new federation leader
+	### From = Previous leader (if still existing)
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_federation_new_leader
+
+	### This = Country scope, federation leader
+	### From = Country to exclude from the federation psionicbattle
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_federation_leader_challenge
+
+	### A federation reached a new level for the first time
+	### This = Federation Leader
+	## replace_scopes = { this = country from = country }
+	## event_type = country
+	on_federation_new_level_unlocked
+
+	### A country is created via create_country or create_rebels
+	### This = created country
+	### From = root of context where create_country/create_rebels happens
+	## replace_scopes = { this = country root = country from = any }
+	## event_type = country
+	on_country_created
+
+	### This = destroyed country
+	### From = optional, destroyer (country)
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_country_destroyed
+
+	### A country sees its type changed during the game via set_country_type
+	### This = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_country_type_changed
+
+	### A Megastructure has been built
+	### Root = Country
+	### From = Megastructure
+	### FromFrom = System
+	### FromFromFrom = Fleet
+	## replace_scopes = { this = country root = country from = megastructure fromfrom = system fromfromfrom = fleet }
+	## event_type = country
+	on_megastructure_built
+
+	### A Megastructure has begun to be upgraded
+	### Root = Country
+	### From = Megastructure
+	### FromFrom = System
+	## replace_scopes = { this = country root = country from = megastructure fromfrom = system }
+	## event_type = country
+	on_megastructure_upgrade_begin
+
+	### A Megastructure has been upgraded
+	### Root = Country
+	### From = Megastructure
+	### FromFrom = System
+	## replace_scopes = { this = country root = country from = megastructure fromfrom = system }
+	## event_type = country
+	on_megastructure_upgraded
+
+	# X years has passed since a planet was colonized (won't trigger on empire homeworld)
+
+	### 1 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_1_year_old
+
+	### 2 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_2_years_old
+
+	### 3 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_3_years_old
+
+	### 4 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_4_years_old
+
+	### 5 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_5_years_old
+
+	### 6 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_6_years_old
+
+	### 7 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_7_years_old
+
+	### 8 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_8_years_old
+
+	### 9 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_9_years_old
+
+	### 10 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_10_years_old
+
+	### 25 years has passed since a planet was colonized (won't trigger on empire homeworld)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_25_years_old
+
+	### Fires for each planet every month (counting up from colonisation date, includes home planet)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_monthly_pulse
+
+	### Fires for each planet every year (counting up from colonisation date, includes home planet)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_yearly_pulse
+
+	### Fires for each planet every 5 years (counting up from colonisation date, includes home planet)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_5_year_pulse
+
+	### Fires for each planet every 10 years (counting up from colonisation date, includes home planet)
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_colony_10_year_pulse
+
+	### this = pop, fired via action.2021
+	## replace_scopes = { this = pop_group root = pop_group }
+	## event_type = pop_group
+	on_colony_10_year_pulse_random_pop_events_list
+
+	### a new leader is created
+	### scope: country, from: leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_leader_spawned
+
+	### A leader is added to the leader pool, available for recruitment
+	### scope: country, from: leader
+	## replace_scopes = { this = country root = country from = leader }
+	## event_type = country
+	on_added_to_leader_pool
+
+	### called during empire initialization when starting a new game
+	### scope: country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	empire_init_add_technologies
+
+	### Called during empire initialization when starting a new game.
+	### scope: colony
+	### from: founder species
+	### fromfrom: secondary species (if exists)
+	## replace_scopes = { this = colony root = colony from = species fromfrom = species }
+	## event_type = colony
+	empire_init_capital_colony
+
+	### called during empire initialization when starting a new game
+	### scope: country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	empire_init_create_ships
+
+	### Called when an election starts
+	### scope: country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_election_started
+
+	### Called when an election ends
+	### scope: country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_election_ended
+
+	### Called upon exploring a wormhole
+	### This = Bypass
+	### From = fleet
+	## replace_scopes = { this = bypass root = bypass from = fleet }
+	## event_type = bypass
+	on_bypass_explored
+
+	### Called upon entering FTL (on-action name scripted on the Bypass type)
+	### THIS = Fleet
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_entering_gateway
+
+	### Called upon entering FTL (on-action name scripted on the Bypass type)
+	### THIS = Fleet
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_entering_wormhole
+
+	### Called upon entering FTL (on-action name scripted on the Bypass type)
+	### THIS = Fleet
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_entering_shroud_tunnel
+
+	### Called upon entering FTL (on-action name scripted on the Bypass type)
+	### THIS = Fleet
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_entering_strange_wormhole
+
+	### THIS = Ship
+	## replace_scopes = { this = ship root = ship }
+	## event_type = ship
+	on_jump_drive
+
+	### Called upon a catapult jump being finished, per ship in catapulted fleet
+	### THIS = Ship
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = ship root = ship from = system fromfrom = system }
+	## event_type = ship
+	on_ship_quantum_catapult
+
+	### Called upon a catapult jump being finished, per fleet
+	### THIS = Fleet
+	### FROM = System jumping to
+	### FROMFROM = System jumped from
+	## replace_scopes = { this = fleet root = fleet from = system fromfrom = system }
+	## event_type = fleet
+	on_fleet_quantum_catapult
+
+	### this = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_pirate_spawn
+
+	### Called when a Starbase changes owner
+	### THIS = Ship (Starbase)
+	### FROM = Former Owner (Country)
+	## replace_scopes = { this = ship root = ship from = country }
+	## event_type = ship
+	on_starbase_transfer
+
+	# Both the following on_action are called when fleet joined combat
+	# (The first one is called for the attacker fleet, the second one is called for the defending fleet)
+
+	### This = Aggressor Fleet
+	### From = Attacked Fleet
+	### FromFrom = Additional Attacked Fleet (if part of ongoing combat)
+	### FromFromFrom = Additional Attacked Fleet (if part of ongoing combat)
+	## replace_scopes = { this = fleet root = fleet from = fleet fromfrom = fleet fromfromfrom = fleet }
+	## event_type = fleet
+	on_fleet_combat_joined_attacker
+
+	### This = Attacked Fleet
+	### From = Aggressor Fleet
+	### FromFrom = Additional Attacked Fleet (if joining ongoing combat)
+	### FromFromFrom = Additional Attacked Fleet (if joining ongoing combat)
+	## replace_scopes = { this = fleet root = fleet from = fleet fromfrom = fleet fromfromfrom = fleet }
+	## event_type = fleet
+	on_fleet_combat_joined_defender
+
+	### From = system
+	### FromFrom = country (new owner)
+	### This = country (previous owner)
+	## replace_scopes = { this = country root = country from = system fromfrom = country }
+	## event_type = country
+	on_system_lost
+
+	### From = system
+	### FromFrom = country (previous owner)
+	### This = country (new owner)
+	## replace_scopes = { this = country root = country from = system fromfrom = country }
+	## event_type = country
+	on_system_gained
+
+	### This = Pop group
+	### From = Country (buyer)
+	### Fromfrom = Country (seller)
+	## replace_scopes = { this = pop_group root = pop_group from = country fromfrom = country }
+	## event_type = pop_group
+	on_slave_sold_on_market
+
+	### This = Country
+	## replace_scopes = { this = country from = country }
+	## event_type = country
+	on_relic_received
+
+	### This = Country
+	## replace_scopes = { this = country from = country }
+	## event_type = country
+	on_relic_activated
+
+	### This = Country
+	## replace_scopes = { this = country from = country }
+	## event_type = country
+	on_relic_lost
+
+	### This = Fleet ( science vessel )
+	### From = Archaeological Site
+	## replace_scopes = { this = fleet root = fleet from = archaeological_site }
+	## event_type = fleet
+	on_arch_stage_finished
+
+	## replace_scopes = { this = fleet root = fleet from = archaeological_site }
+	## event_type = fleet
+	on_arch_site_finished
+
+	### A galcom resolution is moved to the senate floor
+	### this/root = proposer
+	### from = target if valid
+	## replace_scopes = { this = country root = country from = any }
+	## event_type = country
+	on_resolution_put_to_vote
+
+	### A galcom resolution is moved to the senate floor
+	### this/root = vetoer
+	### from = proposer
+	## replace_scopes = { this = country root = country from = any }
+	## event_type = country
+	on_resolution_vetoed
+
+	### A galcom resolution passed
+	### this/root = proposer
+	### from = target if valid
+	### To find out which resolution it was, use last_resolution_changed trigger
+	## replace_scopes = { this = country root = country from = any }
+	## event_type = country
+	on_resolution_passed
+
+	### A galcom resolution failed to pass
+	### this/root = proposer
+	### from = target if valid
+	### To find out which resolution it was, use last_resolution_changed trigger
+	## replace_scopes = { this = country root = country from = any }
+	## event_type = country
+	on_resolution_failed
+
+	### This = Country, first member added
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_galactic_community_formed
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_galactic_council_established
+
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_add_community_member
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_remove_community_member
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_add_to_council
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_remove_from_council
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_join_alliance
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_leave_alliance
+
+	### This = Country who accepted the proposal
+	### From = Country who proposed the commercial pact
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_sign_commercial_pact
+
+	### This = Country who accepted the proposal
+	### From = Country who proposed the defensive pact
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_sign_defensive_pact
+
+	### This = Country who accepted the proposal
+	### From = Country who proposed the migration treaty
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_sign_migration_pact
+
+	### This = Country who accepted the proposal
+	### From = Country who proposed the non-aggression pact
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_sign_non_aggression_pact
+
+	### This = Country who accepted the proposal
+	### From = Country who proposed the research agreement
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_sign_research_pact
+
+	### This = subject
+	### From = subject's overlord
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_becoming_subject
+
+	### fires when a country finishes being integrated
+	### This = overlord
+	### From = subject
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_subject_integrated
+
+	### fires when a country releases a sector as a vassal
+	### This = released vassal
+	### From = overlord
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_released_as_vassal
+
+	### This = empire trying to leave federation
+	### From = empire who declined (federation leader)
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_ask_to_leave_federation_declined
+
+	### this = owner country, from = spynetwork scope
+	## replace_scopes = { this = country root = country from = spynetwork }
+	## event_type = country
+	on_spynetwork_formed
+
+	### THIS = Country: Emperor
+	### FROM = Country added to council
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_add_to_imperial_council
+
+	### THIS = Country: Emperor
+	### FROM = Country removed from council
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_remove_from_imperial_council
+
+	### these three are fired from script, basically for modders who want to change how first contact works or add some extra flavour stories in without overwriting things
+	### THIS = first_contact
+	## replace_scopes = { this = first_contact root = first_contact }
+	## event_type = first_contact
+	on_first_contact_started
+
+	### use for custom country types that need first contact paths
+	### THIS = first_contact
+	## replace_scopes = { this = first_contact root = first_contact }
+	## event_type = first_contact
+	on_first_contact_stage_1_no_path
+
+	### THIS = first_contact
+	## replace_scopes = { this = first_contact root = first_contact }
+	## event_type = first_contact
+	on_first_contact_generic_stage_2
+
+	### THIS = Planet: Branch office planet
+	### FROM = Country: Branch office owner
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_branch_office_established
+
+	### THIS = Planet: Branch office planet
+	### FROM = Country: Branch office owner
+	## replace_scopes = { this = carrier root = carrier from = country }
+	## event_type = carrier
+	on_branch_office_closed
+
+	### THIS = System: system being occupied
+	### FROM = Country: Conqueror of the system
+	### FROMFROM = Country: Original owner of the system
+	## replace_scopes = { this = system root = system from = country fromfrom = country }
+	## event_type = system
+	on_system_occupied
+
+	### THIS = System: system whos controller has changed
+	### FROM = Country: New controller of the system
+	### FROMFROM = Country: Old controller of the system
+	## replace_scopes = { this = system root = system from = country fromfrom = country }
+	## event_type = system
+	on_system_controller_changed
+
+	### THIS = System: system being returned from occupation
+	### FROM = Country: Previous owner of the system
+	### FROMFROM = Country: Occupier of the system
+	## replace_scopes = { this = system  root = system from = country fromfrom = country }
+	## event_type = system
+	on_system_returned
+
+	### A planet has been rendered ownerless, it has an orbital ring or similar, though. The orbital ring is still there, but is about to be deleted
+	### this = starbase
+	### from = planet
+	### fromfrom = old owner
+	## replace_scopes = { this = starbase root = starbase from = planet fromfrom = country }
+	## event_type = starbase
+	on_orbital_defense_planet_ownerless
+
+	### THIS = Espionage operation
+	### FROM = Operation target
+	## replace_scopes = { this = espionage_operation root = espionage_operation from = any }
+	## event_type = espionage_operation
+	on_operation_chapter_finished
+
+	### THIS = Espionage operation
+	### FROM = Operation target
+	## replace_scopes = { this = espionage_operation root = espionage_operation from = any }
+	## event_type = espionage_operation
+	on_operation_finished
+
+	### THIS = Espionage operation
+	## replace_scopes = { this = espionage_operation root = espionage_operation }
+	## event_type = espionage_operation
+	on_operation_cancelled
+
+	### Executed just as country is changing its government, before the new one is applied
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_pre_government_changed
+
+	### Executed just as country is changing its government, after the new one is applied
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_post_government_changed
+
+	### Executed when the Custodian's term ends
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_custodian_term_ends
+
+	### Executed when a country picks any tradition (including starters and finishers)
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_tradition_picked
+
+	### Executed when a country picks an ascension perk
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_ascension_perk_picked
+
+	### Executed when a megastructure has a new owner
+	### this = new owner
+	### from = megastructure
+	### fromfrom = old owner (if existing)
+	## replace_scopes = { this = country root = country from = megastructure fromfrom = country }
+	## event_type = country
+	on_megastructure_change_owner
+
+	### Executed when a megastructure is rendered ownerless
+	### this = solar system containing megastructure
+	### from = megastructure
+	### fromfrom = old owner (if existing)
+	## replace_scopes = { this = system root = system from = megastructure fromfrom = country }
+	## event_type = system
+	on_megastructure_ownerless
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_crystalline_empire_task
+
+	### Fired from destroy_star_system scripted effect
+	### This = system
+	### From = destroyer (if using a star cracker)
+	## replace_scopes = { this = system root = system from = ship }
+	## event_type = system
+	on_destroy_star_system
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_admirals_bickering_event_chain
+
+	### Executed when an empire wishes to turn a mercenary fleet into a Mercenary enclave
+	### This = fleet
+	## replace_scopes = { this = fleet root = fleet }
+	## event_type = fleet
+	on_establish_mercenary_enclave
+
+	### Fired when a science ship succesfully analyzed or scavenged debris
+	### this = country
+	### from = debris
+	### fromfrom = controller of destroyed ship
+	### fromfromfrom = science ship
+	## replace_scopes = { this = country root = country from = debris fromfrom = country fromfromfrom = ship }
+	## event_type = country
+	on_debris_researched
+
+	### Fired when a science ship succesfully analyzed or scavenged debris
+	### this = country
+	### from = debris
+	### fromfrom = controller of destroyed ship
+	### fromfromfrom = science ship
+	## replace_scopes = { this = country root = country from = debris fromfrom = country fromfromfrom = ship }
+	## event_type = country
+	on_debris_scavenged
+
+	### Fired when a science ship succesfully analyzed or scavenged debris
+	### this = country
+	### from = debris
+	### fromfrom = controller of destroyed ship
+	### fromfromfrom = science ship
+	## replace_scopes = { this = country root = country from = debris fromfrom = country fromfromfrom = ship }
+	## event_type = country
+	on_debris_reanimated
+
+	### Fired when a science ship succesfully analyzed or scavenged debris
+	### this = country
+	### from = debris
+	### fromfrom = controller of destroyed ship
+	### fromfromfrom = science ship
+	## replace_scopes = { this = country root = country from = debris fromfrom = country fromfromfrom = ship }
+	## event_type = country
+	on_debris_scavenged_and_researched
+
+	### Fired when a ship completes a special project.
+	### this = country
+	### fromfromfrom = ship
+	## replace_scopes = { this = country root = country fromfromfrom = ship }
+	## event_type = country
+	special_project_success
+
+	### Fired when a ship finishes researching an anomaly.
+	### this = ship
+	### from = planet
+	## replace_scopes = { this = ship root = ship from = planet }
+	## event_type = ship
+	anomaly_success
+
+	### Fired when a subject has started converting to a specialist type
+	### This = agreement
+	### owner = overlord
+	### target = subject
+	## replace_scopes = { this = agreement root = country from = country }
+	## event_type = agreement
+	on_specialist_subject_conversion_started
+
+	### Fired when a subject has finished converting to a specialist type
+	### This = agreement
+	### owner = overlord
+	### target = subject
+	## replace_scopes = { this = agreement root = country from = country }
+	## event_type = agreement
+	on_specialist_subject_conversion_finished
+
+	### Fired when a subject specialist conversion has been aborted
+	### This = agreement
+	### owner = overlord
+	### target = subject
+	## replace_scopes = { this = agreement root = country from = country }
+	## event_type = agreement
+	on_specialist_subject_conversion_aborted
+
+	### Executed when a two capitals get connected through relay network
+	### THIS = Country: Owner
+	### FROM = Country: Other
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_capitals_connected
+
+	### Fired when a change to an existing subject agreement has been accepted
+	### This = agreement
+	### owner = overlord
+	### target = subject
+	## replace_scopes = { this = agreement root = country from = country }
+	## event_type = agreement
+	on_agreement_change_accepted
+
+	## replace_scopes = { this = situation root = country from = country }
+	## event_type = situation
+	on_shroudwalker_divination_visitors_situation
+
+	## replace_scopes = { this = situation root = country from = country }
+	## event_type = situation
+	on_shroudwalker_divination_locus_situation
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_shroudwalker_insight_situation_finish
+
+	### Executed when an astral rift spawns
+	### THIS = AstralRift: spawned astral rift
+	## replace_scopes = { this = astral_rift root = astral_rift }
+	## event_type = astral_rift
+	on_astral_rift_spawned
+
+	### Executed when the exploration of an astral rift starts
+	### THIS = Country: Explorer country
+	### FROM = AstralRift: Explored astral rift
+	### FROMFROM = Exploring Fleet
+	## replace_scopes = { this = country root = country from = astral_rift fromfrom = fleet }
+	## event_type = country
+	on_astral_rift_exploration_start
+
+	### Executed when an astral rift event is about to be fired
+	### THIS = Country: Explorer country
+	### FROM = AstralRift: Explored astral rift
+	### FROMFROM = Exploring Fleet
+	## replace_scopes = { this = country root = country from = astral_rift fromfrom = fleet }
+	## event_type = country
+	on_astral_rift_pre_event_fire
+
+	### Executed when the exploration of an astral rift ends
+	### THIS = Country: Explorer country
+	### FROM = AstralRift: Explored astral rift
+	### FROMFROM = Exploring Fleet
+	## replace_scopes = { this = country root = country from = astral_rift fromfrom = fleet }
+	## event_type = country
+	on_astral_rift_exploration_complete
+
+	### Fired when a Commercial Pact is Broken for both parties
+	### This = Active Country
+	### From = Other participating Country
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_commercial_pact_broken
+
+	### Executed when a country activates an agenda
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_agenda_finished
+
+	### Executed when a country activates an agenda early.
+	### It's triggered in addition to on_agenda_finished just before it.
+	### THIS = country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_agenda_finished_early
+
+	### Fired when a fleet activates cloaking
+	### This = Fleet
+	## replace_scopes = { this = fleet root = fleet }
+	## event_type = fleet
+	on_cloaking_activated
+
+	### Fired when cloaking is deactivated for a fleet (voluntarily or involuntarily)
+	### This = Fleet
+	## replace_scopes = { this = fleet root = fleet }
+	## event_type = fleet
+	on_cloaking_deactivated
+
+	### Fired when a pre-FTL's awareness level increases (by uncloaking ships or using add/set_awareness in events)
+	### This = PreFTL Country
+	### From = Observing Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_awareness_level_increase
+
+	### Fired when a pre-FTL's awareness level decreases (by uncloaking ships or using add/set_awareness in events)
+	### This = PreFTL Country
+	### From = Observing Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_awareness_level_decrease
+
+	### Chance of pre-FTL civilizations to shift their ethics
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_pre_ftl_pop_ethic_shift
+
+	### Fired when a country attacks another country
+	### This = attacked country
+	### From = attacker country
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_country_attacked
+
+	### Fired when a bypass in locked by a Dimensional Lock
+	### This = Bypass
+	### From = fleet locking the bypass
+	## replace_scopes = { this = bypass root = bypass from = fleet }
+	## event_type = bypass
+	on_bypass_locked
+
+	### Fired when a bypass Dimensional Lock expires
+	### This = Bypass
+	## replace_scopes = { this = bypass root = bypass }
+	## event_type = bypass
+	on_dimensional_lock_expired
+
+	### Fired when a Space Storm is created
+	### This = System containing the Storm
+	## replace_scopes = { this = system root = system }
+	## event_type = system
+	on_space_storm_created
+
+	### Fired when a Space Storm is destroyed
+	### This = System containing the Storm
+	## replace_scopes = { this = system root = system }
+	## event_type = system
+	on_space_storm_destroyed
+
+	### Fired approximately every decade via 'syndaw.11'
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_machine_leader_malfunction
+
+	### Fired approximately every decade via 'syndaw.11'
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_synth_leader_malfunction
+
+	### Fired when a PopGroup has a change in their ethics
+	### This = PopGroup
+	### From = Planet Owner
+	### local_num_pops_changed = Num pops that switched ethic to This pop group
+	## replace_scopes = { this = pop_group root = pop_group from = country }
+	## event_type = pop_group
+	on_daily_pop_ethics_divergence
+
+	### Situation Random Event Pool | Fired by cyber.5
+	### This = Situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_cyberization_situation_random_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_cyberization_hive_situation_random_events_list
+
+	### Situation Random Event Pool | Fired by synth.5
+	### This = Situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_digitization_situation_random_events_list
+
+	### Work/Family Event Pool | Fired by cyber.600
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_futureshock_chain_work_family_events_list
+
+	### Leisure/Social Event Pool | Fired by cyber.1000
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_futureshock_chain_leisure_events_list
+
+	### Identity Event Pool | Fired by synth.600
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_synthshock_chain_identity_events_list
+
+	### Possibilities Event Pool | Fired by synth.1000
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_synthshock_chain_opportunity_events_list
+
+	### Synth Queen Random Demand Pool | Fired by situation_synth_queen_player_facing
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_synth_queen_random_demand_list
+
+	### Breach the Shroud Situation Random Social Event Pool | Fired by shroud.2200 during Stage 1
+	### This = situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_breach_the_shroud_situation_random_social_events_list
+
+	### Breach the Shroud Situation Random Beneficial Event Pool | Fired by shroud.2200
+	### This = situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_breach_the_shroud_situation_random_beneficial_events_list
+
+	### Breach the Shroud Situation Random Balanced Event Pool | Fired by shroud.2200
+	### This = situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_breach_the_shroud_situation_random_balanced_events_list
+
+	### Breach the Shroud Situation Random Chaotic Event Pool | Fired by shroud.2200
+	### This = situation
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_breach_the_shroud_situation_random_chaotic_events_list
+
+	## replace_scopes = { this = any root = any }
+	## event_type = scopeless
+	on_galaxy_map_during_tutorial
+
+	### A Gravity Snare was sent by a science fleet
+	### This = Snare Fleet
+	### From = Fleet that sent the snare
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_snare_sent
+
+	### Fired when a truce is over
+	### This = owner of the truce
+	### From = target of the truce
+	## replace_scopes = { this = country root = country from = country }
+	## event_type = country
+	on_truce_end
+
+	### Fired when starbase is occupied and changes controller
+	### This = New controller
+	### From = Starbase being occupied
+	## replace_scopes = { this = country root = country from = starbase }
+	## event_type = country
+	on_starbase_occupied
+
+	### A specimen has been acquired
+	### This = country receiving the specimen
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_specimen_acquired
+
+	### A specimen has been sold
+	### This = country selling the specimen
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_specimen_sold
+
+	### Fired when a ship engulfs another one with an engulf type weapon
+	### This = Engulfed Ship (Defender)
+	### From = Engulfing Ship (Attacker)
+	## replace_scopes = { this = ship root = ship from = ship }
+	## event_type = ship
+	on_ship_engulfed
+
+	### This: System
+	### From: Storm
+	## replace_scopes = { this = system root = system from = storm }
+	## event_type = system
+	on_storm_entered_system
+
+	### This: System
+	### From: Storm
+	## replace_scopes = { this = system root = system from = storm }
+	## event_type = system
+	on_storm_left_system
+
+	### Fired when a collection exhibit has been unlocked
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_exhibit_unlocked
+
+	### Fired when a space fauna is captured
+	### This = Ship captured by a gravity snare - deleted after event fired and sent to vivarium
+	### From = Fleet / Gravity snare that captured the space fauna
+	## replace_scopes = { this = ship root = ship from = fleet }
+	## event_type = ship
+	on_fauna_captured
+
+	### Performed once a space fauna capture attempt ends, no matter the outcome of the attempt
+	### This = Fleet / Gravity Snare Fleet
+	## replace_scopes = { this = fleet root = fleet }
+	## event_type = fleet
+	on_fauna_capture_ended
+
+	### Fired when a space fauna is added to the vivarium
+	### From = Design
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_vivarium_populated
+
+	### Fired when a space fauna is culled
+	### From = Design
+	### This = Country
+	## replace_scopes = { this = country root = country from = design }
+	## event_type = country
+	on_space_fauna_culled
+
+	### This: Storm
+	## replace_scopes = { this = storm root = storm }
+	## event_type = cosmic_storm
+	on_storm_finished
+
+	### Fired when a country encounters a storm for the first time
+	### The number of met storms is incremented after this action
+	### This: Country
+	### From: Storm
+	## replace_scopes = { this = country root = country from = storm }
+	## event_type = country
+	on_storm_encountered
+
+	### This = Leader captured
+	### from = perpetrator country
+	### fromfrom = victim country
+	### fromfromfrom = system where it happened
+	## replace_scopes = { this = leader root = leader from = country fromfrom = country fromfromfrom = system }
+	## event_type = leader
+	on_leader_captured
+
+	### This = Country
+	### This.local_country_biomass = amount of wilderness pops
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_biomass_monthly
+
+	## replace_scopes = { this = no_scope root = no_scope }
+	## event_type = cosmic_storm
+	debug_spawn_storm_random_system
+
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_ftl_society_enters_new_age
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_approach_purity_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_approach_cloning_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_approach_mutation_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_hive_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_hive_approach_purity_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_hive_approach_cloning_events_list
+
+	## replace_scopes = { this = situation root = situation }
+	## event_type = situation
+	on_genetic_ascension_hive_approach_mutation_events_list
+
+	### Fired when attunement towards a Patron is gained (also fired when losing attunement since it's a gain for the opposite patron)
+	### this = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_attunement_gained
+
+	### Fired when a country completes a patron's first contact
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_patron_contact_completed
+
+	### this = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_covenant_formed
+
+	### this = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_active_accord_unlocked
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_superstitious_beliefs_random_positive_events_list
+
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_superstitious_beliefs_random_negative_events_list
+
+	### Fired by breach_shroud = yes
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_shroud_breached
+
+	### Fired when a country delves, no matter the result
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_shroud_delve
+
+	### Fired when a country delves but finds nothing of interest
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_patron_delve_failed
+
+	### Fired when a player selects a new country during the game
+	### This = Country
+	## replace_scopes = { this = country root = country }
+	## event_type = country
+	on_new_country_selected
+
+	# endregion
+
+	# region from 01_planet_destruction.txt
+
+	# Scope:
+	# this/root = planet that have been fired upon
+	# from = fleet that fired
+	# on_destroy_planet_with_PLANET_DESTRUCTION_COMPONENT = {
+	# 	events = {
+	# 		planet_destruction.1
+	# 	}
+	# }
+
+	# Note: The _queued on_actions also fire when the command is made even if there is nothing else in the queue
+	# Similarly, the _unqueued on_actions fire even if you cancel the order while the weapon is on the wind-up to fire
+	# They use the same scopes as the standard events
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_destroy_planet_with_<component_template.planet_killer>
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_destroy_planet_with_<component_template.planet_killer>_queued
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_destroy_planet_with_<component_template.planet_killer>_unqueued
+
+	# endregion
+
+	# region from 02_component_on_actions.txt
+
+	### Beholder Leader's Planetfall action
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_beholder_target_planet_reached
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_azaryn_target_planet_reached
+
+	### Executed when a country activates an agenda
+	### THIS = country
+	## replace_scopes = { this = carrier root = carrier }
+	## event_type = carrier
+	on_azaryn_action_cancel
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_cosmogenesis_exodus_planet_reached
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_behemoth_fast_egg_planet_reached
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_behemoth_slow_egg_planet_reached
+
+	## replace_scopes = { this = carrier root = carrier from = fleet }
+	## event_type = carrier
+	on_behemoth_strong_egg_planet_reached
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_turbo_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_reflexes_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_drain_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_spike_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_burst_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_buff_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_summon_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_healing_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_superweapon_activated
+
+	## replace_scopes = { this = fleet root = fleet from = fleet }
+	## event_type = fleet
+	on_behemoth_rage_triggered
+
+	# endregion
+}

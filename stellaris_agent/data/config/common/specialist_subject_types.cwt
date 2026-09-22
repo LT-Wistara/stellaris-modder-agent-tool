@@ -1,0 +1,39 @@
+types = {
+	type[specialist_subject_type] = {
+		path = "game/common/specialist_subject_types"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			## optional
+			desc = "$_desc"
+			neighbor_name = "$_neighbor"
+			## optional
+			neighbor_desc = "$_neighbor_desc"
+		}
+		images = {
+			icon = icon # <sprite>
+			icon_large = icon_large # <sprite>
+		}
+	}
+}
+
+specialist_subject_type = {
+	icon = <sprite>
+	icon_large = <sprite>
+	preferred_ethic = <ethic>
+	base_conversion_time = int
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	on_progress_complete = single_alias_right[effect_clause]
+	levels = {
+		## cardinality = 1..inf
+		{
+			## cardinality = 0..1
+			experience_needed_for_next_level = int
+			perks = {
+				## cardinality = 0..inf
+				<specialist_subject_perk>
+			}
+		}
+	}
+}

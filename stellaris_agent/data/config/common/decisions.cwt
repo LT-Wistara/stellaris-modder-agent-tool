@@ -1,0 +1,100 @@
+types = {
+	type[decision] = {
+		path = "game/common/decisions"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## optional
+			icon = icon # icon[gfx/interface/icons/decisions] | <decision>
+			## optional
+			icon = "gfx/interface/icons/decisions/$.dds" # inferred
+		}
+		subtype[colony_decision] = {
+			owned_planets_only = yes
+		}
+	}
+}
+
+# Here, `decision` will have different domains depending on the situation in the game.
+# On a nomadic ship colony, it is `ship`; on a planet, it is `planet`.
+# It is not fixed, and we use `carrier` here (at the common parent scope) atm.
+## replace_scopes = { this = carrier root = carrier from = country }
+decision = {
+	## cardinality = 0..1
+	owned_planets_only = bool
+	#### default: no. Shown on top of the list and highlighted
+	####
+	## cardinality = 0..1
+	important = bool
+	## cardinality = 0..1
+	enactment_time = int
+
+	## cardinality = 0..1
+	custom_tooltip = {
+		## cardinality = 0..1
+		text = ""
+		## cardinality = 0..1
+		text = localisation
+		## cardinality = 0..1
+		fail_text = default
+		## cardinality = 0..1
+		fail_text = localisation
+		## cardinality = 0..1
+		success_text = localisation
+		alias_name[trigger] = alias_match_left[trigger]
+	}
+
+	## cardinality = 0..1
+	sound = <sound>
+	## cardinality = 0..1
+	sound = <sound_effect>
+	## cardinality = 0..1
+	icon = icon[gfx/interface/icons/decisions]
+	## cardinality = 0..1
+	icon = <decision>
+    #icon = <sprite>
+
+	## cardinality = 0..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { root = country this = country }
+	show_tech_unlock_if = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	allow = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	abort_trigger = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	abort_effect = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	
+	on_queued = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	on_unqueued = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	effect = single_alias_right[effect_clause]
+
+	## cardinality = 0..1
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+}

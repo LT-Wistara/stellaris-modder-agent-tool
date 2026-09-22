@@ -1,0 +1,27 @@
+types = {
+	type[attitude] = {
+		path = "game/common/attitudes"
+		path_extension = .txt
+		localisation = {
+			name = "attitude_$"
+		}
+	}
+}
+
+attitude = {
+	type = scalar
+	behaviour = {
+		## cardinality = 0..1
+		attack = bool
+		## cardinality = 0..1
+		weaken = bool
+		## cardinality = 0..1
+		alliance = bool
+		## cardinality = 0..1
+		vassalize = bool
+		## cardinality = 0..1
+		trade = bool
+		## cardinality = 0..1
+		coexist = bool
+	}
+}

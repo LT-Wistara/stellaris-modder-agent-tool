@@ -1,0 +1,23 @@
+[Unit]
+Description=Stellaris Agent MCP Server (loopback only; no authentication)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stellaris-mcp
+Group=stellaris-mcp
+WorkingDirectory=/opt/stellaris-agent-tool
+# Serves on loopback only. The server has no authentication, so anything that
+# must reach it from elsewhere goes through a TLS reverse proxy (see
+# nginx-stellaris-mcp.conf) rather than binding this service to a public address.
+ExecStart=/usr/bin/python3 /opt/stellaris-agent-tool/start.py --http --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

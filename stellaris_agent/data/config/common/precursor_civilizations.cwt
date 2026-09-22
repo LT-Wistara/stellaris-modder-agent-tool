@@ -1,0 +1,25 @@
+types = {
+	type[precursors] = {
+		path = "common/precursor_civilizations"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			pictrue = picture
+		}
+	}
+}
+
+# Sets the chance for a system getting a specific precursor and distributes star flags named after the precursor. Or something like that.
+precursors = {
+	size = int
+
+	## cardinality = 0..1
+	possible = single_alias_right[trigger_clause]
+
+	## cardinality = 1..1
+	picture = <sprite>
+
+}

@@ -1,0 +1,36 @@
+types = {
+	type[diplomacy_economy] = {
+		path = "game/common/diplomacy_economy"
+		path_extension = .txt
+		type_per_file = yes
+		name_from_file = yes
+	}
+}
+
+diplomacy_economy = {
+	once = {
+		## cardinality = 0..inf
+		scalar = {
+			## replace_scopes = { this = country root = country from = country }
+			trigger = single_alias_right[trigger_clause]
+			resources = {
+				## cardinality = 0..1
+				category = <economic_category>
+				alias_name[economic_template] = alias_match_left[economic_template]
+			}
+		}
+	}
+	per_relation = {
+		#Not sure if you can define your own stuff here so used an enum
+		## cardinality = 0..inf
+		scalar = {
+			## replace_scopes = { this = country root = country from = country }
+			trigger = single_alias_right[trigger_clause]
+			resources = {
+				## cardinality = 0..1
+				category = <economic_category>
+				alias_name[economic_template] = alias_match_left[economic_template]
+			}
+		}
+	}
+}

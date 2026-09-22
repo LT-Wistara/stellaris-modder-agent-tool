@@ -1,0 +1,19 @@
+types = {
+	type[advisor_voice] = {
+		path = "game/sound/advisor_voice_types"
+		path_extension = .txt
+	}
+}
+
+advisor_voice = {
+	name = scalar
+	## file_extensions = { png dds tga }
+	icon = filepath
+
+	## cardinality = 0..1
+	playable = single_alias_right[trigger_clause]
+
+	weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}

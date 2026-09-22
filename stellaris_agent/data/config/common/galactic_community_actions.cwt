@@ -1,0 +1,15 @@
+types = {
+	type[galactic_community_action] = {
+		path = "game/common/galactic_community_actions"
+		path_extension = .txt
+	}
+}
+
+galactic_community_action = {
+	## cardinality = 1..inf
+	resources = {
+		## cardinality = 0..1
+		category = <economic_category>
+		alias_name[economic_template] = alias_match_left[economic_template]
+	}
+}

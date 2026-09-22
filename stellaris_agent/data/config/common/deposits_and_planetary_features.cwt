@@ -1,0 +1,176 @@
+types = {
+	type[deposit] = {
+		path = "game/common/deposits"
+		path_extension = .txt
+		path_strict = yes
+		subtype[colonisable] = {
+			is_for_colonizable = yes
+		}
+		subtype[orbital] = {
+			station = shipclass_research_station
+			station = shipclass_mining_station
+		}
+		subtype[blocker] = {
+			category = <deposit_category.blocker>
+		}
+		subtype[null] = {
+			is_null = yes
+		}
+		subtype[not_dropped] = {
+			potential = { always = no }
+		}
+		localisation = {
+			subtype[!null] = {
+				name = "$"
+				## optional
+				desc = "$_desc"
+			}
+		}
+		images = {
+			## optional
+			icon = icon # icon[gfx/interface/icons/deposits]
+			## optional
+			icon = "gfx/interface/icons/deposits/$.dds" # inferred
+		}
+	}
+	type[deposit_category] = {
+		path = "game/common/deposit_categories"
+		path_extension = .txt
+		subtype[blocker] = {
+			blocker = yes
+		}
+	}
+}
+
+## push_scope = planet
+deposit = {
+	subtype[!null] = {
+		## cardinality = 0..0
+		is_null = yes
+		## cardinality = 0..1
+		is_for_colonizable = bool
+	}
+	subtype[null] = {
+		### this makes the deposit transparent, used by vanilla to designate an "empty" deposit.
+		is_null = yes
+	}
+	## cardinality = 0..1
+	use_for_min_max_adjustments = bool
+
+	#blocker?
+	## cardinality = 0..1
+	icon = icon[gfx/interface/icons/deposits]
+
+	subtype[blocker] = {
+		## cardinality = 0..1
+		time = int
+		## cardinality = 0..1
+		on_cleared = single_alias_right[effect_clause]
+		## cardinality = 0..1
+		can_be_cleared = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		can_be_cleared_potential = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		blocker_swap_types = {
+			## cardinality = 1..inf
+			<deposit>
+		}
+		## cardinality = 0..1
+		use_weights_for_blocker_swap_types = bool
+
+		## cardinality = 0..1
+		all_blocker_swap_types = yes
+
+		## cardinality = 0..1
+		prerequisites = single_alias_right[technology_prerequisites]
+
+		## cardinality = 0..1
+		ai_weight = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = planet root = planet }
+	planet_modifier = single_alias_right[modifier_clause]
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	country_modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = planet root = planet }
+	triggered_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = pop_group root = pop_group }
+	triggered_planet_pop_group_modifier_for_species = single_alias_right[triggered_modifier_by_pop_group_clause]
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = pop_group root = pop_group }
+	triggered_planet_pop_group_modifier_for_all = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { this = planet root = planet }
+	habitat_modifier = single_alias_right[modifier_clause]
+
+	subtype[colonisable] = {
+		## cardinality = 0..1
+		use_weights_for_terraforming_swap_types = bool
+		## cardinality = 0..1
+		should_swap_deposit_on_terraforming = bool
+		## cardinality = 0..1
+		terraforming_swap_types = {
+			## cardinality = 1..inf
+			<deposit>
+		}
+		## cardinality = 0..1
+		category = <deposit_category>
+	}
+	subtype[!colonisable] = {
+		## cardinality = 0..1
+		category = <deposit_category>
+	}
+
+	## cardinality = 0..1
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	drop_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	subtype[orbital] = {
+		station = shipclass_mining_station
+		station = shipclass_research_station
+	}
+
+	alias_name[resources_template_optional] = alias_match_left[resources_template_optional]
+
+	#	## cardinality = 0..1
+	#	resources = {
+	#		category = <economic_category>
+	#
+	#		alias_name[economic_template] = alias_match_left[economic_template]
+	#
+	#		#to be analysed whether you can have cost, upkeep, produces everywhere
+	#		subtype[!blocker] = {
+	#			## cardinality = 0..0
+	#			cost = {
+	#			}
+	#		}
+	#	}
+
+	## cardinality = 0..1
+	custom_tooltip = localisation
+	## cardinality = 0..1
+	custom_tooltip_short = localisation
+}
+
+deposit_category = {
+	### Counts as blockers
+	## cardinality = 0..1
+	blocker = yes
+	### Shows up as rare deposits in planetview
+	## cardinality = 0..1
+	important = yes
+}

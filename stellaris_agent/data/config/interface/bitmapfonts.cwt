@@ -1,0 +1,137 @@
+#all the types defined in this file are nestled within bitmapfonts = {
+#please see interface/fonts.gfx - this file is weird.
+types = {
+	## type_key_filter = bitmapfont
+	type[bitmapfont] = {
+		name_field = name
+		skip_root_key = bitmapfonts
+		path = "game/interface" #see game/interface/fonts.gfx
+		path_extension = .gfx
+	}
+	## type_key_filter = bitmapfont_override
+	type[bitmapfont_override] = {
+		name_field = name
+		skip_root_key = bitmapfonts
+		path = "game/interface" #see game/interface/fonts.gfx
+		path_extension = .gfx
+	}
+}
+
+#these are the defines for the text coloring used in localisations. For example in the localisation "§HGhost Signal§!" the
+#H color code refers to what is defined in the example below from vanilla. Text colors should be thus parsed and checked against
+#the localisation if they are changed or new ones added.
+#example:
+#textcolors = {
+#	M = { 35 206 255 }
+#	L = { 195 176 145 }
+#	G = { 41 225 38 }
+#	R = { 242 86 70 }
+#	Y = { 247 252 52 }
+#	H = { 251 170 41 }
+#	T = { 255 255 255 }
+#	E = { 135 255 207 }
+#	S = { 228 156 42 }
+#	W = { 255 255 255 }
+#  g = { 128 128 128 }
+#}
+
+enums = {
+	enum[font_language] = {
+		l_braz_por
+		l_english
+		l_french
+		l_german
+		l_polish
+		l_russian
+		l_spanish
+		l_simp_chinese
+		l_korean
+		l_japanese
+	}
+}
+
+bitmapfont = {
+	name = scalar
+	## cardinality = 0..1
+	path = filepath[,.fnt]
+	## cardinality = 0..1
+	fontfiles = {
+		## cardinality = 1..inf
+		filepath[,.fnt]
+	}
+	## color_type = hex
+	color = scalar
+	## cardinality = 0..1
+	cursor_offset = {
+		## cardinality = 2..2
+		int
+	}
+	## cardinality = 0..1
+	selection_offset = {
+		## cardinality = 2..2
+		int
+	}
+	# textcolors can appear for each bitmapfont as well. it seems these override the global colors defined above it in the list. see the file.
+	## cardinality = 0..1
+	textcolors = {
+		## color_type = rgb
+		scalar = {
+			## cardinality = 3..3
+			int[0..255]
+		}
+	}
+}
+
+bitmapfont_override = {
+	name = <bitmapfont>
+	## cardinality = 0..1
+	ttf_font = <font>
+	## cardinality = 0..1
+	ttf_size = int
+	## cardinality = 0..1
+	vertical_offset = int
+	## cardinality = 0..1
+	fontfiles = {
+		## cardinality = 1..inf
+		filepath[,.fnt]
+	}
+	languages = {
+		## cardinality = 1..inf
+		enum[font_language]
+	}
+	## cardinality = 0..1
+	multiline = {
+		## cardinality = 0..1
+		line_break = {
+			## cardinality = 0..inf
+			scalar
+		}
+		## cardinality = 0..1
+		forbidden_start = {
+			## cardinality = 0..inf
+			scalar
+		}
+	}
+}
+
+#bitmapfont entries are connected to the fonts defined at game/fonts and the file there (see pull requests).
+#example:
+# bitmapfont = {
+#		name = "cg_16b" -> name defined at game/fonts
+#		path = "gfx/fonts/cg_16b" -> file path to ttf or otf file
+#		color = 0xffffffff -> hex color code: this needs to be addressed somehow
+#		cursor_offset = { -3 -5 }
+#		selection_offset = { 0 3 }
+#	}
+
+
+#overrides appear to replace defines for fonts for speciesi languages:
+#example:
+#	 bitmapfont_override = {
+#		name = "cg_16b"
+#		fontfiles = {
+#			"gfx/fonts/stellaris_main"
+#		}
+#		languages = { "l_russian" "l_polish" }
+#	 }
+

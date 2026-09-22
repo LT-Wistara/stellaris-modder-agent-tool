@@ -1,0 +1,57 @@
+types = {
+	type[game_concept] = {
+		path = "game/common/game_concepts"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## optional
+			icon = icon # icon[gfx/interface/icons/concepts]
+		}
+	}
+}
+
+game_concept = {
+	### List of aliases that may be used instead of the ID.
+	### Any that are used without a replacement string must have a loc with an identical key.
+	## cardinality = 0..1
+	alias = {
+		## cardinality = 0..inf
+		scalar
+	}
+
+	### Icon shown in concept tooltip.
+	### If not specified, it will use NUncheckedDefines::NInterface::GAME_CONCEPT_ICON_DEFAULT from unchecked_defines/00_interface.txt.
+	## cardinality = 0..1
+	## file_extensions = { png dds tga }
+	icon = filepath
+
+	### Alternative for "icon".
+	## cardinality = 0..1
+	## file_extensions = { png dds tga }
+	texture = filepath
+
+	### Tooltip to use instead of the default. Can be either a loc key or a database object (see DATABASE CONCEPTS below).
+	## cardinality = 0..1
+	tooltip_override = localisation
+	### Tooltip to use instead of the default. Can be either a loc key or a database object (see DATABASE CONCEPTS below).
+	## cardinality = 0..1
+	tooltip_override = $database_object
+
+	## cardinality = 0..1
+	databank = {
+		category = <game_concepts_categories>
+		icon = <sprite>
+		picture = <sprite>
+		## cardinality = 0..1
+		postfix = localisation
+	}
+
+	### Stellaris Wiki search string override. By default it is generated from the key. Probably not useful for modders currently as only the official wiki is supported.
+	## cardinality = 0..1
+	wiki = enum[wiki_key]
+
+}
+

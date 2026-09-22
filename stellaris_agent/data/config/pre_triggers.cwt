@@ -1,0 +1,52 @@
+#planets:
+
+#### whether the  planet has an owner
+alias[colony_pre_trigger:has_owner] = bool
+
+#### whether the planet is its owner's homeworld
+alias[colony_pre_trigger:is_homeworld] = bool
+
+#### whether the planet still belong to its original owner
+alias[colony_pre_trigger:original_owner] = bool
+
+#### whether the planet owner is controlled by the computer (vs controlled by a human)
+alias[colony_pre_trigger:is_ai] = bool
+
+#### whether ground combat is going on the planet
+alias[colony_pre_trigger:has_ground_combat] = bool
+
+#### whether the planet is the capital world of the empire it belongs too
+alias[colony_pre_trigger:is_capital] = bool
+
+#### whether the planet is occupied
+alias[colony_pre_trigger:is_occupied_flag] = bool
+
+
+#pops:
+
+#### whether the pop_group planet has an owner
+alias[pop_pre_trigger:has_owner] = bool
+
+#### whether the pop_group is enslaved
+alias[pop_pre_trigger:is_enslaved] = bool
+
+#### whether the pop_group is being purged
+alias[pop_pre_trigger:is_being_purged] = bool
+
+#### whether the pop_group is being assimilated
+alias[pop_pre_trigger:is_being_assimilated] = bool
+
+#### whether the pop_group is on a planet or not
+alias[pop_pre_trigger:has_planet] = bool
+
+#### whether the pop_group is sapients
+alias[pop_pre_trigger:is_sapient] = bool
+
+#### whether the pop_group is robotic
+alias[pop_pre_trigger:is_robotic] = bool
+
+
+#country:
+
+#### whether the planet owner is controlled by the computer (vs controlled by a human)
+alias[country_pre_trigger:is_ai] = bool

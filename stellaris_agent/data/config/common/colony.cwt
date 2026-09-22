@@ -1,0 +1,155 @@
+types = {
+	type[colony_type] = {
+		path = "game/common/colony_types"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+			tooltip = "$_tt"
+		}
+		images = {
+			icon = icon # <sprite>
+		}
+	}
+	type[colony_automation] = {
+		path = "game/common/colony_automation"
+		path_extension = .txt
+		path_strict = yes
+	}
+	type[colony_automation_category] = {
+		path = "game/common/colony_automation_categories"
+		path_extension = .txt
+	}
+	type[colony_automation_exception] = {
+		path = "game/common/colony_automation_exceptions"
+		path_extension = .txt
+	}
+}
+
+## push_scope = colony
+colony_type = {
+	icon = <sprite>
+
+	### Used by AI to estimate what will happen when we change the designation
+	## cardinality = 0..1
+	ai_resource_conversion = {
+		## cardinality = 0..inf
+		<resource> = float
+		## replace_scopes = { this = colony root = colony }
+		trigger = single_alias_right[trigger_clause]
+	}
+
+	### Used by AI to estimate the current effects of this designation
+	## cardinality = 0..1
+	ai_resource_current_conversion = {
+		## cardinality = 0..inf
+		<resource> = float
+		## replace_scopes = { this = colony root = colony }
+		trigger = single_alias_right[trigger_clause]
+	}
+
+	potential = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	custom_tooltip = localisation
+
+	## cardinality = 0..1
+	## replace_scopes = { this = colony root = colony }
+	planet_modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = colony root = colony }
+	triggered_planet_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	ai_building_set_affinity = {
+		## cardinality = 0..inf
+		value[building_set] = float
+	}
+
+	weight_modifier = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}
+
+## push_scope = colony
+colony_automation = {
+	category = <colony_automation_category>
+
+	available = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	prio_districts = {
+		## cardinality = 0..inf
+		<district>
+	}
+
+	## cardinality = 0..1
+	prio_zones = {
+		## cardinality = 0..inf
+		<zone>
+	}
+
+	buildings = {
+		## cardinality = 1..inf
+		scalar = {
+			building = <building>
+			## cardinality = 0..1
+			available = single_alias_right[trigger_clause]
+			## cardinality = 0..1
+			planet_limit = int
+		}
+	}
+}
+
+## push_scope = colony
+colony_automation_category = {
+	## cardinality = 0..1
+	available = single_alias_right[trigger_clause]
+}
+
+## push_scope = colony
+colony_automation_exception = {
+	category = <colony_automation_category>
+	### default: no
+	## cardinality = 0..1
+	emergency = bool
+	### default: no
+	## cardinality = 0..1
+	empire_wide_emergency = bool
+	### default: no
+	## cardinality = 0..1
+	should_ai_use_job_micro = bool
+
+	available = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	prio_districts = {
+		## cardinality = 0..inf
+		<district>
+	}
+
+	## cardinality = 0..1
+	buildings = {
+		## cardinality = 1..inf
+		scalar = {
+			building = <building>
+			## cardinality = 0..1
+			available = single_alias_right[trigger_clause]
+			## cardinality = 0..1
+			upgrade_trigger = single_alias_right[trigger_clause]
+			## cardinality = 0..1
+			planet_limit = int
+		}
+	}
+
+	## cardinality = 0..1
+	job_changes = {
+		scalar = {
+			## cardinality = 0..1
+			available = single_alias_right[trigger_clause]
+			job = <job>
+			amount = int
+		}
+	}
+}

@@ -1,0 +1,64 @@
+types = {
+	type[specialist_subject_perk] = {
+		path = "game/common/specialist_subject_perks"
+		path_extension = .txt
+		subtype[main] = {
+			main_perk = yes
+		}
+        subtype[non_main] = {
+            ## cardinality = 0..1
+			main_perk = no
+		}
+		localisation = {
+            name = "$"
+            ## optional
+            desc = "$_desc"
+		}
+		images = {
+			subtype[non_main] = {
+				icon = icon # <sprite>
+			}
+		}
+	}
+}
+
+specialist_subject_perk = {
+    ## cardinality = 0..1
+	main_perk = bool
+    subtype[non_main] = {
+        icon = <sprite>
+    }
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+	subject_modifier = {
+        alias_name[modifier] = alias_match_left[modifier]
+        ## cardinality = 0..1
+        description = localisation
+	}
+    ## cardinality = 0..1
+    ## replace_scopes = { this = country root = country }
+    overlord_modifier = {
+        alias_name[modifier] = alias_match_left[modifier]
+        ## cardinality = 0..1
+        description = localisation
+	}
+    ## cardinality = 0..1
+    ## replace_scopes = { this = agreement root = agreement  }
+	### Invoked when the perk is activated (target is the specialist subject)
+	activate_effect = single_alias_right[effect_clause]
+    ## cardinality = 0..1
+    ## replace_scopes = { this =  agreement root = agreement }
+	### Invoked when the perk is deactivated (target is the specialist subject)
+	deactivate_effect = single_alias_right[effect_clause]
+    ## cardinality = 0..1
+	### Static modifiers that are applied to the overlord's planets if the capitals of both empires are connected via the hyperlane network
+    overlord_relay_network_modifier = {
+        ## cardinality = 0..inf
+		<static_modifier> = float
+	}
+
+	## cardinality = 0..1
+	desc = {
+		description = localisation
+	}
+}

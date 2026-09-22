@@ -1,0 +1,45 @@
+types = {
+    type[zone_slots] = {
+        path = "game/common/zone_slots"
+        path_extension = .txt
+    }
+}
+
+zone_slots = {
+    ## cardinality = 0..1
+    start = <zone>
+
+	## cardinality = 0..1
+    include = {
+        ## cardinality = 0..1
+        all
+        ## cardinality = 0..inf
+        <zone>
+    }
+
+    ## cardinality = 0..1
+    included_zone_sets = {
+        ## cardinality = 0..inf
+        value[zone_set]
+    }
+
+    ## cardinality = 0..1
+    excluded_zone_sets = {
+        ## cardinality = 0..inf
+        value[zone_set]
+    }
+
+    ## cardinality = 0..1
+    exclude = {
+        ## cardinality = 0..inf
+        <zone>
+    }
+
+    ## replace_scopes = { this = planet root = planet }
+    ## cardinality = 0..1
+    potential = single_alias_right[trigger_clause]
+
+    ## replace_scopes = { this = planet root = planet }
+    ## cardinality = 0..1
+    unlock = single_alias_right[trigger_clause]
+}

@@ -1,0 +1,303 @@
+types = {
+	## type_key_filter = empire_name_parts_list
+	type[empire_name_parts_list] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = key
+	}
+	## type_key_filter = empire_name_format
+	type[empire_name_format] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = "" # force anonymous
+	}
+	## type_key_filter = federation_name_parts_list
+	type[federation_name_parts_list] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = key
+	}
+	## type_key_filter = federation_name_format
+	type[federation_name_format] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = "" # force anonymous
+	}
+	## type_key_filter = pop_faction_name_parts_list
+	type[pop_faction_name_parts_list] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = key
+	}
+	## type_key_filter = pop_faction_name_format
+	type[pop_faction_name_format] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = "" # force anonymous
+	}
+	## type_key_filter = pre_communications_name_parts_list
+	type[pre_communications_name_parts_list] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = key
+	}
+	## type_key_filter = pre_communications_name_format
+	type[pre_communications_name_format] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = "" # force anonymous
+	}
+	## type_key_filter = war_name_parts_list
+	type[war_name_parts_list] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = key
+	}
+	## type_key_filter = war_name_format
+	type[war_name_format] = {
+		path = "game/common/random_names"
+		path_extension = .txt
+		name_field = "" # force anonymous
+	}
+
+	## type_key_filter = species_modification_prefix
+	type[species_modification_prefix] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = species_modification_postfix
+	type[species_modification_postfix] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = black_hole_names
+	type[black_hole_names] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = asteroid_prefix
+	type[asteroid_prefix] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = asteroid_postfix
+	type[asteroid_postfix] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = star_names
+	type[star_names] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = nebula_names
+	type[nebula_names] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = cosmic_storm_name_prefixes
+	type[cosmic_storm_name_prefixes] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = custom_star_names
+	type[custom_star_names] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+	## type_key_filter = custom_planet_names
+	type[custom_planet_names] = {
+		path = "game/common/random_names/base"
+		path_extension = .txt
+	}
+}
+
+### Define possible parts of empire name here, such as "Glorious Empire of". When generating random name for empire, format can refer to it via <key> and pick random part.
+empire_name_parts_list = {
+	key = scalar
+	### default: no
+	## cardinality = 0..1
+	cyclic = bool
+	### List of possible parts. Random weights to the right are optional
+	parts = {
+		## cardinality = 0..inf
+		localisation = int
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+### This block contains rules for picking a specific name format
+empire_name_format = {
+	### Conditional weight for choosing this format
+	## replace_scopes = { root = country this = country }
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Format string for generating random name (proper noun form)
+	format = name_format[empire]
+	### String used to determine prefix for empire's ship. (Default being ISS). Usually matches name format. Optional for countries that would not ever have ships, e. g. Primitives.
+	## cardinality = 0..1
+	prefix_format = name_format[empire]
+	## cardinality = 0..1
+	noun = name_format[empire]
+	### Format string for generating random name (adjective form)
+	## cardinality = 0..1
+	adjective = name_format[empire]
+}
+
+### Define possible parts of federation name here. When generating random name for federation, format can refer to it via <key> and pick random part.
+federation_name_parts_list = {
+	key = scalar
+	### default: no
+	## cardinality = 0..1
+	cyclic = bool
+	### List of possible parts. Random weights to the right are optional
+	parts = {
+		## cardinality = 0..inf
+		localisation = int
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+### This block contains rules for picking a specific name format
+federation_name_format = {
+	### Conditional weight for choosing this format
+	## replace_scopes = { root = federation this = federation }
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Format string for generating random name (proper noun form)
+	format = name_format[federation]
+}
+
+pop_faction_name_parts_list = {
+	key = scalar
+	### default: no
+	## cardinality = 0..1
+	cyclic = bool
+	### List of possible parts. Random weights to the right are optional
+	parts = {
+		## cardinality = 0..inf
+		localisation = int
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+pop_faction_name_format = {
+	### Conditional weight for choosing this format
+	## replace_scopes = { root = pop_faction this = pop_faction }
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Format string for generating random name (proper noun form)
+	format = name_format[pop_faction]
+}
+
+pre_communications_name_parts_list = {
+	key = scalar
+	### default: no
+	## cardinality = 0..1
+	cyclic = bool
+	### List of possible parts. Random weights to the right are optional
+	parts = {
+		## cardinality = 0..inf
+		localisation = int
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+pre_communications_name_format = {
+	### Conditional weight for choosing this format
+	## replace_scopes = { root = country this = country }
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Format string for generating random name (proper noun form)
+	format = name_format[pre_communications]
+}
+
+war_name_parts_list = {
+	key = scalar
+	### default: no
+	## cardinality = 0..1
+	cyclic = bool
+	### List of possible parts. Random weights to the right are optional
+	parts = {
+		## cardinality = 0..inf
+		localisation = int
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+war_name_format = {
+	### Conditional weight for choosing this format
+	## replace_scopes = { root = war this = war }
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	### Format string for generating random name (proper noun form)
+	format = name_format[war]
+}
+
+species_modification_prefix = {
+	## cardinality = 0..inf
+	localisation
+}
+
+species_modification_postfix = {
+	## cardinality = 0..inf
+	localisation
+}
+
+black_hole_names = {
+	## cardinality = 0..inf
+	localisation
+}
+
+asteroid_prefix = {
+	## cardinality = 0..inf
+	localisation
+}
+
+asteroid_postfix = {
+	## cardinality = 0..inf
+	localisation
+	## cardinality = 0..inf
+	int
+}
+
+star_names = {
+	## cardinality = 0..inf
+	localisation
+}
+
+nebula_names = {
+	## cardinality = 0..inf
+	localisation
+}
+
+cosmic_storm_name_prefixes = {
+	## cardinality = 0..inf
+	localisation
+}
+
+custom_star_names = {
+	## cardinality = 0..inf
+	value_set[custom_star_names] = {
+		## cardinality = 0..inf
+		localisation
+	}
+}
+
+custom_planet_names = {
+	## cardinality = 0..inf
+	value_set[custom_planet_names] = {
+		## cardinality = 0..inf
+		localisation
+	}
+}

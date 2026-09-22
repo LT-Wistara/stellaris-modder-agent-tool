@@ -1,0 +1,64 @@
+types = {
+	type[map_mode] = {
+		path = "game/common/map_modes"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			icon = icon # <sprite>
+		}
+	}
+}
+
+map_mode = {
+	icon =  <sprite>
+	enable_terra_incognita = bool
+	## cardinality = 0..1
+	can_change_point_of_view = bool
+	## cardinality = 0..1
+	shortcut = scalar
+	## cardinality = 0..1
+	display_claims = bool
+	## cardinality = 0..1
+	display_espionage_operations = bool
+	## cardinality = 0..1
+	display_storms = bool
+	## cardinality = 0..1
+	tutorial = "STORM_FORECAST_MAP_MODE"
+	## cardinality = 0..1
+	visible = single_alias_right[trigger_clause]
+
+	## cardinality = 1..inf
+	color = {
+		## cardinality = 0..1
+		type = country_and_borders
+		## cardinality = 0..1
+		type = country
+		## cardinality = 0..1
+		type = borders
+		## cardinality = 0..1
+		zoom = int
+
+		## cardinality = 1..1
+		value = colour_field
+		## cardinality = 1..1
+		value = country
+		## cardinality = 1..1
+		value = union
+		## cardinality = 1..1
+		value = {
+			##cardinality = 3..4
+			float
+		}
+		## cardinality = 0..1
+		custom_tooltip = localisation
+		## cardinality = 0..1
+		hardcoded_tooltip = enum[hardcoded_map_mode_tooltip]
+		## replace_scopes = { root = country this = country from = country }
+		condition = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		filter = enum[hardcoded_map_mode_filter]
+	}
+}

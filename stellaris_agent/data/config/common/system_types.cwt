@@ -1,0 +1,22 @@
+types = {
+	type[system_type] = {
+		path = "game/common/system_types"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+		}
+	}
+}
+
+system_type = {
+	## replace_scopes = { this = system root = system }
+	#TODO: it appears so, but the file uses owner (not space_owner). Check pls
+	potential = single_alias_right[trigger_clause]
+
+	## replace_scopes = { this = system root = system }
+	#TODO: it appears so, but the file uses owner (not space_owner). Check pls
+	## cardinality = 0..1
+	weight_modifier = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}

@@ -1,0 +1,305 @@
+types = {
+	## graph_related_types = {}
+	type[technology] = {
+		path = "game/common/technology"
+		path_extension = .txt
+		path_strict = yes
+
+		## group = technology_attribute
+		subtype[start] = {
+			start_tech = yes
+		}
+		## group = technology_attribute
+		subtype[rare] = {
+			is_rare = yes
+		}
+		## group = technology_attribute
+		subtype[dangerous] = {
+			is_dangerous = yes
+		}
+		## group = technology_attribute
+		subtype[insight] = {
+			is_insight = yes
+		}
+		## group = technology_attribute
+		subtype[repeatable] = {
+			levels = int[-1..100]
+		}
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			icon = icon # icon[gfx/interface/icons/technologies]
+			icon = "gfx/interface/icons/technologies/$.dds" # inferred
+		}
+	}
+	type[technology_tier] = {
+		path = "game/common/technology/tier"
+		path_extension = .txt
+	}
+	# a tech category causes the game to autogenerate a unique modifier:
+	# category_tech_category_key_research_speed_mult
+	# each of these modifiers requires localisation and a GFX (gfx/interface/icons/modifiers - same name as the tech_category key)
+	type[technology_category] = {
+		path = "game/common/technology/category"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## primary
+			icon = icon # filepath
+		}
+	}
+	## type_key_filter = technology_swap
+	type[swapped_technology] = {
+		base_type = technology
+		path = "game/common/technology"
+		path_extension = .txt
+		skip_root_key = any
+		name_field = name
+		subtype[not_inheriting_name] = {
+			## cardinality = 0..0
+			inherit_name = yes
+		}
+		subtype[not_inheriting_effects] = {
+			## cardinality = 0..0
+			inherit_effects = yes
+		}
+		subtype[not_inheriting_icon] = {
+			## cardinality = 0..0
+			inherit_icon = yes
+		}
+		localisation = {
+			subtype[not_inheriting_name] = {
+				name = "$"
+				desc = "$_desc"
+			}
+			subtype[not_inheriting_effects] = {
+				## optional
+				effect = description
+				## optional
+				negative_effect = negative_description
+			}
+		}
+		images = {
+			subtype[not_inheriting_icon] = {
+				icon = icon # filepath
+				icon = "gfx/interface/icons/governments/authorities/$.dds" # inferred
+			}
+		}
+	}
+}
+
+technology = {
+	area = enum[research_area]
+	tier = <technology_tier>
+	category = {
+		## cardinality = 1..inf
+		<technology_category>
+	}
+
+	## cardinality = 0..1
+	icon = icon[gfx/interface/icons/technologies]
+
+	subtype[start] = {
+		## cardinality = 0..1
+		cost = int
+		## cardinality = 0..1
+		weight = float
+	}
+	subtype[!start] = {
+		## cardinality = ~1..1
+		cost = int
+		## cardinality = ~1..1
+		cost = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+		weight = float
+		# usually in ""
+		### NOT use in vanilla.Definition of dangerous technology, rare technology, and insightful technology provided to modders for use
+		## cardinality = 0..1
+		is_custom_tech_1 = bool
+		### NOT use in vanilla.Definition of dangerous technology, rare technology, and insightful technology provided to modders for use
+		## cardinality = 0..1
+		is_custom_tech_2 = bool
+		### NOT use in vanilla.Definition of dangerous technology, rare technology, and insightful technology provided to modders for use
+		## cardinality = 0..1
+		is_custom_tech_3 = bool
+		## cardinality = 0..1
+		levels = int[-1..100]
+	}
+
+	## cardinality = 0..1
+	prerequisites = single_alias_right[technology_prerequisites]
+
+	## cardinality = 0..inf
+	technology_swap = {
+		## cardinality = 0..1
+		name = localisation
+		## cardinality = 0..1
+		name = scalar
+		## cardinality = 0..1
+		inherit_icon = bool
+		## cardinality = 0..1
+		inherit_name = bool
+		## cardinality = 0..1
+		inherit_effects = bool
+		## cardinality = 0..1
+		## replace_scopes = { this = country root = country }
+		trigger = single_alias_right[trigger_clause]
+		## cardinality = 0..1
+		## replace_scopes = { this = country root = country }
+		modifier = single_alias_right[modifier_clause]
+		## cardinality = 0..1
+		prereqfor_desc = {
+			## cardinality = 0..4
+			hide_prereq_for_desc = enum[prereq_for_category]
+			## cardinality = 0..4
+			enum[prereq_for_category] = {
+				title = localisation
+				## cardinality = 0..1
+				desc = localisation
+			}
+		}
+		## cardinality = 0..1
+		area = enum[research_area]
+		## cardinality = 0..1
+		category = {
+			## cardinality = 1..inf
+			<technology_category>
+		}
+		## cardinality = 0..1
+		weight = float
+		## cardinality = 0..1
+		weight = {
+			alias_name[modifier_rule] = alias_match_left[modifier_rule]
+		}
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	potential = single_alias_right[trigger_clause]
+
+	#TODO:pls update
+	#gateway actually get localisation:gateway_<localisation>
+	## cardinality = 0..1
+	gateway = scalar # can be any string
+
+	subtype[repeatable] = {
+		cost_per_level = int
+	}
+
+	## cardinality = 0..1
+	### a weight group increases the chances of a technology appearing - if another tech of a similar group is picked.
+	weight_groups = {
+		## cardinality = 0..inf
+		value_set[tech_weight_group]
+	}
+	## cardinality = 0..inf
+	mod_weight_if_group_picked = {
+		## cardinality = 0..inf
+		value[tech_weight_group] = float
+	}
+
+	## cardinality = 0..1
+	start_tech = bool
+	## cardinality = 0..1
+	is_reverse_engineerable = bool
+
+	## cardinality = 0..1
+	ai_update_type = enum[tech_ai_type]
+
+	## cardinality = 0..1
+	is_rare = bool
+	## cardinality = 0..1
+	is_dangerous = bool
+	## cardinality = 0..1
+	is_insight = bool
+
+	## cardinality = 0..1
+	feature_flags = {
+		## cardinality = 0..100
+		value[feature_flag]
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	modifier = single_alias_right[modifier_clause]
+
+	## cardinality = 0..1
+	prereqfor_desc = {
+		## cardinality = 0..4
+		hide_prereq_for_desc = enum[prereq_for_category]
+		## cardinality = 0..4
+		enum[prereq_for_category] = {
+			title = localisation
+			## cardinality = 0..1
+			desc = localisation
+		}
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	weight_modifier = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	ai_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	subtype[start] = {
+		## cardinality = 0..1
+		## replace_scopes = { this = country root = country }
+		starting_potential = single_alias_right[trigger_clause]
+	}
+}
+
+enums = {
+	enum[prereq_for_category] = {
+		ship
+		custom
+		component
+		diplo_action
+		feature
+		resource
+	}
+	enum[technology_area] = {
+		engineering
+		society
+		physics
+	}
+	enum[tech_ai_type] = {
+		all
+		military
+	}
+}
+
+
+# Should actually be a number
+### This should be a number
+technology_tier = {
+	## cardinality = 0..1
+	previously_unlocked = int
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	weight_modifier = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}
+
+
+technology_category = {
+	## file_extensions = { png dds tga }
+	icon = filepath
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	weight_modifier = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}

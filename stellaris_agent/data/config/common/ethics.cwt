@@ -1,0 +1,100 @@
+types = {
+	type[ethic] = {
+		path = "game/common/ethics"
+		path_extension = .txt
+		localisation = {
+			name = "$"
+			desc = "$_desc"
+		}
+		images = {
+			## primary
+			## required
+			icon = "gfx/interface/icons/ethics/$.dds" # inferred
+		}
+	}
+	type[ethic_category] = {
+		path = "game/common/ethic_categories"
+		path_extension = .txt
+	}
+}
+
+ethic_category = {}
+
+ethic = {
+	cost = int
+
+	#theoretically this should link to the ethic categories, not sure how to do that though (or whether it is worth it)
+	category = <ethic_category>
+	category_value = int[0..20]
+
+	### Used for hardcoded checks (mainly in tooltips)
+	## cardinality = 0..1
+	xenophobe = bool
+	### Used for hardcoded checks (mainly in tooltips)
+	## cardinality = 0..1
+	xenophile = bool
+	### Yes by default
+	## cardinality = 0..1
+	use_for_pops = bool
+
+	## cardinality = 0..1
+	category_opposite = bool
+
+	## cardinality = 0..1
+	regular_variant = <ethic>
+
+	## cardinality = 0..1
+	fanatic_variant = <ethic>
+
+	## cardinality = 0..1
+	leader_background_job_weight = {
+		## cardinality = 0..inf
+		<job> = int
+	}
+
+	### always = yes by default
+	## cardinality = 0..1
+	playable = single_alias_right[trigger_clause]
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	country_modifier = {
+		## cardinality = 0..1
+		custom_tooltip = localisation
+		## cardinality = 0..1
+		show_only_custom_tooltip = bool
+		alias_name[modifier] = alias_match_left[modifier]
+	}
+
+	## cardinality = 0..inf
+	## replace_scopes = { this = country root = country }
+	triggered_country_modifier = single_alias_right[triggered_modifier_clause]
+
+	## cardinality = 0..1
+	tags = {
+		## cardinality = 0..inf
+		localisation
+	}
+
+	random_weight = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+
+	## cardinality = 0..100
+	pop_attraction_tag = {
+		desc = localisation
+		## replace_scopes = { this = country root = country }
+		trigger = single_alias_right[trigger_clause]
+	}
+
+	## cardinality = 0..1
+	## replace_scopes = { this = country root = country }
+	country_attraction = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+	## cardinality = 0..1
+	## replace_scopes = { root = pop_group this = pop_group from = planet }
+	pop_attraction = {
+		alias_name[modifier_rule] = alias_match_left[modifier_rule]
+	}
+}
