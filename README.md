@@ -46,25 +46,18 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 **前置条件只有一条：Python 3.9 或更新版本**，安装时勾选加入 PATH。
 
 1. 把整个文件夹解压到**你自己的 Mod 根目录**里（与 `descriptor.mod` 同级的那一层，放其下任意子目录也可以）；
-2. 双击 **`start.cmd`**；
+2. 双击 **`start.py`**；
 3. 黑窗口会依次：检查 Python 与语料 → 探测游戏本体和你的 Mod → 建索引并打印统计 → 在 `http://127.0.0.1:8765/mcp` 起服务 → **打印可直接复制粘贴的客户端配置片段**；
 4. 把片段贴进你的 MCP 客户端，重新加载客户端即可。
 
 黑窗口就是服务器进程，**关掉窗口即停止**。重复双击不会起第二个进程 —— 它会检测到已有服务，直接把片段打出来。启动失败会打印原因，并把完整堆栈写入 `start-error.log`。
 
-也可以直接跑：
-
-```powershell
-python start.py                 # 交互：起 HTTP 服务器并打印片段
-python start.py --print-only    # 只打印片段，不启动服务器
-python start.py serve           # stdio：由 MCP 客户端拉起时使用
 ```
 
 **模式自动判断**：有控制台（双击）走 HTTP；被客户端用管道拉起（`serve` 参数，或 stdin 不是终端）自动走 stdio，此时 stdout 只输出 JSON-RPC。同一个脚本既能给人用，也能给 Agent 用。
 
 > **Mod 根目录由 `descriptor.mod` 唯一确定。** 工具只读"自己所在的那个 Mod"——判定方式是"从工具自身位置向上找 `descriptor.mod`"。找不到就报未检测到并打印修复提示（退化为只能查内置规则），**不会**根据 `common/`、`events/` 这类目录名去猜，以免静默读错脚本。位置放错了用 `STELLARIS_MOD_ROOT` 或 `--mod-root` 显式指定。
 
-Linux / macOS：`python3 start.py`（HTTP）、`python3 start.py serve`（stdio），不需要任何 `.cmd`。本版本在 Windows / Python 3.9+ 上实测；跨平台只用标准库，但未在 Linux/macOS 实机验收。
 
 ---
 
@@ -123,44 +116,7 @@ Linux / macOS：`python3 start.py`（HTTP）、`python3 start.py serve`（stdio�
 
 ---
 
-## 四、接入客户端
-
-### stdio（推荐长期使用）
-
-把 `start.py` 打印的 stdio 片段合并进客户端 MCP 配置，然后重新加载客户端。**不要覆盖已有的其他服务器配置。**
-
-```json
-{
-  "mcpServers": {
-    "stellaris": {
-      "command": "python",
-      "args": ["<工具目录>/start.py", "serve"]
-    }
-  }
-}
-```
-
-想拿到落盘的片段文件，运行 `python scripts/configure.py`，它会在 `client-config/` 生成 `mcp.json` / `codex.toml`（固定本机解释器）与 `portable-mcp.json` / `portable-codex.toml`（调用 `start.cmd`，换电脑或换目录都不用改）。`client-config/` 含本机绝对路径，**已被 `.gitignore` 排除**。
-
-> **stdio 握手速度**：`initialize` 在 1 秒内响应（实测约 0.8 秒，只解析内置语料）；游戏/Mod 数据索引改到**首次真正需要它的请求**时才建（首次约 6 秒，之后 0.04 秒）。HTTP 模式仍在启动时建好索引，因为那时有人看着横幅。想让 stdio 也预先建索引，设 `STELLARIS_WARMUP=1`。
-
-### HTTP / 远程
-
-```powershell
-python stellaris_tool.py serve --http --port 8765
-```
-
-地址 `http://127.0.0.1:8765/mcp`，标准 Streamable HTTP，无会话模式（POST 返回 JSON，通知返回 202）。协议支持 `2024-11-05` / `2025-03-26` / `2025-06-18` / `2025-11-25`。
-
-> ⚠️ **服务没有认证层。** 安全性来自监听位置：默认只绑 `127.0.0.1`，只有本机能连，所以客户端不需要 token。绑到非本机地址默认被**拒绝**，必须显式确认（`serve --http --host 0.0.0.0 --allow-remote`、`start.py --host 0.0.0.0 --allow-remote`，或 `STELLARIS_ALLOW_REMOTE=1`）。一旦那样暴露，请自备 TLS 反向代理做访问控制 —— 服务本身不提供 TLS、OAuth 或账户登录。带 `Origin` 头且来源非本机的请求一律 403（DNS-rebinding 防护）。
->
-> 局域网/容器场景的现成模板在 `deploy/`：`stellaris-mcp.service`（systemd，只绑 loopback）+ `nginx-stellaris-mcp.conf`（反向代理）+ certbot 续期 timer。
-
-远程 ChatGPT 之类无法访问你的 `localhost`，需要你自己部署 HTTPS 反向代理或隧道，再把公开的 `/mcp` 接进去。
-
----
-
-## 五、命令行
+## 四、命令行
 
 CLI 与 MCP **共用同一套解析、检索与验证规则**，区别只在输出：MCP 是给模型看的紧凑投影，CLI 保留全部细节（`source.file/line`、原始节点、逐项诊断、评分解释）。
 
@@ -181,7 +137,7 @@ python stellaris_tool.py serve --http
 
 ---
 
-## 六、更新内置语料库
+## 五、更新内置语料库
 
 内置语料是一个**固定快照**（`stellaris_agent/data/`，来源见 `UPSTREAM.json` 的 `commit_sha`）。工具本身永远不联网 —— 更新是一个显式动作：
 
@@ -216,7 +172,6 @@ python stellaris_tool.py update-corpus --apply    # 下载、验证、替换
 
 `stellaris_doctor` 的 `update` 字段会带上最近一次检查结果（只读缓存，不联网），所以 Agent 也能告诉你"语料落后了"。关掉它：`--no-update-check` 或 `STELLARIS_UPDATE_CHECK=0`。
 
-> 为什么不做成自动同步？因为答案带 `commit` 溯源字段，而且 `docs/FUZZY_SEARCH_REPORT.md` 里的实测数字和测试基线都绑定在某个具体快照上。如果语料在你不知情时变化，这些会**静默失效** —— 而且是往"看起来没问题"的方向失效。所以这里只提醒，替换由你决定。
 
 `--check` 会打印本地 pin 与上游 HEAD 的差距，以及 **added / removed / changed / unchanged** 四类文件清单：
 
@@ -243,7 +198,7 @@ files         : 173 local, 175 upstream
 
 ---
 
-## 七、热更新与检索细节
+## 六、热更新与检索细节
 
 **正在运行的 MCP 会自己发现 Mod 改动，新建条目无需重启。** 它用"文件数 + 总字节数 + mtime 之和"对白名单目录做指纹（约 4 ms），变化即重建索引（含模糊索引），按 2 秒节流。新建、修改（即使长度不变）、删除都能识别。`--no-watch` 或 `STELLARIS_WATCH=0` 可关闭，`stellaris_doctor` 的 `watch` 字段会报告状态、节流间隔与重建次数。
 
@@ -251,7 +206,7 @@ files         : 173 local, 175 upstream
 
 ---
 
-## 八、目录结构
+## 七、目录结构
 
 ```text
 stellaris-agent-tool/
@@ -282,7 +237,7 @@ stellaris-agent-tool/
 
 ---
 
-## 九、开发与测试
+## 八、开发与测试
 
 ```powershell
 test.cmd                 # 或 sh test.sh，即 python -m unittest discover -s tests -v
@@ -296,7 +251,7 @@ python scripts/build_release.py   # 在上级目录生成 stellaris-agent-tool-<
 
 ---
 
-## 十、已知限制
+## 九、已知限制
 
 - **行尾差异不会误报，但 `--apply` 会把语料统一成 LF**（上游原始字节）。
 - **不读启动器数据库、playset 和其他已安装的 Mod** —— 只看原版 + 你自己那一个 Mod，这是刻意的：你要验的是自己的 Mod。
