@@ -345,7 +345,7 @@ class Database:
 
     def _source_summary(self, environment, report):
         """State plainly which sources are usable here, and how to get the missing one."""
-        project = 'https://github.com/LT-Wistara/stellaris-agent-tool'
+        project = 'https://github.com/LT-Wistara/stellaris-modder-agent-tool'
         available = environment.get('mod_root') is not None
         index = report.get('index') or {}
         mod = {'root': environment.get('mod_root'), 'available': available,

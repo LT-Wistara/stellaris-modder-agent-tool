@@ -9,11 +9,11 @@ import unittest
 import urllib.request
 from unittest.mock import patch
 
-from stellaris_agent.index import Database, DATA
-from stellaris_agent.http_server import create_http_server
-from stellaris_agent.server import Server, TOOLS
-from stellaris_agent.validate import Validator
-from stellaris_agent.projection import project
+from stellaris_modder_agent.index import Database, DATA
+from stellaris_modder_agent.http_server import create_http_server
+from stellaris_modder_agent.server import Server, TOOLS
+from stellaris_modder_agent.validate import Validator
+from stellaris_modder_agent.projection import project
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -189,7 +189,7 @@ class SchemaCatalogCase(unittest.TestCase):
         self.assertEqual(len(self.db.symbols), 23057)
 
     def test_catalog_get_and_search_reuse_parsed_corpus(self):
-        with patch('stellaris_agent.index.parse_file', side_effect=AssertionError('reparse')):
+        with patch('stellaris_modder_agent.index.parse_file', side_effect=AssertionError('reparse')):
             self.assert_schema('common/buildings.cwt')
             self.db.list_files()
             self.db.search('has_backgroud_job', 'trigger')
@@ -239,7 +239,7 @@ class SchemaCatalogCase(unittest.TestCase):
                                         (['get', 'triggers.cwt'], self.db.get('triggers.cwt'), 2),
                                         (['get', 'effects.cwt'], self.db.get('effects.cwt'), 2)]:
             with self.subTest(args=args):
-                result = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py')] + args,
+                result = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py')] + args,
                                         cwd=tempfile.gettempdir(), capture_output=True, timeout=30)
                 self.assertEqual(result.returncode, exitcode, result.stderr)
                 self.assertEqual(json.loads(result.stdout), expected)
@@ -256,7 +256,7 @@ class SchemaCatalogCase(unittest.TestCase):
         requests += [{'jsonrpc': '2.0', 'id': i, 'method': 'tools/call',
                       'params': {'name': name, 'arguments': arguments}} for i, (name, arguments, _) in enumerate(calls, 1)]
         wire = ('\n'.join(json.dumps(r) for r in requests) + '\n').encode()
-        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'), 'serve'],
+        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'), 'serve'],
                                  input=wire, capture_output=True, timeout=30)
         self.assertEqual(process.returncode, 0, process.stderr)
         replies = [json.loads(line) for line in process.stdout.splitlines()]

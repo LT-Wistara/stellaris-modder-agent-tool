@@ -6,10 +6,10 @@ import sys
 import tempfile
 import unittest
 
-from stellaris_agent.index import Database
-from stellaris_agent.server import Server
-from stellaris_agent.validate import Validator
-from stellaris_agent.projection import project
+from stellaris_modder_agent.index import Database
+from stellaris_modder_agent.server import Server
+from stellaris_modder_agent.validate import Validator
+from stellaris_modder_agent.projection import project
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -120,7 +120,7 @@ class CompactOutputCase(unittest.TestCase):
     def test_stats_and_corpus_retain_full_dataset_details(self):
         for command in ('stats', 'corpus'):
             with self.subTest(command=command):
-                process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'), command],
+                process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'), command],
                                          capture_output=True, timeout=30)
                 self.assertEqual(process.returncode, 0, process.stderr)
                 result = json.loads(process.stdout)
@@ -138,7 +138,7 @@ class CompactOutputCase(unittest.TestCase):
                   {'code': 'has_magic_planet = yes', 'context': 'trigger'})]
         for args, name, arguments in cases:
             with self.subTest(tool=name):
-                process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'),
+                process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'),
                                           '--no-game-data'] + args,
                                          capture_output=True, timeout=30)
                 self.assertIn(process.returncode, (0, 2), process.stderr)

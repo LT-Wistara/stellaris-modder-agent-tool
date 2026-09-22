@@ -15,12 +15,12 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from stellaris_agent import dynamic as dynamic_module  # noqa: E402
-from stellaris_agent import environment as environment_module  # noqa: E402
-from stellaris_agent.index import Database  # noqa: E402
-from stellaris_agent.parser import parse  # noqa: E402
-from stellaris_agent.projection import project  # noqa: E402
-from stellaris_agent.validate import Validator  # noqa: E402
+from stellaris_modder_agent import dynamic as dynamic_module  # noqa: E402
+from stellaris_modder_agent import environment as environment_module  # noqa: E402
+from stellaris_modder_agent.index import Database  # noqa: E402
+from stellaris_modder_agent.parser import parse  # noqa: E402
+from stellaris_modder_agent.projection import project  # noqa: E402
+from stellaris_modder_agent.validate import Validator  # noqa: E402
 
 GAME_FILES = {
     'stellaris.exe': '',

@@ -376,6 +376,6 @@ test_unknown_schema_field (test_tool.ValidateCase.test_unknown_schema_field) ...
 test_unknown_scope_context (test_tool.ValidateCase.test_unknown_scope_context) ... ok
 
 ----------------------------------------------------------------------
-Ran 321 tests in 139.874s
+Ran 321 tests in 128.008s
 
 OK

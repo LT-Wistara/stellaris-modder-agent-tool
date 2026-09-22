@@ -17,8 +17,8 @@ VERSIONS = ('2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25')
 INSTRUCTIONS = (
     'Answer Stellaris scripting questions with these tools -- stellaris_search, '
     'stellaris_list, stellaris_validate, stellaris_doctor -- not by running commands or '
-    'reading files. Do not invoke this server\'s own CLI (stellaris_tool.py, start.py, '
-    'scripts/*), and do not open, grep or read the .cwt files under stellaris_agent/data '
+    'reading files. Do not invoke this server\'s own CLI (stellaris_modder_tool.py, start.py, '
+    'scripts/*), and do not open, grep or read the .cwt files under stellaris_modder_agent/data '
     'or the server source: the tools already hold the parsed corpus index, the call '
     'sites, the loaded game/mod data and the evidence rules, while the raw corpus is text '
     'with no status attached, so reading it spends more context for less certainty. Use '
@@ -99,7 +99,7 @@ class Server:
     def public_metadata(self):
         upstream = self.db.upstream
         return {
-            'server': {'name': 'stellaris-agent-tool', 'version': __version__},
+            'server': {'name': 'stellaris-modder-agent-tool', 'version': __version__},
             'stellaris': {
                 'version': upstream.get('stellaris_version', 'unknown'),
                 'basis': upstream.get('stellaris_version_basis', 'Not declared by this corpus.'),
@@ -165,7 +165,7 @@ class Server:
             version = params.get('protocolVersion')
             result = {'protocolVersion': version if version in VERSIONS else VERSIONS[-1],
                       'capabilities': {'tools': {'listChanged': False}},
-                      'serverInfo': {'name': 'stellaris-agent-tool', 'version': __version__},
+                      'serverInfo': {'name': 'stellaris-modder-agent-tool', 'version': __version__},
                       'instructions': INSTRUCTIONS}
             self.initialized = True
         elif method == 'ping':

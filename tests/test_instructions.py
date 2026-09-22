@@ -16,8 +16,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from stellaris_agent.index import Database  # noqa: E402
-from stellaris_agent.server import INSTRUCTIONS, TOOLS, Server  # noqa: E402
+from stellaris_modder_agent.index import Database  # noqa: E402
+from stellaris_modder_agent.server import INSTRUCTIONS, TOOLS, Server  # noqa: E402
 
 # A cap, not a target: these instructions ride in every session's system prompt,
 # so unbounded growth is a real cost. Keep headroom for editing.
@@ -37,13 +37,13 @@ class InstructionCase(unittest.TestCase):
     def test_it_tells_the_agent_not_to_use_the_cli(self):
         self.assertIn('not by running commands', self.lower)
         self.assertIn('cli', self.lower)
-        for entry_point in ('stellaris_tool.py', 'start.py'):
+        for entry_point in ('stellaris_modder_tool.py', 'start.py'):
             with self.subTest(entry_point=entry_point):
                 self.assertIn(entry_point, self.text)
 
     def test_it_tells_the_agent_not_to_read_the_corpus_or_the_source(self):
         self.assertIn('do not open, grep or read', self.lower)
-        self.assertIn('stellaris_agent/data', self.text)
+        self.assertIn('stellaris_modder_agent/data', self.text)
 
     def test_the_directive_comes_before_the_semantics(self):
         """A rule buried under a wall of detail is a rule that gets skipped."""

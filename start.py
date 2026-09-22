@@ -138,13 +138,13 @@ def detect_environment(game_data, explicit_game=None, explicit_mod=None):
     """(environment, health) or (None, None) when game data is switched off."""
     if not game_data:
         return None, None
-    from stellaris_agent import environment as environment_module
+    from stellaris_modder_agent import environment as environment_module
     environment = environment_module.detect_environment(explicit_game, explicit_mod)
     return environment, environment_module.inspect_mod_root(getattr(environment, 'mod_root', None))
 
 
 def build_database(args, environment, background=False):
-    from stellaris_agent.index import Database
+    from stellaris_modder_agent.index import Database
     watch = not args.no_watch and os.environ.get('STELLARIS_WATCH', '1').strip().lower() \
         not in ('0', 'false', 'no')
     database = Database(game_data=not args.no_game_data, environment=environment, watch=watch)
@@ -259,7 +259,7 @@ def port_in_use(host, port):
 
 
 def serve_http(database, host, port, allow_remote, url):
-    from stellaris_agent.http_server import create_http_server
+    from stellaris_modder_agent.http_server import create_http_server
     try:
         server = create_http_server(database, host, port, allow_remote=allow_remote)
     except ValueError as error:
@@ -337,7 +337,7 @@ def confirm_corpus_update(args):
     whatever corpus is on disk -- never with a dead window.
     """
     try:
-        from stellaris_agent import corpus
+        from stellaris_modder_agent import corpus
     except Exception:  # noqa: BLE001 - the updater must never block startup
         return
     try:
@@ -429,7 +429,7 @@ def run(argv):
         return 1
 
     if mode == 'stdio':
-        from stellaris_agent.server import serve
+        from stellaris_modder_agent.server import serve
         serve(database)
         return 0
 

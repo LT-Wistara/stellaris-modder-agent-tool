@@ -23,7 +23,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from stellaris_agent import environment as env  # noqa: E402
+from stellaris_modder_agent import environment as env  # noqa: E402
 
 DRIVER_BANNER = 'OpenGL Version: 4.6.0 NVIDIA 596.21'
 GAME_BANNER = '[17:55:05][game_application.cpp:250]: Game Version: Cygnus v4.5.0'

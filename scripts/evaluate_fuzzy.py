@@ -13,10 +13,10 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from stellaris_agent.index import Database
-from stellaris_agent.environment import Environment
-from stellaris_agent.server import Server
-from stellaris_agent.validate import Validator
+from stellaris_modder_agent.index import Database
+from stellaris_modder_agent.environment import Environment
+from stellaris_modder_agent.server import Server
+from stellaris_modder_agent.validate import Validator
 
 
 def make_cases(db):
@@ -274,7 +274,7 @@ def main():
     cases = make_cases(db) + make_permutation_cases(db)
     report = {'dataset': db.dataset, 'seed': 20260919, 'cases': len(cases)}
     if args.sweep:
-        from stellaris_agent import index, retrieval
+        from stellaris_modder_agent import index, retrieval
         originals = (retrieval.MIN_SCORE, index.MIN_SCORE)
         sweep_cases = [c for c in cases if c['split'] != 'holdout']
         report['cutoff_sweep'] = {}
@@ -285,7 +285,7 @@ def main():
                                                    if '/' not in k}
             print('cutoff', cutoff, report['cutoff_sweep'][str(cutoff)], flush=True)
         retrieval.MIN_SCORE, index.MIN_SCORE = originals
-    report['selected_cutoff'] = __import__('stellaris_agent.retrieval', fromlist=['MIN_SCORE']).MIN_SCORE
+    report['selected_cutoff'] = __import__('stellaris_modder_agent.retrieval', fromlist=['MIN_SCORE']).MIN_SCORE
     report['evaluation'] = evaluate(db, cases)
     report['evaluation']['groups'] = {k: v for k, v in report['evaluation']['groups'].items()}
     report['reference_grounding'] = evaluate_reference_grounding()

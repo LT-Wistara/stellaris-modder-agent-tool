@@ -7,11 +7,11 @@ Wants=network-online.target
 Type=simple
 User=stellaris-mcp
 Group=stellaris-mcp
-WorkingDirectory=/opt/stellaris-agent-tool
+WorkingDirectory=/opt/stellaris-modder-agent-tool
 # Serves on loopback only. The server has no authentication, so anything that
 # must reach it from elsewhere goes through a TLS reverse proxy (see
 # nginx-stellaris-mcp.conf) rather than binding this service to a public address.
-ExecStart=/usr/bin/python3 /opt/stellaris-agent-tool/start.py --http --host 127.0.0.1 --port 8765
+ExecStart=/usr/bin/python3 /opt/stellaris-modder-agent-tool/start.py --http --host 127.0.0.1 --port 8765
 Restart=on-failure
 RestartSec=3
 NoNewPrivileges=true

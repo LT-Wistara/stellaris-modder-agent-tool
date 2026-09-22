@@ -106,10 +106,10 @@ plus ten unrelated negatives, splitting by source name into disjoint `calibratio
 * corpus-derived cases: 1,317 = 498 calibration + 507 holdout + 12 negative + 300 permutation
 * seed 20260919, so the numbers are reproducible byte for byte
 
-Live version numbers (`pyproject.toml`, `stellaris_agent.__version__`, the MCP
+Live version numbers (`pyproject.toml`, `stellaris_modder_agent.__version__`, the MCP
 handshake, this document and the README) are asserted to agree by `VersionCase` in
 `tests/test_fuzzy_search.py`. `pyproject.toml` declares the version once and
-`stellaris_agent/__init__.py` reads it from there. `docs/FUZZY_BASELINE.json` keeps its
+`stellaris_modder_agent/__init__.py` reads it from there. `docs/FUZZY_BASELINE.json` keeps its
 own historical `version` field on purpose: it is a frozen measurement of the 1.1 release.
 
 Selected thresholds and what set them:

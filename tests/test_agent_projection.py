@@ -9,12 +9,12 @@ import threading
 import unittest
 import urllib.request
 
-from stellaris_agent import __version__
-from stellaris_agent.index import Database
-from stellaris_agent.projection import project
-from stellaris_agent.server import Server
-from stellaris_agent.http_server import create_http_server
-from stellaris_agent.validate import Validator
+from stellaris_modder_agent import __version__
+from stellaris_modder_agent.index import Database
+from stellaris_modder_agent.projection import project
+from stellaris_modder_agent.server import Server
+from stellaris_modder_agent.http_server import create_http_server
+from stellaris_modder_agent.validate import Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -55,7 +55,7 @@ class AgentProjectionCase(unittest.TestCase):
         result = server.dispatch(self.request('stellaris_list', {}))['result']
         payload = json.loads(result['content'][0]['text'])
         metadata = payload['metadata']
-        self.assertEqual(metadata['server'], {'name': 'stellaris-agent-tool', 'version': __version__})
+        self.assertEqual(metadata['server'], {'name': 'stellaris-modder-agent-tool', 'version': __version__})
         self.assertEqual(metadata['stellaris']['version'], '4.5')
         self.assertIn('target version', metadata['stellaris']['note'])
         self.assertEqual(metadata['cwt']['commit'], self.db.upstream['commit_sha'])
@@ -220,7 +220,7 @@ class AgentProjectionCase(unittest.TestCase):
                     self.request('stellaris_get', {'target': 'has_background_job'}),
                     self.request('stellaris_validate', {'code': 'has_magic_planet = yes', 'context': 'trigger'})]
         init = {'jsonrpc': '2.0', 'id': 0, 'method': 'initialize'}
-        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'),
+        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'),
                                   '--no-game-data', 'serve'],
                                  input=('\n'.join(json.dumps(r) for r in [init] + requests) + '\n').encode(),
                                  capture_output=True, timeout=30)

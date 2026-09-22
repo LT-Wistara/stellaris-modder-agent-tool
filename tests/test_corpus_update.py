@@ -29,7 +29,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from stellaris_agent import corpus  # noqa: E402
+from stellaris_modder_agent import corpus  # noqa: E402
 
 TOP = 'cwtools-stellaris-config-abc1234'
 VALID = 'alias[name:name] = localisation\n'
@@ -651,7 +651,7 @@ class ConfirmUpdateCase(unittest.TestCase):
 
     def confirm(self, *, behind=12, answer='y', apply_code=0, check_error=None,
                 cache=None):
-        from stellaris_agent import corpus
+        from stellaris_modder_agent import corpus
         args = type('Args', (), {'update_timeout': 5.0})()
 
         def cached_status(**kwargs):
@@ -706,7 +706,7 @@ class ConfirmUpdateCase(unittest.TestCase):
 
     def test_a_cached_verdict_is_dropped_after_a_successful_update(self):
         """Otherwise the next launch offers the update that already happened."""
-        from stellaris_agent import corpus
+        from stellaris_modder_agent import corpus
         cache = Path(tempfile.mkdtemp(prefix='stellaris-cache-')) / 'check.json'
         self.addCleanup(shutil.rmtree, cache.parent, ignore_errors=True)
         corpus.write_status_cache(self.status(12), cache)
@@ -715,7 +715,7 @@ class ConfirmUpdateCase(unittest.TestCase):
         self.assertFalse(cache.is_file())
 
     def test_the_cache_survives_a_skipped_update(self):
-        from stellaris_agent import corpus
+        from stellaris_modder_agent import corpus
         cache = Path(tempfile.mkdtemp(prefix='stellaris-cache-')) / 'check.json'
         self.addCleanup(shutil.rmtree, cache.parent, ignore_errors=True)
         corpus.write_status_cache(self.status(12), cache)

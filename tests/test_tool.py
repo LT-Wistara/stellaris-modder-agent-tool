@@ -10,12 +10,12 @@ import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
-from stellaris_agent.index import Database, DATA
-from stellaris_agent.http_server import create_http_server
-from stellaris_agent.parser import ParseError, parse, parse_file, metadata
-from stellaris_agent.server import Server, serve
-from stellaris_agent.templates import Template
-from stellaris_agent.validate import Validator
+from stellaris_modder_agent.index import Database, DATA
+from stellaris_modder_agent.http_server import create_http_server
+from stellaris_modder_agent.parser import ParseError, parse, parse_file, metadata
+from stellaris_modder_agent.server import Server, serve
+from stellaris_modder_agent.templates import Template
+from stellaris_modder_agent.validate import Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -175,7 +175,7 @@ class CorpusCase(unittest.TestCase):
         self.assertNotIn('__unparsed_metadata__', self.db.metadata_inventory)
 
     def test_queries_do_not_reparse(self):
-        with patch('stellaris_agent.index.parse_file', side_effect=AssertionError('reparse')):
+        with patch('stellaris_modder_agent.index.parse_file', side_effect=AssertionError('reparse')):
             self.db.search('has_background_job')
             self.db.get_definition('building', 'buildings')
             Validator(self.db).validate('is_ai = yes', {'type': 'trigger', 'scope': 'country'})
@@ -448,7 +448,7 @@ class ProtocolCase(unittest.TestCase):
             {'jsonrpc': '2.0', 'id': 5, 'method': 'tools/call', 'params': {'name': 'stellaris_validate', 'arguments': {'code': 'has_quantum_banana = yes', 'context': 'trigger'}}},
             {'jsonrpc': '2.0', 'id': 6, 'method': 'ping'}]
         text = '\n'.join(json.dumps(m) for m in messages)+'\n'
-        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'), 'serve'], input=text,
+        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'), 'serve'], input=text,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                  cwd=tempfile.gettempdir(), timeout=30)
         self.assertEqual(process.returncode, 0, process.stderr)
@@ -477,7 +477,7 @@ class ProtocolCase(unittest.TestCase):
         for args, status, exitcode in [(['search', 'has_unlocked_council_positions', '-t', 'trigger'], 'CONFIRMED_CWT', 0),
                                       (['search', 'zzzz_invented_api'], 'NOT_FOUND', 2),
                                       (['validate', '--code', 'has_quantum_banana = yes', '--context', 'trigger'], 'UNKNOWN', 2)]:
-            process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py')] + args,
+            process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py')] + args,
                                      capture_output=True, text=True, encoding='utf-8', cwd=tempfile.gettempdir(), timeout=30)
             self.assertEqual(process.returncode, exitcode, process.stderr)
             self.assertEqual(json.loads(process.stdout)['status'], status)

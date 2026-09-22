@@ -10,8 +10,8 @@ The archive is written next to this project directory (the repository root)
 and contains exactly one top-level folder, so extracting it never scatters
 files:
 
-    <output-dir>/stellaris-agent-tool-<version>-portable.zip
-        stellaris-agent-tool/
+    <output-dir>/stellaris-modder-agent-tool-<version>-portable.zip
+        stellaris-modder-agent-tool/
             使用说明.txt     <- read this first (double-click guide)
             start.cmd        <- double-click: MCP server on 8765 + client snippets
             start.py         <- the launcher itself (checks, index, serve, snippets)
@@ -28,7 +28,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT.parent
-TOP = 'stellaris-agent-tool'
+TOP = 'stellaris-modder-agent-tool'
 
 EXCLUDED_DIRS = {'__pycache__', '.git', '.venv', 'venv', 'build', 'dist', '.idea', '.vscode'}
 EXCLUDED_DIRS_BY_PATH = {'client-config'}
@@ -37,8 +37,8 @@ EXCLUDED_BY_PATH = {'scripts/' + Path(__file__).name}
 
 # A usable bundle must contain these; a silent mistake here would ship a
 # launcher that cannot find its entry point.
-REQUIRED = ('start.py', 'start.cmd', 'stellaris_tool.py', '使用说明.txt',
-            'stellaris_agent/data/UPSTREAM.json')
+REQUIRED = ('start.py', 'start.cmd', 'stellaris_modder_tool.py', '使用说明.txt',
+            'stellaris_modder_agent/data/UPSTREAM.json')
 
 
 def project_version():

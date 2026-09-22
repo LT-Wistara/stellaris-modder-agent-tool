@@ -108,7 +108,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 服务器在 `initialize` 时会把一段说明注入客户端的 system prompt，开头就是这条规则：
 
-> 用 `stellaris_search` / `stellaris_list` / `stellaris_validate` / `stellaris_doctor` 回答问题，**不要**跑命令、**不要**读文件。不要调用本工具自己的 CLI（`stellaris_tool.py`、`start.py`、`scripts/*`），不要打开、grep 或读取 `stellaris_agent/data` 下的 `.cwt` 或服务器源码 —— 工具里已经有解析好的索引、调用点、游戏/Mod 数据和证据规则，而原始语料只是没有状态标注的文本，读它花更多上下文、得到更少确定性。shell 只用于看你自己的 Mod 文件。
+> 用 `stellaris_search` / `stellaris_list` / `stellaris_validate` / `stellaris_doctor` 回答问题，**不要**跑命令、**不要**读文件。不要调用本工具自己的 CLI（`stellaris_modder_tool.py`、`start.py`、`scripts/*`），不要打开、grep 或读取 `stellaris_modder_agent/data` 下的 `.cwt` 或服务器源码 —— 工具里已经有解析好的索引、调用点、游戏/Mod 数据和证据规则，而原始语料只是没有状态标注的文本，读它花更多上下文、得到更少确定性。shell 只用于看你自己的 Mod 文件。
 
 原因很实际：LLM 习惯性地去 shell 里跑 CLI，但那样会丢掉索引、调用点和证据状态，而且把几万行语料灌进上下文。这段提示词就是为了拦住它。
 
@@ -119,16 +119,16 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 CLI 与 MCP **共用同一套解析、检索与验证规则**，区别只在输出：MCP 是给模型看的紧凑投影，CLI 保留全部细节（`source.file/line`、原始节点、逐项诊断、评分解释）。
 
 ```powershell
-python stellaris_tool.py search "any_owned_pop_job" --type trigger
-python stellaris_tool.py search "地方化文本" --mode text
-python stellaris_tool.py get common/buildings.cwt
-python stellaris_tool.py validate --file .\common\buildings\my_building.txt --context "building"
-python stellaris_tool.py list
-python stellaris_tool.py stats
-python stellaris_tool.py corpus        # 无损 roundtrip 自检
-python stellaris_tool.py doctor
-python stellaris_tool.py update-corpus --check
-python stellaris_tool.py serve --http
+python stellaris_modder_tool.py search "any_owned_pop_job" --type trigger
+python stellaris_modder_tool.py search "地方化文本" --mode text
+python stellaris_modder_tool.py get common/buildings.cwt
+python stellaris_modder_tool.py validate --file .\common\buildings\my_building.txt --context "building"
+python stellaris_modder_tool.py list
+python stellaris_modder_tool.py stats
+python stellaris_modder_tool.py corpus        # 无损 roundtrip 自检
+python stellaris_modder_tool.py doctor
+python stellaris_modder_tool.py update-corpus --check
+python stellaris_modder_tool.py serve --http
 ```
 
 通用参数：`--game-root DIR`、`--mod-root DIR`、`--no-game-data`（只读内置语料）、`--no-watch`。
@@ -146,11 +146,11 @@ python stellaris_tool.py serve --http
 ## 六、目录结构
 
 ```text
-stellaris-agent-tool/
+stellaris-modder-agent-tool/
 ├─ start.cmd / start.py        入口（双击即用；也是 stdio 入口）
-├─ stellaris_tool.py           CLI 入口
+├─ stellaris_modder_tool.py           CLI 入口
 ├─ 使用说明.txt                 中文速查（面向双击使用者）
-├─ stellaris_agent/
+├─ stellaris_modder_agent/
 │  ├─ server.py                MCP 协议 + 工具声明 + 注入提示词
 │  ├─ cli.py                   命令行
 │  ├─ index.py                 语料解析与索引
@@ -186,4 +186,4 @@ stellaris-agent-tool/
 
 ## 八、许可
 
-MIT。内置 CWT 语料来自 [cwtools-stellaris-config](https://github.com/cwtools/cwtools-stellaris-config)（DragonKnightOfBreeze fork），版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_agent/data/LICENSE.cwt`。
+MIT。内置 CWT 语料来自 [cwtools-stellaris-config](https://github.com/cwtools/cwtools-stellaris-config)（DragonKnightOfBreeze fork），版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_modder_agent/data/LICENSE.cwt`。

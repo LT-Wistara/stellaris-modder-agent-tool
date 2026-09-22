@@ -14,7 +14,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from stellaris_agent import environment as env  # noqa: E402
+from stellaris_modder_agent import environment as env  # noqa: E402
 
 DESCRIPTOR = 'name="layout test"\nsupported_version="v4.2.4"\n'
 
@@ -33,7 +33,7 @@ class ModRootCase(unittest.TestCase):
 
     def test_descriptor_at_mod_root_is_detected(self):
         mod = self.base / 'mod' / '239854621'
-        start = mod / 'stellaris-agent-tool' / 'stellaris_agent' / 'index.py'
+        start = mod / 'stellaris-modder-agent-tool' / 'stellaris_modder_agent' / 'index.py'
         start.parent.mkdir(parents=True)
         (mod / 'descriptor.mod').write_text(DESCRIPTOR, encoding='utf-8')
         (mod / 'common').mkdir()
@@ -44,7 +44,7 @@ class ModRootCase(unittest.TestCase):
 
     def test_tool_nested_under_common_still_finds_the_mod(self):
         mod = self.base / 'mod' / '239854621'
-        start = mod / 'common' / 'stellaris-agent-tool' / 'stellaris_agent' / 'index.py'
+        start = mod / 'common' / 'stellaris-modder-agent-tool' / 'stellaris_modder_agent' / 'index.py'
         start.parent.mkdir(parents=True)
         (mod / 'descriptor.mod').write_text(DESCRIPTOR, encoding='utf-8')
         (mod / 'events').mkdir()
@@ -53,7 +53,7 @@ class ModRootCase(unittest.TestCase):
     def test_no_descriptor_anywhere_is_reported_not_guessed(self):
         """A stray common/ above the tool must not be mistaken for a mod."""
         mod = self.base / 'mod' / '239854621'
-        start = mod / 'stellaris-agent-tool' / 'stellaris_agent' / 'index.py'
+        start = mod / 'stellaris-modder-agent-tool' / 'stellaris_modder_agent' / 'index.py'
         start.parent.mkdir(parents=True)
         (mod / 'common').mkdir()
         (mod / 'events').mkdir()
@@ -67,7 +67,7 @@ class ModRootCase(unittest.TestCase):
     def test_unpacked_into_the_mod_container_is_reported(self):
         """The usual mistake: extracted into mod/ instead of the mod folder."""
         container = self.base / 'mod'
-        start = container / 'stellaris-agent-tool' / 'stellaris_agent' / 'index.py'
+        start = container / 'stellaris-modder-agent-tool' / 'stellaris_modder_agent' / 'index.py'
         start.parent.mkdir(parents=True)
         (container / '239854621' / 'common').mkdir(parents=True)
         self.assertIsNone(self.resolve(start))
@@ -91,7 +91,7 @@ class ModRootCase(unittest.TestCase):
         with no descriptor.mod anywhere. The second must report "not detected"
         instead of silently claiming the surrounding folder is a mod.
         """
-        start = ROOT / 'stellaris_agent' / 'index.py'
+        start = ROOT / 'stellaris_modder_agent' / 'index.py'
         root = self.resolve(start)
         above = ROOT.parent
         health = env.inspect_mod_root(root)

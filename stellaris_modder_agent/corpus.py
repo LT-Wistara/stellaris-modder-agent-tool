@@ -5,9 +5,9 @@ The tool ships a pinned snapshot of ``.cwt`` files so that it works with no
 network at all.  This module is the only part of the project that talks to the
 internet, and it only runs when you ask it to:
 
-    python stellaris_tool.py update-corpus --check                 # report drift, change nothing
-    python stellaris_tool.py update-corpus --apply                 # download and replace
-    python stellaris_tool.py update-corpus --apply --commit <sha>  # pin one exact commit
+    python stellaris_modder_tool.py update-corpus --check                 # report drift, change nothing
+    python stellaris_modder_tool.py update-corpus --apply                 # download and replace
+    python stellaris_modder_tool.py update-corpus --apply --commit <sha>  # pin one exact commit
     python scripts/update_corpus.py --apply                        # the same, script form
 
 Design notes:
@@ -44,7 +44,7 @@ import urllib.error
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / 'stellaris_agent' / 'data'
+DATA_DIR = ROOT / 'stellaris_modder_agent' / 'data'
 CONFIG_DIR = DATA_DIR / 'config'
 MANIFEST_PATH = DATA_DIR / 'UPSTREAM.json'
 LICENSE_PATH = DATA_DIR / 'LICENSE.cwt'
@@ -52,7 +52,7 @@ LICENSE_PATH = DATA_DIR / 'LICENSE.cwt'
 DEFAULT_REPOSITORY = 'DragonKnightOfBreeze/cwtools-stellaris-config'
 DEFAULT_BRANCH = 'master'
 
-USER_AGENT = 'stellaris-agent-tool corpus updater (+https://github.com/LT-Wistara/stellaris-agent-tool)'
+USER_AGENT = 'stellaris-modder-agent-tool corpus updater (+https://github.com/LT-Wistara/stellaris-modder-agent-tool)'
 API_COMMIT = 'https://api.github.com/repos/{repository}/commits/{ref}'
 API_COMPARE = 'https://api.github.com/repos/{repository}/compare/{base}...{head}'
 ARCHIVE = 'https://codeload.github.com/{repository}/tar.gz/{ref}'
@@ -70,7 +70,7 @@ CONFIG_PREFIX = 'config/'
 # no archive download. Its result is cached because start.py runs on every client
 # session, and asking GitHub once per session would be rude to the API and slow
 # for the user.
-CHECK_CACHE_NAME = 'stellaris-agent-tool-update-check.json'
+CHECK_CACHE_NAME = 'stellaris-modder-agent-tool-update-check.json'
 CHECK_MAX_AGE = 24 * 60 * 60
 
 # Retry policy for the per-file route: seconds before the first retry, doubled
@@ -687,8 +687,8 @@ def update_hint(status):
         chinese = '内置语料落后上游（%s -> %s）。' % (local, head)
     return '\n'.join([
         '[提示] ' + chinese,
-        '       运行  python stellaris_tool.py update-corpus --check  查看差异，',
-        '       或    python stellaris_tool.py update-corpus --apply  下载并替换。',
+        '       运行  python stellaris_modder_tool.py update-corpus --check  查看差异，',
+        '       或    python stellaris_modder_tool.py update-corpus --apply  下载并替换。',
         '       ' + english,
         '       Nothing changes until you run it: the tool stays offline otherwise.',
     ])

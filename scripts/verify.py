@@ -27,12 +27,12 @@ def main():
     log = io.StringIO()
     suite = unittest.defaultTestLoader.discover(str(ROOT / 'tests'))
     result = unittest.TextTestRunner(stream=log, verbosity=2, resultclass=Results).run(suite)
-    corpus = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'), 'corpus'],
+    corpus = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'), 'corpus'],
                             capture_output=True, text=True, encoding='utf-8', timeout=30)
     if corpus.returncode:
         raise SystemExit(corpus.stderr)
     stats = json.loads(corpus.stdout)
-    manifest = json.loads((ROOT / 'stellaris_agent/data/UPSTREAM.json').read_text('utf-8'))
+    manifest = json.loads((ROOT / 'stellaris_modder_agent/data/UPSTREAM.json').read_text('utf-8'))
     report = {'verified_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'platform': platform.system(), 'python': platform.python_version(),
               'commit_sha': manifest['commit_sha'],

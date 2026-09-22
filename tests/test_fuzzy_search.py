@@ -5,13 +5,13 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from stellaris_agent import __version__
-from stellaris_agent.index import Database, identity
-from stellaris_agent.retrieval import edit_distance, tokens
-from stellaris_agent.scoring import MatchFacts, score_match
-from stellaris_agent.server import TOOLS, Server
-from stellaris_agent.validate import Validator
-from stellaris_agent.projection import project
+from stellaris_modder_agent import __version__
+from stellaris_modder_agent.index import Database, identity
+from stellaris_modder_agent.retrieval import edit_distance, tokens
+from stellaris_modder_agent.scoring import MatchFacts, score_match
+from stellaris_modder_agent.server import TOOLS, Server
+from stellaris_modder_agent.validate import Validator
+from stellaris_modder_agent.projection import project
 from scripts.evaluate_fuzzy import (make_cases, evaluate, evaluate_one_call_search,
                                     evaluate_reference_grounding)
 
@@ -50,8 +50,8 @@ class VersionCase(unittest.TestCase):
         # explicit history in prose and are therefore not listed here.
         previous = ('1.6.0', '1.6.1')
         checked = [ROOT / 'README.md', ROOT / 'docs/FUZZY_SEARCH_REPORT.md',
-                   ROOT / 'pyproject.toml', ROOT / 'stellaris_agent/server.py',
-                   ROOT / 'stellaris_agent/__init__.py', ROOT / 'docs/TEST_REPORT.json']
+                   ROOT / 'pyproject.toml', ROOT / 'stellaris_modder_agent/server.py',
+                   ROOT / 'stellaris_modder_agent/__init__.py', ROOT / 'docs/TEST_REPORT.json']
         for path in checked:
             if not path.exists():
                 continue
@@ -242,7 +242,7 @@ class FuzzySearchCase(unittest.TestCase):
         self.assertNotIn('upstream', payload)
 
     def test_pretokenization_reused(self):
-        with patch('stellaris_agent.index.parse_file', side_effect=AssertionError('reparse')):
+        with patch('stellaris_modder_agent.index.parse_file', side_effect=AssertionError('reparse')):
             before = id(self.db.retrieval)
             first = self.db.search('has_backgroud_job', 'trigger')
             self.assertEqual(first, self.db.search('has_backgroud_job', 'trigger'))
@@ -338,7 +338,7 @@ class StrategyUnionCase(unittest.TestCase):
 
     def test_repeated_query_is_served_from_cache(self):
         first = self.db.search('any_pop_job', 'trigger')
-        with patch('stellaris_agent.index.parse_file', side_effect=AssertionError('reparse')):
+        with patch('stellaris_modder_agent.index.parse_file', side_effect=AssertionError('reparse')):
             self.assertEqual(first, self.db.search('any_pop_job', 'trigger'))
 
     def test_prefilter_never_drops_a_scoring_candidate(self):

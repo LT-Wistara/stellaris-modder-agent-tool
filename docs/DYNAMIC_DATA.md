@@ -27,9 +27,9 @@ and `common/economic_categories/`. The mod root is found by walking **upwards** 
 tool until a `descriptor.mod` is found, so the tool may live in a subdirectory.
 
 ```bash
-python stellaris_tool.py doctor                 # what was detected, and what was indexed
-python stellaris_tool.py --game-root "D:/Games/Stellaris" search has_background_job
-python stellaris_tool.py --no-game-data stats   # pure CWT: never touches disk outside the tool
+python stellaris_modder_tool.py doctor                 # what was detected, and what was indexed
+python stellaris_modder_tool.py --game-root "D:/Games/Stellaris" search has_background_job
+python stellaris_modder_tool.py --no-game-data stats   # pure CWT: never touches disk outside the tool
 ```
 
 ## What is indexed

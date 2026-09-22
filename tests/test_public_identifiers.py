@@ -6,9 +6,9 @@ import sys
 import tempfile
 import unittest
 
-from stellaris_agent.index import Database, declaration
-from stellaris_agent.server import Server
-from stellaris_agent.validate import Validator
+from stellaris_modder_agent.index import Database, declaration
+from stellaris_modder_agent.server import Server
+from stellaris_modder_agent.validate import Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -110,7 +110,7 @@ class PublicIdentifiersCase(unittest.TestCase):
         row = next(r for r in rows if r['name'] == 'base' and r['type'] == 'modifier_rule')
         self.assertTrue(row['definitions'])
         self.assertFalse(any(r['name'] == 'base' and r['type'] == 'effects' for r in rows))
-        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_tool.py'), 'search', 'base'],
+        process = subprocess.run([sys.executable, str(ROOT / 'stellaris_modder_tool.py'), 'search', 'base'],
                                  capture_output=True, timeout=30)
         self.assertEqual(process.returncode, 0, process.stderr)
         result = json.loads(process.stdout)

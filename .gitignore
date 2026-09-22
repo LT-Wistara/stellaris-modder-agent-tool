@@ -12,7 +12,7 @@ client-config/
 # Runtime output from start.py
 start-error.log
 
-# Corpus updater staging/backup directories (`stellaris_tool.py update-corpus`)
+# Corpus updater staging/backup directories (`stellaris_modder_tool.py update-corpus`)
 .staging-corpus-*/
 config.previous/
 

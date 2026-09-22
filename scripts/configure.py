@@ -28,7 +28,7 @@ def identifiers(root=None):
     files. ``root`` defaults to the directory containing this script's parent.
     """
     base = Path(root).resolve() if root is not None else ROOT
-    return {'entry': str(base / 'stellaris_tool.py'),
+    return {'entry': str(base / 'stellaris_modder_tool.py'),
             'start': str(base / 'start.py'),
             'launcher': str(base / 'start.cmd')}
 
@@ -52,7 +52,7 @@ def main(argv=None):
         base = Path(argv[index + 1]).resolve()
         if not (base / 'start.py').is_file():
             raise SystemExit('no start.py in ' + str(base))
-    from stellaris_agent.index import Database
+    from stellaris_modder_agent.index import Database
     db = Database()
     out = base / 'client-config'
     out.mkdir(exist_ok=True)
