@@ -5,7 +5,7 @@ Everything the old launchers did is folded into this single script, so a user
 runs one program instead of a launcher plus an installer plus a diagnostic:
 
   * checks the Python version and where the bundled corpus lives,
-  * finds the Stellaris installation and the mod this folder lives in,
+  * finds the Stellaris installation and reads a manually configured mod,
   * builds the index once and reports it,
   * starts the MCP server, and
   * prints ready-to-paste client configuration for the running server.
@@ -205,7 +205,7 @@ def codex_config(command, arguments):
             'startup_timeout_sec = 60\n')
 
 
-def print_snippets(http_url):
+def print_snippets(http_url, client_flags=()):
     """Everything a client needs, in the shapes clients actually ask for.
 
     No credentials appear anywhere: the server is local-only and carries no
@@ -213,7 +213,8 @@ def print_snippets(http_url):
     """
     entry = str(ROOT / 'start.py')
     python = str(Path(sys.executable).resolve())
-    stdio = {'command': python, 'args': ['serve'] if getattr(sys, 'frozen', False) else [entry, 'serve']}
+    stdio = {'command': python, 'args': (['serve'] if getattr(sys, 'frozen', False) else [entry, 'serve'])
+             + list(client_flags)}
 
     say('')
     say(LINE)
@@ -273,7 +274,7 @@ def http_url(host, port):
     return f'http://[{host}]:{port}/mcp' if ':' in host else f'http://{host}:{port}/mcp'
 
 
-def serve_http(database, host, port, allow_remote, url):
+def serve_http(database, host, port, allow_remote, url, client_flags=()):
     from stellaris_modder_agent.http_server import create_http_server
     try:
         server = create_http_server(database, host, port, allow_remote=allow_remote)
@@ -291,7 +292,7 @@ def serve_http(database, host, port, allow_remote, url):
     say('  服务器已启动，保持本窗口开着（关闭窗口 = 停止服务器）')
     say('  Server is running. Keep this window open; closing it stops the server.')
     say(LINE)
-    print_snippets(http_url(host, server.server_port))
+    print_snippets(http_url(host, server.server_port), client_flags)
     if sys.stdin and sys.stdin.isatty():
         say('  提示：把上面的片段贴进你的 MCP 客户端后，重新加载客户端即可使用。')
         say('        按 Ctrl+C 停止服务器。')
@@ -482,10 +483,19 @@ def run(argv):
     host = args.host
     port = args.port
     url = http_url(host, port)
+    client_flags = []
+    if args.game_root:
+        client_flags += ['--game-root', args.game_root]
+    if environment is not None and environment.mod_root is not None:
+        client_flags += ['--mod-root', str(environment.mod_root)]
+    if args.no_game_data:
+        client_flags.append('--no-game-data')
+    if args.no_watch:
+        client_flags.append('--no-watch')
 
     if args.print_only:
         report(database, environment, health)
-        print_snippets(url)
+        print_snippets(url, client_flags)
         return 0
 
     busy, payload = port_in_use(host, port)
@@ -499,12 +509,12 @@ def run(argv):
                 say('       现有服务: ' + json.dumps(name, ensure_ascii=False))
             except (ValueError, KeyError, TypeError):
                 pass
-        print_snippets(url)
+        print_snippets(url, client_flags)
         return 0
 
     if interactive:
         report(database, environment, health)
-    return serve_http(database, host, port, args.allow_remote, url)
+    return serve_http(database, host, port, args.allow_remote, url, client_flags)
 
 
 if __name__ == '__main__':

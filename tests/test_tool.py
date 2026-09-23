@@ -125,7 +125,7 @@ class CorpusCase(unittest.TestCase):
     def test_nonexistent_identifier(self):
         result = self.db.search('zzzz_completely_fake_api_98765', 'trigger')
         self.assertEqual(result['status'], 'NOT_FOUND')
-        self.assertIn('mod', result['note'])
+        self.assertEqual(result['note'], 'No matching declaration in the loaded rules and data.')
 
     def test_naked_scripted_placeholder_not_evidence(self):
         self.assertIsNone(Template('<scripted_trigger>').exact('anything'))

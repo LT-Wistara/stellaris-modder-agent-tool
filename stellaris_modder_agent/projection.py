@@ -32,13 +32,9 @@ LEGEND = {
     'CONFIRMED_GAME_DATA': 'declared by the loaded game/mod data',
     'TEMPLATE_MATCH': 'shape matched, object not proven',
     'SUGGESTION': 'candidate only',
-    'UNKNOWN': 'no evidence here, not proof of absence',
+    'UNKNOWN': 'no matching declaration in loaded sources',
     'UNRESOLVED': 'needs context the validator cannot see',
 }
-NO_GAME_DATA_NOTE = ('game/mod data is not loaded, so names declared by mods cannot be '
-                     'confirmed; run stellaris_doctor for the detected sources')
-NOT_FOUND_TIP = ('No match in the loaded CWT corpus; the name may be defined by a mod. '
-                 'Run stellaris_doctor to see which data sources are loaded.')
 
 def select(value, keys):
     return {key: deepcopy(value[key]) for key in keys if key in value}
@@ -131,9 +127,7 @@ def search_view(payload):
     hidden = total - sum(len(result.get(key, ())) for key in ('results', 'templates', 'suggestions'))
     if hidden > 0:
         result['more'] = hidden
-    if payload['status'] == 'NOT_FOUND':
-        result['tips'] = NOT_FOUND_TIP
-    elif result.get('suggestions') and (confirmed or templates):
+    if result.get('suggestions') and (confirmed or templates):
         result['tips'] = 'suggestions are candidates, not confirmed interfaces'
     elif result.get('suggestions'):
         result['tips'] = ('candidates only: each definition belongs to the suggested spelling, '
@@ -146,8 +140,6 @@ def search_view(payload):
 def definition_view(payload):
     result = {'status': payload['status'], 'name': payload['name']}
     result['definitions'] = definition_rows(payload)
-    if payload['status'] == 'NOT_FOUND':
-        result['tips'] = NOT_FOUND_TIP
     return result
 
 
@@ -174,8 +166,6 @@ def validation_view(payload):
     legend = legend_for(sorted({row['status'] for row in findings}))
     if legend:
         result['legend'] = legend
-    if not (payload.get('coverage') or {}).get('runtime_objects'):
-        result['note'] = NO_GAME_DATA_NOTE
     return result
 
 

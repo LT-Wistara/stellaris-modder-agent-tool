@@ -15,7 +15,7 @@ def main(argv=None):
     parser.add_argument('--game-root', metavar='DIR',
                         help='Stellaris installation directory; overrides automatic detection')
     parser.add_argument('--mod-root', metavar='DIR',
-                        help='mod directory containing this tool; overrides automatic detection')
+                        help='manually chosen mod directory; omitted means no mod unless STELLARIS_MOD_ROOT is set')
     parser.add_argument('--no-game-data', action='store_true',
                         help='read only the bundled CWT corpus; never touch the game or the mod')
     parser.add_argument('--no-watch', action='store_true',
@@ -56,6 +56,7 @@ def main(argv=None):
                         help='requests in flight at once on the per-file route')
     update.add_argument('--timeout', type=int, default=None,
                         help='per-request timeout in seconds')
+    update.add_argument('--gui-progress', action='store_true', help=argparse.SUPPRESS)
     server = commands.add_parser('serve')
     server.add_argument('--http', action='store_true', help='Use stateless Streamable HTTP instead of stdio')
     server.add_argument('--host', default='127.0.0.1',
@@ -82,6 +83,8 @@ def main(argv=None):
             forwarded += ['--workers', str(args.workers)]
         if args.timeout is not None:
             forwarded += ['--timeout', str(args.timeout)]
+        if args.gui_progress:
+            forwarded += ['--gui-progress']
         return update_corpus(forwarded)
     try:
         game_data = not args.no_game_data

@@ -51,7 +51,7 @@ def main():
         assert stats['PARSED'] == 173 and stats['lossless_roundtrip'], stats
         snippets = run('--print-only', '--no-game-data')
         assert str(exe) in snippets and 'start.py' not in snippets, snippets
-        doctor = json.loads(run('cli', 'doctor'))
+        doctor = json.loads(run('cli', '--mod-root', str(root), 'doctor'))
         assert doctor['environment']['mod_root'] == str(root), doctor
         messages = [
             {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
@@ -67,10 +67,10 @@ def main():
         ]:
             messages.append({'jsonrpc': '2.0', 'id': len(messages), 'method': 'tools/call',
                              'params': {'name': name, 'arguments': arguments}})
-        replies = [json.loads(line) for line in run('serve', input=''.join(
+        replies = [json.loads(line) for line in run('serve', '--mod-root', str(root), input=''.join(
             json.dumps(message) + '\n' for message in messages)).splitlines()]
         assert len(replies) == len(messages) - 1, replies
-        assert replies[0]['result']['serverInfo']['version'] == '1.2.0', replies[0]
+        assert replies[0]['result']['serverInfo']['version'] == '0.1.3', replies[0]
         assert len(replies[1]['result']['tools']) == 4, replies[1]
         for reply in replies:
             assert 'error' not in reply and not reply['result'].get('isError'), reply
@@ -101,7 +101,7 @@ def main():
                         if time.monotonic() >= deadline or process.poll() is not None:
                             raise
                         time.sleep(0.2)
-                assert reply['result']['serverInfo']['version'] == '1.2.0', reply
+                assert reply['result']['serverInfo']['version'] == '0.1.3', reply
                 assert len(post(messages[2])['result']['tools']) == 4
                 reply = post({'jsonrpc': '2.0', 'id': 10, 'method': 'tools/call',
                               'params': {'name': 'stellaris_search',
@@ -111,8 +111,8 @@ def main():
                 process.terminate()
                 process.wait(timeout=10)
         print(json.dumps({'status': 'passed', 'corpus_files': stats['PARSED'],
-                          'version': '1.2.0', 'checks': ['Windows GUI subsystem', 'console MCP helper', 'relocated Unicode path', 'empty PATH',
-                          'CLI corpus roundtrip', 'EXE client configuration', 'automatic mod detection',
+                          'version': '0.1.3', 'checks': ['Windows GUI subsystem', 'console MCP helper', 'relocated Unicode path', 'empty PATH',
+                          'CLI corpus roundtrip', 'EXE client configuration', 'manual mod directory',
                           'stdio handshake and all four tools', 'HTTP handshake/list/search']}, indent=2))
     return 0
 

@@ -3,7 +3,7 @@ PARSED: 173
 FAILED: 0
 
 TESTS:
-358 passed
+363 passed
 0 failed
 
 CLI: passed
@@ -67,6 +67,7 @@ test_download_files_fetches_every_path_and_the_licence (test_corpus_update.Fallb
 test_main_reports_a_total_failure_without_installing (test_corpus_update.FallbackCase.test_main_reports_a_total_failure_without_installing) ... ok
 test_main_uses_the_fallback_when_the_archive_host_fails (test_corpus_update.FallbackCase.test_main_uses_the_fallback_when_the_archive_host_fails) ... ok
 test_tree_paths_keeps_only_the_corpus (test_corpus_update.FallbackCase.test_tree_paths_keeps_only_the_corpus) ... ok
+test_update_reports_download_and_install_progress (test_corpus_update.GuiProgressCase.test_update_reports_download_and_install_progress) ... ok
 test_counts_are_shown (test_corpus_update.HintCase.test_counts_are_shown) ... ok
 test_it_says_nothing_changes_by_itself (test_corpus_update.HintCase.test_it_says_nothing_changes_by_itself) ... ok
 test_nothing_to_say_when_current (test_corpus_update.HintCase.test_nothing_to_say_when_current) ... ok
@@ -136,12 +137,18 @@ test_invalid_port_rejected (test_desktop.DesktopSettingsCase.test_invalid_port_r
 test_malformed_settings_recover (test_desktop.DesktopSettingsCase.test_malformed_settings_recover) ... ok
 test_missing_path_retained_but_start_rejected (test_desktop.DesktopSettingsCase.test_missing_path_retained_but_start_rejected) ... ok
 test_missing_settings_use_defaults (test_desktop.DesktopSettingsCase.test_missing_settings_use_defaults) ... ok
+test_removed_theme_setting_is_ignored (test_desktop.DesktopSettingsCase.test_removed_theme_setting_is_ignored) ... ok
 test_settings_roundtrip_with_unicode_paths (test_desktop.DesktopSettingsCase.test_settings_roundtrip_with_unicode_paths) ... ok
 test_stdio_config_preserves_flags_and_spaces (test_desktop.DesktopSettingsCase.test_stdio_config_preserves_flags_and_spaces) ... ok
 test_check_result_distinguishes_current_and_new (test_desktop_ui.DesktopStateCase.test_check_result_distinguishes_current_and_new) ... ok
-test_install_cannot_be_interrupted_by_closing_window (test_desktop_ui.DesktopStateCase.test_install_cannot_be_interrupted_by_closing_window) ... ok
+test_close_during_update_offers_exit_choice (test_desktop_ui.DesktopStateCase.test_close_during_update_offers_exit_choice) ... ok
+test_copy_http_button_uses_saved_port (test_desktop_ui.DesktopStateCase.test_copy_http_button_uses_saved_port) ... ok
+test_force_exit_choice_closes_update_dialog (test_desktop_ui.DesktopStateCase.test_force_exit_choice_closes_update_dialog) ... ok
+test_hidden_pages_are_unmapped (test_desktop_ui.DesktopStateCase.test_hidden_pages_are_unmapped) ... ok
 test_ready_and_stop_states (test_desktop_ui.DesktopStateCase.test_ready_and_stop_states) ... ok
+test_starting_button_spins_and_restores (test_desktop_ui.DesktopStateCase.test_starting_button_spins_and_restores) ... ok
 test_update_failure_restores_controls (test_desktop_ui.DesktopStateCase.test_update_failure_restores_controls) ... ok
+test_update_progress_uses_reported_fraction (test_desktop_ui.DesktopStateCase.test_update_progress_uses_reported_fraction) ... ok
 test_update_success_refreshes_corpus (test_desktop_ui.DesktopStateCase.test_update_success_refreshes_corpus) ... ok
 test_a_new_mod_entry_appears_without_restarting (test_dynamic.DynamicCase.test_a_new_mod_entry_appears_without_restarting)
 Modding is iterative: a file written now must be visible in the next query. ... ok
@@ -287,16 +294,9 @@ test_it_tells_the_agent_not_to_use_the_cli (test_instructions.InstructionCase.te
 test_the_directive_comes_before_the_semantics (test_instructions.InstructionCase.test_the_directive_comes_before_the_semantics)
 A rule buried under a wall of detail is a rule that gets skipped. ... ok
 test_the_evidence_vocabulary_is_still_documented (test_instructions.InstructionCase.test_the_evidence_vocabulary_is_still_documented) ... ok
-test_descriptor_at_mod_root_is_detected (test_mod_root.ModRootCase.test_descriptor_at_mod_root_is_detected) ... ok
-test_explicit_environment_variable_wins (test_mod_root.ModRootCase.test_explicit_environment_variable_wins)
-A mod genuinely without descriptor.mod stays usable when told. ... ok
-test_no_descriptor_anywhere_is_reported_not_guessed (test_mod_root.ModRootCase.test_no_descriptor_anywhere_is_reported_not_guessed)
-A stray common/ above the tool must not be mistaken for a mod. ... ok
-test_tool_nested_under_common_still_finds_the_mod (test_mod_root.ModRootCase.test_tool_nested_under_common_still_finds_the_mod) ... ok
-test_unpacked_into_the_mod_container_is_reported (test_mod_root.ModRootCase.test_unpacked_into_the_mod_container_is_reported)
-The usual mistake: extracted into mod/ instead of the mod folder. ... ok
-test_upstream_layout_on_this_checkout (test_mod_root.ModRootCase.test_upstream_layout_on_this_checkout)
-Whatever this copy is installed in, detection must not guess. ... ok
+test_environment_variable_is_manual_configuration (test_mod_root.ModRootCase.test_environment_variable_is_manual_configuration) ... ok
+test_explicit_path_is_used_with_or_without_descriptor (test_mod_root.ModRootCase.test_explicit_path_is_used_with_or_without_descriptor) ... ok
+test_placement_does_not_select_mod_even_with_descriptor (test_mod_root.ModRootCase.test_placement_does_not_select_mod_even_with_descriptor) ... ok
 test_all_declared_apis_and_registry_entries_remain_public (test_public_identifiers.PublicIdentifiersCase.test_all_declared_apis_and_registry_entries_remain_public) ... ok
 test_base_does_not_impersonate_an_effect (test_public_identifiers.PublicIdentifiersCase.test_base_does_not_impersonate_an_effect) ... ok
 test_complete_ast_get_and_validator_keep_parameters (test_public_identifiers.PublicIdentifiersCase.test_complete_ast_get_and_validator_keep_parameters) ... ok
@@ -305,10 +305,11 @@ test_nested_exact_fuzzy_template_and_browse_paths_are_private (test_public_ident
 test_cli_text_mode_searches_mod_content (test_release.ReleaseCase.test_cli_text_mode_searches_mod_content) ... ok
 test_explicit_roots_are_forwarded (test_release.ReleaseCase.test_explicit_roots_are_forwarded) ... ok
 test_frozen_config_calls_exe_without_script (test_release.ReleaseCase.test_frozen_config_calls_exe_without_script) ... ok
-test_frozen_mod_detection_uses_exe_not_bundle_or_cwd (test_release.ReleaseCase.test_frozen_mod_detection_uses_exe_not_bundle_or_cwd) ... ok
+test_frozen_mod_placement_is_not_used (test_release.ReleaseCase.test_frozen_mod_placement_is_not_used) ... ok
 test_ipv6_loopback_can_bind_and_url_is_valid (test_release.ReleaseCase.test_ipv6_loopback_can_bind_and_url_is_valid) ... ok
 test_port_probe_checks_server_identity_and_full_response (test_release.ReleaseCase.test_port_probe_checks_server_identity_and_full_response) ... ok
 test_print_only_exits_when_stdin_is_piped (test_release.ReleaseCase.test_print_only_exits_when_stdin_is_piped) ... ok
+test_printed_stdio_config_keeps_manual_mod_root (test_release.ReleaseCase.test_printed_stdio_config_keeps_manual_mod_root) ... ok
 test_stdio_start_failure_keeps_stdout_clean (test_release.ReleaseCase.test_stdio_start_failure_keeps_stdout_clean) ... ok
 test_800_line_boundary_in_both_directories (test_schema_catalog.SchemaCatalogCase.test_800_line_boundary_in_both_directories) ... ok
 test_all_root_files_follow_line_limit (test_schema_catalog.SchemaCatalogCase.test_all_root_files_follow_line_limit) ... ok
@@ -417,6 +418,6 @@ test_unknown_schema_field (test_tool.ValidateCase.test_unknown_schema_field) ...
 test_unknown_scope_context (test_tool.ValidateCase.test_unknown_scope_context) ... ok
 
 ----------------------------------------------------------------------
-Ran 358 tests in 199.206s
+Ran 363 tests in 134.982s
 
 OK

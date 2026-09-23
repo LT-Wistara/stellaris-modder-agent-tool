@@ -804,11 +804,21 @@ def main(argv=None):
     parser.add_argument('--full', action='store_true',
                         help='download every file instead of only the ones upstream changed; '
                              'use it if the local snapshot was edited by hand')
+    parser.add_argument('--gui-progress', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+
+    def gui_progress(fraction, label):
+        if args.gui_progress:
+            print('@@GUI_PROGRESS@@' + json.dumps({'fraction': round(fraction, 4),
+                                                   'label': label}, ensure_ascii=False), flush=True)
+
+    def downloaded(done, total, detail=''):
+        gui_progress(0.05 + 0.8 * done / max(1, total), f'已下载 {done}/{total} 个文件')
 
     repository = args.repository or default_repository
     ref = args.commit or args.branch or default_branch
     current = local_files()
+    gui_progress(0.0, '正在检查上游版本…')
 
     try:
         if args.commit:
@@ -818,6 +828,7 @@ def main(argv=None):
     except UpdateError as error:
         print(str(error), file=sys.stderr)
         return 1
+    gui_progress(0.05, '已获取上游版本，准备下载…')
 
     incoming = license_bytes = None
     base = None if args.full else incremental_base(current, manifest)
@@ -839,22 +850,23 @@ def main(argv=None):
             untouched = len(current) - updated - len(removed)
             print('  %s -> %s: %d added, %d updated, %d removed, %d untouched'
                   % (base[:10], commit[:10], len(fresh), updated, len(removed), untouched))
-            bar = ProgressBar(len(changed))
+            bar = None if args.gui_progress else ProgressBar(len(changed))
             try:
                 fetched, license_bytes = download_files(
                     repository, commit, changed, timeout=args.timeout,
-                    workers=args.workers, progress=bar.update)
+                    workers=args.workers, progress=downloaded if args.gui_progress else bar.update)
             except UpdateError as error:
                 print(str(error), file=sys.stderr)
                 return 1
             finally:
-                bar.close()
+                if bar:
+                    bar.close()
             incoming = {name: blob for name, blob in current.items() if name not in set(removed)}
             incoming.update(fetched)
         else:
             print('  upstream capped its file list; downloading everything')
 
-    if incoming is None:
+    if incoming is None and not args.gui_progress:
         try:
             incoming, license_bytes, _ = read_archive(
                 download_archive(repository, commit, timeout=args.timeout))
@@ -882,6 +894,18 @@ def main(argv=None):
                 # Also on Ctrl+C: leave the bar on its own line, never half drawn.
                 bar.close()
 
+    if incoming is None:
+        try:
+            print('  listing the commit ...', flush=True)
+            paths = tree_paths(repository, commit, timeout=min(args.timeout, 30))
+            print('  %d files to fetch:' % len(paths), flush=True)
+            incoming, license_bytes = download_files(
+                repository, commit, paths, timeout=args.timeout,
+                workers=args.workers, progress=downloaded)
+        except UpdateError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+
     summary, _ = report(current, incoming, manifest, repository=repository, branch=ref,
                         commit=commit, committed_at=committed_at, blocked=not args.apply)
     print(summary)
@@ -890,7 +914,9 @@ def main(argv=None):
         return 0
 
     try:
+        gui_progress(0.88, f'正在验证 {len(incoming)} 个规则文件…')
         verify_corpus(incoming)
+        gui_progress(0.95, '验证完成，正在安装…')
         build = build_manifest(incoming, repository=repository, branch=ref, commit=commit,
                                committed_at=committed_at, license_bytes=license_bytes)
         install(incoming, license_bytes, build)
@@ -898,6 +924,7 @@ def main(argv=None):
         print('\n' + str(error), file=sys.stderr)
         return 1
 
+    gui_progress(1.0, '更新完成 · 100%')
     print('\nInstalled ' + str(len(incoming)) + ' files from ' + commit[:10]
           + '; UPSTREAM.json rewritten.')
     return 0

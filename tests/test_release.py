@@ -41,14 +41,21 @@ class ReleaseCase(unittest.TestCase):
         self.assertIn('serve', output.getvalue())
         self.assertNotIn('start.py', output.getvalue())
 
-    def test_frozen_mod_detection_uses_exe_not_bundle_or_cwd(self):
+    def test_printed_stdio_config_keeps_manual_mod_root(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            start.print_snippets('http://127.0.0.1:8765/mcp', ['--mod-root', 'D:/My Mod'])
+        self.assertIn('"--mod-root", "D:/My Mod"', output.getvalue())
+
+    def test_frozen_mod_placement_is_not_used(self):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, {}, clear=True):
             mod = Path(temp)
             (mod / 'descriptor.mod').write_text('name="test"', encoding='utf-8')
             exe = mod / 'tool' / 'StellarisModderAgent.exe'
             with patch.object(sys, 'frozen', True, create=True), \
                     patch.object(sys, 'executable', str(exe)):
-                self.assertEqual(environment.detect_mod_root(), mod)
+                self.assertIsNone(environment.detect_mod_root())
+                self.assertEqual(environment.detect_mod_root(str(mod)), mod)
 
     def test_stdio_start_failure_keeps_stdout_clean(self):
         output, errors = io.StringIO(), io.StringIO()

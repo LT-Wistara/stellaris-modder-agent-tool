@@ -1,4 +1,4 @@
-# Fuzzy identifier retrieval: design, calibration and results (1.2.0)
+# Fuzzy identifier retrieval: design, calibration and results (0.1.3)
 
 The 1.4 catalog split changes public candidate eligibility, not scoring or token
 calibration. The benchmark below documents the inherited retrieval engine; the full

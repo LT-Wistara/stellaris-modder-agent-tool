@@ -572,8 +572,7 @@ class Validator:
         if not doc.nodes:
             status = 'UNRESOLVED'
         built = self.db.dynamic.built
-        note = ('Validation reports support in bundled CWT, not guaranteed game correctness. '
-                'Unknown identifiers may be supplied by mods.')
+        note = 'Validation reports support in bundled CWT, not guaranteed game correctness.'
         if built:
             note += ' Game/mod data is loaded: object existence is verified against real declarations.'
         return {'status': status, 'context': ctx, 'findings': self.findings, 'counts': dict(counts),

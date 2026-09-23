@@ -1,4 +1,6 @@
-# 1.1.2 发布审阅
+# 0.1.3 发布审阅
+
+安装、Mod 路径和许可说明见 [README](../README.md)、[Windows 发布版说明](WINDOWS_RELEASE.md) 和 [LICENSE](../LICENSE)。
 
 该工具将 CWT 规则、原版游戏和当前 Mod 的声明统一索引，通过 CLI、Python API
 及 MCP 提供带证据等级的查询和验证。保留纯标准库运行时、查询与验证共用索引的设计，
@@ -19,7 +21,7 @@
 
 ## EXE 发布适配
 
-- 从 EXE 路径向上定位 descriptor.mod，避免误从打包资源目录识别 Mod。
+- Mod 目录由用户显式指定，不从 EXE 所在位置自动识别。
 - 配置直接调用 EXE 的 `serve`；诊断命令通过 `EXE cli ...` 使用。
 - 打包全部 CWT、清单、许可及版本文件；包含 Python 和 SSL 运行库。
 - 选择 PyInstaller 目录式便携包：更新语料持久保存在 `_internal`，启动无需临时解压。
@@ -38,13 +40,12 @@
 
 ## 验证
 
-源码回归 341 项全部通过，0 失败；173 个 CWT 全部通过无损解析。
-详细结果见 TEST_REPORT.txt / TEST_REPORT.json。
+源码回归结果见 TEST_REPORT.txt / TEST_REPORT.json；173 个 CWT 全部通过无损解析。
 `scripts/smoke_release.py` 会将 ZIP 解压到独立中文含空格目录，清空 PATH 后验证
-CLI、Mod 自动识别、stdio 四个工具和 HTTP 握手/检索，确认运行的是实际发布 EXE。
+CLI、手动指定 Mod 目录、stdio 四个工具和 HTTP 握手/检索，确认运行的是实际发布 EXE。
 此验证检查工具行为，不替代 Stellaris 游戏内验证。
 
 本次实际 EXE 验证通过：Windows 11 x64 / Python 3.13.9 / PyInstaller 6.16.0，
-中文含空格目录迁移、空 PATH、173 文件 roundtrip、EXE 配置、Mod 自动识别、
+中文含空格目录迁移、空 PATH、173 文件 roundtrip、EXE 配置、手动指定 Mod 目录、
 stdio 全部四个工具及 HTTP 握手/列举/检索均通过。另通过本地 HTTP 请求确认
 SSE 到期后客户端能读到 EOF。

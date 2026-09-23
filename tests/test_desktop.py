@@ -36,6 +36,12 @@ class DesktopSettingsCase(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             self.assertEqual(load_settings(Path(temp) / 'missing.json'), (Settings(), None))
 
+    def test_removed_theme_setting_is_ignored(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'settings.json'
+            path.write_text('{"port":9123,"theme":"light"}', encoding='utf-8')
+            self.assertEqual(load_settings(path), (Settings(port=9123), None))
+
     def test_invalid_port_rejected(self):
         for value in (0, -1, 65536, True, '123'):
             with self.assertRaises(ValueError):

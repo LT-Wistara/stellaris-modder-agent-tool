@@ -3,7 +3,7 @@
 Only two sources exist by design:
 
 1. the Stellaris installation (game data), and
-2. the mod directory that contains this tool (the user's own work in progress).
+2. the mod directory explicitly selected by the user (their own work in progress).
 
 The launcher database, playsets and other installed mods are deliberately not
 consulted: a modder validating their own mod only needs vanilla plus their own
@@ -19,7 +19,6 @@ from pathlib import Path
 import json
 import os
 import re
-import sys
 
 GAME_ENV = ('STELLARIS_GAME_ROOT', 'STELLARIS_GAME_DIR')
 MOD_ENV = ('STELLARIS_MOD_ROOT', 'STELLARIS_MOD_DIR')
@@ -270,22 +269,12 @@ def detect_userdata_root(mod_root, steps=None):
 
 
 def detect_mod_root(explicit=None, start=None, steps=None):
-    """The mod containing this tool: the folder that owns a ``descriptor.mod``.
-
-    The tool normally lives in a sub-folder of the mod, so the walk-up looks for
-    ``descriptor.mod`` on the way up and nothing else.  Directory names are not
-    used as evidence -- an unrelated ``common/`` above the tool is not a mod --
-    because guessing there means silently reading the wrong scripts.  When the
-    walk-up finds no ``descriptor.mod`` this returns ``None`` and the caller
-    reports the warning instead of pretending mod data is available.
-
-    ``start`` exists for tests and hosted layouts; it defaults to this file.
-    """
+    """Use only a manually supplied mod directory; never infer one from placement."""
     steps = [] if steps is None else steps
     if explicit:
         candidate = Path(explicit)
         ok = (candidate / MOD_DESCRIPTOR).is_file()
-        steps.append(Step('argument', str(candidate), ok, 'descriptor.mod present' if ok else 'argument still accepted'))
+        steps.append(Step('argument', str(candidate), ok, 'descriptor.mod present' if ok else 'explicit path accepted'))
         return candidate
     for name in MOD_ENV:
         value = os.environ.get(name)
@@ -293,13 +282,7 @@ def detect_mod_root(explicit=None, start=None, steps=None):
             candidate = Path(value)
             steps.append(Step('env:' + name, str(candidate), True, 'explicit mod root'))
             return candidate
-    here = Path(start) if start else (Path(sys.executable).resolve()
-                                    if getattr(sys, 'frozen', False) else Path(__file__).resolve())
-    for candidate in [here] + list(here.parents):
-        if (candidate / MOD_DESCRIPTOR).is_file():
-            steps.append(Step('walk-up', str(candidate), True, 'descriptor.mod found'))
-            return candidate
-    steps.append(Step('walk-up', str(here), False, 'no descriptor.mod above this tool'))
+    steps.append(Step('manual', '', False, 'mod root not configured'))
     return None
 
 
@@ -307,32 +290,19 @@ VERSION_MARKERS = ('version.txt', '.stellaris-version')
 
 
 def inspect_mod_root(mod_root):
-    """Is the detected mod root confirmed by its own ``descriptor.mod``?
-
-    The rule is deliberately the same one ``detect_mod_root`` uses, so the check
-    can never disagree with the detection: a directory is a mod root when it
-    contains ``descriptor.mod``.  Without that file the tool would be reading
-    whatever script folders happen to sit above it, which is exactly the
-    "unpacked into ``mod/`` instead of your mod folder" mistake, so it is
-    reported as a warning instead of being papered over.
-    """
+    """Report whether the configured mod root has a descriptor."""
     if mod_root is None:
         return {'usable': False, 'descriptor': False, 'root': None,
-                'reason': 'No descriptor.mod in this folder or in any folder above it, so the '
-                          'mod\'s own scripts are not being read and mod-defined interfaces '
-                          'cannot be confirmed.',
-                'hint': 'Extract this folder into your mod folder itself -- the one that holds '
-                        'descriptor.mod -- instead of into the "mod" folder that contains your '
-                        'mods. If your mod really has no descriptor.mod, set ' + MOD_ENV[0]
-                        + ' to the folder holding your scripts.'}
+                'reason': 'Mod directory is not configured; mod scripts are not being read.',
+                'hint': 'Enter the Mod directory in the GUI, pass --mod-root, or set ' + MOD_ENV[0] + '.'}
     root = Path(mod_root)
     if (root / MOD_DESCRIPTOR).is_file():
         return {'usable': True, 'descriptor': True, 'root': str(root),
                 'reason': None, 'hint': None}
     return {'usable': True, 'descriptor': False, 'root': str(root),
-            'reason': ('No descriptor.mod in the detected mod root ' + str(root) + '; it may not '
+            'reason': ('No descriptor.mod in the configured mod root ' + str(root) + '; it may not '
                        'be a mod folder, and mod-defined interfaces may be missed.'),
-            'hint': 'Set ' + MOD_ENV[0] + ' to the folder that holds your descriptor.mod.'}
+            'hint': 'Configure the folder that holds your descriptor.mod.'}
 
 
 def _version_number(text):

@@ -17,7 +17,7 @@ from .templates import Template
 from .retrieval import Retrieval
 
 DATA = Path(__file__).resolve().parent / 'data'
-NOT_FOUND = 'Current loaded CWT contains no match. The name may be defined by a mod; absence is not proof of nonexistence.'
+NOT_FOUND = 'No matching declaration in the loaded rules and data.'
 SUGGESTION_NOTE = 'Search candidates do not establish validity in a script context.'
 RELATED_NOTE = ('Some names only share tokens with the query; they are browse context, '
                 'not suggestions, and are listed separately.')
@@ -324,9 +324,9 @@ class Database:
         report.update(self.dynamic.report())
         report['version_check'] = self._version_check(report.get('environment') or {})
         report['sources'] = self._source_summary(report.get('environment') or {}, report)
-        report['note'] = ('Read-only report. Detection order: explicit argument, environment '
-                          'variable, Steam registry, Steam library manifests, defaults. Only the '
-                          'game installation and the mod containing this tool are read.')
+        report['note'] = ('Read-only report. Game detection checks explicit configuration, '
+                          'Steam and default locations. Mod data is read only from an explicitly '
+                          'configured directory.')
         return report
 
     @staticmethod

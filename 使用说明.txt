@@ -1,4 +1,4 @@
-Stellaris Modder Agent 1.2.0
+Stellaris Modder Agent 0.1.3
 
 Windows 发布版：双击 StellarisModderAgent.exe 打开图形面板。
 面板中可启动 / 停止服务、设置游戏与 Mod 路径、更新 CWT 语料、复制客户端配置。

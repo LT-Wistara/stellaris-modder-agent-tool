@@ -3,7 +3,6 @@ import datetime
 import json
 from pathlib import Path
 import queue
-import sys
 from tkinter import filedialog, messagebox
 
 import customtkinter as ctk
@@ -19,10 +18,14 @@ TEXT = '#edf3fc'
 MUTED = '#91a1bb'
 ACCENT = '#66e3bb'
 BLUE = '#8aaeff'
+RED = '#c64b5b'
+SPINNER = ('◴', '◷', '◶', '◵')
+PROGRESS_PREFIX = '@@GUI_PROGRESS@@'
 
 
 class Desktop(ctk.CTk):
     def __init__(self, settings_path=None):
+        ctk.set_appearance_mode('dark')
         super().__init__()
         self.title('Stellaris Modder Agent')
         self.geometry('1160x790')
@@ -34,8 +37,12 @@ class Desktop(ctk.CTk):
         self.service = ProcessTask(self.events, 'service')
         self.job = ProcessTask(self.events, 'job')
         self.job_action = None
+        self.update_available = False
         self.running = False
         self.closing = False
+        self._button_mode = None
+        self._spinner_index = 0
+        self._font_cache = {}
         self.editable = []
         self.pages = {}
         self.nav = {}
@@ -56,6 +63,7 @@ class Desktop(ctk.CTk):
         self._data_page()
         self._clients()
         self._logs()
+        self._about()
         self.show_page('overview')
         self.refresh_corpus()
         self.log('面板已就绪。点击「启动服务」后，AI 客户端即可通过 HTTP 连接。')
@@ -63,17 +71,21 @@ class Desktop(ctk.CTk):
             self.log(warning)
         self.after(100, self.poll)
 
-    @staticmethod
-    def font(size=14, weight='normal'):
-        return ctk.CTkFont(family='Microsoft YaHei UI', size=size, weight=weight)
+    def font(self, size=14, weight='normal'):
+        key = (size, weight)
+        if key not in self._font_cache:
+            self._font_cache[key] = ctk.CTkFont(family='Microsoft YaHei UI', size=size, weight=weight)
+        return self._font_cache[key]
 
     def label(self, parent, text, size=14, color=TEXT, **kwargs):
         return ctk.CTkLabel(parent, text=text, text_color=color, font=self.font(size), **kwargs)
 
     def button(self, parent, text, command, primary=False, **kwargs):
+        fg_color = kwargs.pop('fg_color', ACCENT if primary else '#23324b')
+        hover_color = kwargs.pop('hover_color', '#8defd0' if primary else '#304360')
         return ctk.CTkButton(parent, text=text, command=command, height=40, corner_radius=9,
-                             font=self.font(14), fg_color=ACCENT if primary else '#23324b',
-                             hover_color='#8defd0' if primary else '#304360',
+                             font=self.font(14), fg_color=fg_color,
+                             hover_color=hover_color,
                              text_color='#09241d' if primary else TEXT,
                              text_color_disabled='#63718a', **kwargs)
 
@@ -86,18 +98,19 @@ class Desktop(ctk.CTk):
         side.grid(row=0, column=0, sticky='nsew')
         side.grid_propagate(False)
         side.grid_columnconfigure(0, weight=1)
-        side.grid_rowconfigure(7, weight=1)
+        side.grid_rowconfigure(8, weight=1)
         self.label(side, '✦', 48, ACCENT).grid(row=0, column=0, sticky='w', padx=25, pady=(27, 0))
         self.label(side, 'STELLARIS', 22).grid(row=1, column=0, sticky='w', padx=25)
         self.label(side, 'MODDER  /  AGENT', 12, MUTED).grid(row=2, column=0, sticky='w', padx=25, pady=(0, 36))
         for row, (key, text) in enumerate([('overview', '服务控制台'), ('data', '数据与更新'),
-                                            ('clients', '客户端接入'), ('logs', '运行日志')], 3):
+                                            ('clients', '客户端接入'), ('logs', '运行日志'),
+                                            ('about', '关于软件')], 3):
             button = self.button(side, text, lambda k=key: self.show_page(k), anchor='w', width=174)
             button.grid(row=row, column=0, padx=18, pady=6)
             self.nav[key] = button
         self.side_status = self.label(side, '●  服务未启动', 12, MUTED)
-        self.side_status.grid(row=8, column=0, sticky='w', padx=25, pady=(0, 8))
-        self.label(side, f'桌面控制面板  /  v{__version__}', 11, MUTED).grid(row=9, column=0, sticky='w', padx=25, pady=(0, 25))
+        self.side_status.grid(row=9, column=0, sticky='w', padx=25, pady=(0, 8))
+        self.label(side, f'桌面控制面板  /  v{__version__}', 11, MUTED).grid(row=10, column=0, sticky='w', padx=25, pady=(0, 25))
 
     def page(self, key, eyebrow, title, subtitle):
         frame = ctk.CTkFrame(self.content, fg_color=BG)
@@ -120,11 +133,11 @@ class Desktop(ctk.CTk):
         self.endpoint.pack(anchor='w', padx=24, pady=(18, 16))
         actions = ctk.CTkFrame(hero, fg_color='transparent')
         actions.pack(fill='x', padx=24, pady=(0, 24))
-        self.start_button = self.button(actions, '启动服务', self.start_service, primary=True, width=150)
-        self.start_button.pack(side='left')
-        self.stop_button = self.button(actions, '停止服务', self.stop_service, width=120, state='disabled')
-        self.stop_button.pack(side='left', padx=10)
-        self.button(actions, '复制地址', lambda: self.copy(self.endpoint.cget('text')), width=110).pack(side='right')
+        self.service_button = self.button(actions, '启动服务', self.toggle_service, primary=True, width=150)
+        self.service_button.pack(side='left')
+        self.copy_http_button = self.button(actions, '复制 HTTP 配置',
+                                            lambda: self.copy(client_config(self.settings, 'HTTP')), width=150)
+        self.copy_http_button.pack(side='right')
         metrics = ctk.CTkFrame(page, fg_color='transparent')
         metrics.pack(fill='x', pady=18)
         metrics.grid_columnconfigure((0, 1, 2), weight=1, uniform='metric')
@@ -160,12 +173,13 @@ class Desktop(ctk.CTk):
         paths = self.card(page)
         paths.pack(fill='x')
         self.label(paths, '工作空间路径', 17).pack(anchor='w', padx=22, pady=(18, 0))
-        self.label(paths, '留空时自动检测；修改设置后，下次启动服务生效。', 12, MUTED).pack(anchor='w', padx=22, pady=(4, 14))
+        self.label(paths, '游戏目录留空时自动检测；Mod 目录请手动填写，留空则不指定 Mod。修改后下次启动生效。', 12, MUTED).pack(anchor='w', padx=22, pady=(4, 14))
         for title, var in [('游戏安装目录', self.game), ('Mod 目录', self.mod)]:
             self.label(paths, title, 12, MUTED).pack(anchor='w', padx=22)
             row = ctk.CTkFrame(paths, fg_color='transparent')
             row.pack(fill='x', padx=22, pady=(4, 14))
-            entry = ctk.CTkEntry(row, textvariable=var, placeholder_text='自动检测', height=36,
+            entry = ctk.CTkEntry(row, textvariable=var,
+                                placeholder_text='自动检测' if var is self.game else '输入 Mod 根目录', height=36,
                                 fg_color=BG, border_color=BORDER, font=self.font(12))
             entry.pack(side='left', fill='x', expand=True)
             browse = self.button(row, '浏览', lambda v=var: self.browse(v), width=74)
@@ -181,15 +195,16 @@ class Desktop(ctk.CTk):
         self.corpus_info.pack(anchor='w', padx=22)
         self.update_message = self.label(update, '点击检查更新，查看上游是否有新的规则。', 13, BLUE, wraplength=710, justify='left')
         self.update_message.pack(anchor='w', padx=22, pady=(14, 10))
-        self.progress = ctk.CTkProgressBar(update, height=4, progress_color=ACCENT, fg_color=BORDER, mode='indeterminate')
-        self.progress.pack(fill='x', padx=22, pady=(0, 14))
-        self.progress.set(0)
+        self.progress = ctk.CTkProgressBar(update, height=5, progress_color=ACCENT,
+                                           fg_color=BORDER, mode='determinate')
+        self.progress.pack(fill='x', padx=22, pady=(0, 6))
+        self.progress.set(0.0)
+        self.progress_label = self.label(update, '', 11, MUTED)
+        self.progress_label.pack(anchor='w', padx=22, pady=(0, 12))
         row = ctk.CTkFrame(update, fg_color='transparent')
         row.pack(fill='x', padx=22, pady=(0, 20))
-        self.check_button = self.button(row, '检查更新', lambda: self.start_job('check'), width=120)
-        self.check_button.pack(side='left')
-        self.update_button = self.button(row, '更新语料', lambda: self.start_job('update'), primary=True, width=120)
-        self.update_button.pack(side='left', padx=10)
+        self.update_button = self.button(row, '检查更新', self.start_job, width=150)
+        self.update_button.pack(side='left')
         self.label(row, '更新前请先停止服务', 12, MUTED).pack(side='right')
 
     def _clients(self):
@@ -219,8 +234,25 @@ class Desktop(ctk.CTk):
         row.pack(fill='x', pady=(16, 0))
         self.button(row, '复制日志', lambda: self.copy(self.log_text.get('1.0', 'end-1c'))).pack(side='left')
 
+    def _about(self):
+        page = self.page('about', 'WORKSPACE / 05', '关于软件', 'Stellaris Modder Agent')
+        card = self.card(page)
+        card.pack(fill='x')
+        for title, value in [('版本', __version__),
+                             ('用途', '为 Stellaris Mod 提供 CWT 规则查询、脚本验证与 MCP 服务。'),
+                             ('许可', 'MIT；内置 CWT 语料的许可见 THIRD_PARTY_NOTICES.md。'),
+                             ('项目', 'github.com/LT-Wistara/stellaris-modder-agent-tool')]:
+            self.label(card, title, 12, MUTED).pack(anchor='w', padx=22, pady=(16, 2))
+            self.label(card, value, 14, TEXT, wraplength=700, justify='left').pack(
+                anchor='w', padx=22, pady=(0, 5))
+        self.label(card, '', 5).pack(pady=(0, 8))
+
     def show_page(self, key):
-        self.pages[key].tkraise()
+        for name, page in self.pages.items():
+            if name == key:
+                page.grid(row=0, column=0, sticky='nsew')
+            else:
+                page.grid_remove()
         for name, button in self.nav.items():
             button.configure(fg_color='#203a3b' if name == key else SIDE,
                              text_color=ACCENT if name == key else MUTED)
@@ -285,12 +317,58 @@ class Desktop(ctk.CTk):
     def controls(self):
         busy = self.service.active or self.running
         working = self.job.active
-        self.start_button.configure(state='disabled' if busy or working else 'normal')
-        self.stop_button.configure(state='normal' if busy and not self.service.stopping else 'disabled')
-        self.check_button.configure(state='disabled' if working else 'normal')
-        self.update_button.configure(state='disabled' if busy or working else 'normal')
+        mode = ('stopping' if self.service.stopping and busy else
+                'running' if self.running else 'starting' if busy else 'idle')
+        self._render_service_button(mode, working)
+        update_text = ('检查中…' if self.job_action == 'check' else '更新中…') if working else (
+            '更新语料' if self.update_available else '检查更新')
+        update_state = 'disabled' if working or (self.update_available and busy) else 'normal'
+        if self.update_button.cget('text') != update_text or self.update_button.cget('state') != update_state:
+            self.update_button.configure(text=update_text, state=update_state,
+                                         fg_color=ACCENT if self.update_available else '#23324b',
+                                         text_color='#09241d' if self.update_available else TEXT)
         for widget in self.editable:
-            widget.configure(state='disabled' if busy or working else 'normal')
+            state = 'disabled' if busy or working else 'normal'
+            if widget.cget('state') != state:
+                widget.configure(state=state)
+
+    def _render_service_button(self, mode, working):
+        state = 'disabled' if working or mode in ('starting', 'stopping') else 'normal'
+        if self._button_mode == (mode, state):
+            return
+        previous = self._button_mode[0] if self._button_mode else None
+        self._button_mode = (mode, state)
+        if mode in ('starting', 'stopping'):
+            self.service_button.configure(text=SPINNER[self._spinner_index], state='disabled',
+                                          fg_color='#485467', hover_color='#485467',
+                                          text_color=TEXT, text_color_disabled=TEXT,
+                                          font=self.font(25))
+            if previous not in ('starting', 'stopping'):
+                self.after(90, self._spinner_tick)
+            cursor = 'watch'
+        else:
+            running = mode == 'running'
+            self.service_button.configure(text='停止服务' if running else '启动服务', state=state,
+                                          fg_color=RED if running else ACCENT,
+                                          hover_color='#e26371' if running else '#8defd0',
+                                          text_color=TEXT if running else '#09241d', font=self.font(14))
+            cursor = 'hand2' if state == 'normal' else 'arrow'
+        self.service_button._canvas.configure(cursor=cursor)
+        if self.service_button._text_label is not None:
+            self.service_button._text_label.configure(cursor=cursor)
+
+    def _spinner_tick(self):
+        if not self._button_mode or self._button_mode[0] not in ('starting', 'stopping') or self.closing:
+            return
+        self._spinner_index = (self._spinner_index + 1) % len(SPINNER)
+        self.service_button.configure(text=SPINNER[self._spinner_index])
+        self.after(90, self._spinner_tick)
+
+    def toggle_service(self):
+        if self.running:
+            self.stop_service()
+        else:
+            self.start_service()
 
     def start_service(self):
         if self.service.active or self.job.active or not self.save():
@@ -312,17 +390,20 @@ class Desktop(ctk.CTk):
         self.status_label.configure(text='●  正在停止', text_color=MUTED)
         self.controls()
 
-    def start_job(self, action):
+    def start_job(self):
+        action = 'update' if self.update_available else 'check'
         if self.job.active or (action == 'update' and (self.service.active or self.running)):
             return
         self.job_action = action
-        arguments = ['gui-check'] if action == 'check' else ['cli', 'update-corpus', '--apply', '--timeout', '20']
+        arguments = ['gui-check'] if action == 'check' else [
+            'cli', 'update-corpus', '--apply', '--timeout', '20', '--gui-progress']
         try:
             self.job.start(arguments)
-            text = '正在检查上游版本…' if action == 'check' else '正在下载并验证语料，请保持窗口开启…'
+            text = '正在检查上游版本…' if action == 'check' else '正在下载并验证语料…'
             self.update_message.configure(text=text, text_color=BLUE)
             self.log(text)
-            self.progress.start()
+            self.progress.set(0.0)
+            self.progress_label.configure(text='检查中…' if action == 'check' else '准备更新…')
         except OSError as error:
             self.update_message.configure(text='无法执行：' + str(error), text_color='#ff9b9b')
         self.controls()
@@ -343,7 +424,15 @@ class Desktop(ctk.CTk):
             except queue.Empty:
                 break
             if event == 'log':
-                self.log(payload)
+                if kind == 'job' and payload.startswith(PROGRESS_PREFIX):
+                    try:
+                        progress = json.loads(payload[len(PROGRESS_PREFIX):])
+                        self.progress.set(progress['fraction'])
+                        self.progress_label.configure(text=progress['label'])
+                    except (ValueError, KeyError, TypeError):
+                        self.log(payload)
+                else:
+                    self.log(payload)
             elif event == 'ready' and not self.service.stopping:
                 self.running = True
                 self.status_label.configure(text='●  服务运行中', text_color=ACCENT)
@@ -360,21 +449,27 @@ class Desktop(ctk.CTk):
                 self.log(f'服务已退出（{code}）。')
             elif event == 'done' and kind == 'job':
                 code, stopped, output = payload
-                self.progress.stop()
-                self.progress.set(0)
                 if code != 0:
                     self.update_message.configure(text='操作未完成，请查看运行日志后重试。', text_color='#ff9b9b')
+                    self.progress_label.configure(text='操作未完成')
                 elif self.job_action == 'check':
                     try:
                         status = json.loads(output.splitlines()[-1])
                         current = status['local'] == status['upstream']
+                        self.update_available = not current
                         text = '当前语料已是最新版本。' if current else '发现新的规则语料，停止服务后点击「更新语料」。'
                         self.update_message.configure(text=text, text_color=ACCENT)
+                        self.progress.set(1.0)
+                        self.progress_label.configure(text='检查完成')
                     except (ValueError, KeyError, IndexError):
                         self.update_message.configure(text='无法读取检查结果，请查看运行日志。', text_color='#ff9b9b')
+                        self.progress_label.configure(text='检查结果不可用')
                 else:
+                    self.update_available = False
                     self.refresh_corpus()
                     self.update_message.configure(text='语料更新完成。下次启动服务将使用新规则。', text_color=ACCENT)
+                    self.progress.set(1.0)
+                    self.progress_label.configure(text='更新完成 · 100%')
                     self.log('语料更新完成。')
         self.controls()
         if self.closing and not self.service.active and not self.job.active:
@@ -384,8 +479,38 @@ class Desktop(ctk.CTk):
 
     def close(self):
         if self.job.active and self.job_action == 'update':
-            messagebox.showinfo('语料正在更新', '请等待更新结束后关闭，以免中断语料安装。', parent=self)
+            self._show_exit_dialog()
             return
+        self._finish_close()
+
+    def _show_exit_dialog(self):
+        if getattr(self, '_exit_dialog', None) and self._exit_dialog.winfo_exists():
+            self._exit_dialog.focus_force()
+            return
+        dialog = ctk.CTkToplevel(self)
+        self._exit_dialog = dialog
+        dialog.title('语料正在更新')
+        dialog.geometry('420x180')
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.configure(fg_color=BG)
+        self.label(dialog, '语料正在更新', 18).pack(anchor='w', padx=24, pady=(20, 8))
+        self.label(dialog, '现在退出会中断更新。', 13, MUTED).pack(anchor='w', padx=24)
+        row = ctk.CTkFrame(dialog, fg_color='transparent')
+        row.pack(side='bottom', fill='x', padx=24, pady=20)
+        self.button(row, '继续等待', dialog.destroy, width=120).pack(side='left')
+        self.button(row, '仍然退出', self._force_close, width=120,
+                    fg_color=RED, hover_color='#e26371').pack(side='right')
+        dialog.grab_set()
+        dialog.focus_force()
+
+    def _force_close(self):
+        if getattr(self, '_exit_dialog', None) and self._exit_dialog.winfo_exists():
+            self._exit_dialog.grab_release()
+            self._exit_dialog.destroy()
+        self._finish_close()
+
+    def _finish_close(self):
         self.closing = True
         self.job.stop()
         self.service.stop()
@@ -393,7 +518,6 @@ class Desktop(ctk.CTk):
 
 
 def main():
-    ctk.set_appearance_mode('dark')
     ctk.set_default_color_theme('blue')
     app = Desktop()
     app.mainloop()

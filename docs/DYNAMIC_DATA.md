@@ -3,32 +3,34 @@
 The server reads exactly **two** data sources, and only when they exist:
 
 1. **the Stellaris installation** — the game's own script files;
-2. **the mod that contains this tool** — the work in progress.
+2. **the manually configured mod directory** — the work in progress.
 
 The launcher database, playsets and other installed mods are deliberately *not*
 read: a modder validating their own mod needs vanilla plus their own files.
 
-Everything is read-only. If no installation is found the server behaves exactly like
-the pure-CWT release, and `stellaris_doctor` explains why.
+Everything is read-only. If neither a game installation nor a Mod directory is available,
+the server uses only the bundled CWT corpus. `stellaris_doctor` reports the available sources.
 
-## Detecting the installation
+## Choosing data sources
 
 `stellaris_doctor` reports every step it tried. Detection order, first hit wins:
 
-1. `--game-root` / `--mod-root` arguments (or `STELLARIS_GAME_ROOT`, `STELLARIS_MOD_ROOT`);
+1. `--game-root` argument (or `STELLARIS_GAME_ROOT`);
 2. the Steam installation from the Windows registry (`HKCU\Software\Valve\Steam`,
    `HKLM\SOFTWARE\WOW6432Node\Valve\Steam`);
 3. every Steam library listed in `steamapps/libraryfolders.vdf`
    (`appmanifest_281990.acf` confirms the app);
 4. the usual install locations per platform.
 
-A candidate is accepted only when it contains the game executable, `common/defines/00_defines.txt`
-and `common/economic_categories/`. The mod root is found by walking **upwards** from the
-tool until a `descriptor.mod` is found, so the tool may live in a subdirectory.
+A game candidate is accepted only when it contains the game executable, `common/defines/00_defines.txt`
+and `common/economic_categories/`. The Mod root is never inferred from the tool's location.
+Enter it in the GUI, pass `--mod-root`, or set `STELLARIS_MOD_ROOT`. Without one of those,
+Mod scripts are not indexed. An explicit path remains usable even without `descriptor.mod`.
 
 ```bash
 python stellaris_modder_tool.py doctor                 # what was detected, and what was indexed
 python stellaris_modder_tool.py --game-root "D:/Games/Stellaris" search has_background_job
+python stellaris_modder_tool.py --mod-root "D:/MyMod" doctor
 python stellaris_modder_tool.py --no-game-data stats   # pure CWT: never touches disk outside the tool
 ```
 

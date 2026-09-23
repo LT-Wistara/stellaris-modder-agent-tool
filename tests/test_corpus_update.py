@@ -493,6 +493,34 @@ class IncrementalCase(unittest.TestCase):
         diff.assert_not_called()
 
 
+class GuiProgressCase(unittest.TestCase):
+    def test_update_reports_download_and_install_progress(self):
+        def download(*args, **kwargs):
+            kwargs['progress'](1, 2, 'a.cwt')
+            kwargs['progress'](2, 2, 'b.cwt')
+            return {'a.cwt': b'a', 'b.cwt': b'b'}, None
+
+        output = io.StringIO()
+        with patch.object(corpus, 'read_manifest', return_value={}), \
+                patch.object(corpus, 'local_files', return_value={}), \
+                patch.object(corpus, 'upstream_commit', return_value=('b' * 40, None)), \
+                patch.object(corpus, 'tree_paths', return_value=['a.cwt', 'b.cwt']), \
+                patch.object(corpus, 'download_archive') as archive, \
+                patch.object(corpus, 'download_files', side_effect=download), \
+                patch.object(corpus, 'report', return_value=('summary', None)), \
+                patch.object(corpus, 'verify_corpus'), \
+                patch.object(corpus, 'build_manifest', return_value={}), \
+                patch.object(corpus, 'install'), contextlib.redirect_stdout(output):
+            self.assertEqual(corpus.main(['--apply', '--gui-progress']), 0)
+        archive.assert_not_called()
+        events = [json.loads(line.removeprefix('@@GUI_PROGRESS@@'))
+                  for line in output.getvalue().splitlines()
+                  if line.startswith('@@GUI_PROGRESS@@')]
+        self.assertEqual(events[-1]['fraction'], 1.0)
+        self.assertTrue(any('1/2' in event['label'] for event in events))
+        self.assertTrue(any('验证' in event['label'] for event in events))
+
+
 class RepeatedRoundCase(unittest.TestCase):
     """One stalled connection must not discard the files that already arrived.
 

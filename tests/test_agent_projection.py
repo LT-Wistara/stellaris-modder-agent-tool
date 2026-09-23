@@ -137,7 +137,7 @@ class AgentProjectionCase(unittest.TestCase):
         self.assertEqual(result['counts'], {'CONFIRMED_CWT': 1})
         self.assertNotIn('legend', result)          # nothing to explain without findings
         unknown = self.call('stellaris_validate', code='has_magic_planet = yes', context='trigger')
-        self.assertIn('UNKNOWN=no evidence here', unknown['legend'])
+        self.assertIn('UNKNOWN=no matching declaration in loaded sources', unknown['legend'])
         cases = [('has_magic_planet = yes', 'trigger'),
                  ('has_unlocked_council_positions >= banana', 'trigger'),
                  ('has_unlocked_council_positions >= 2', {'type': 'trigger', 'scope': 'planet'}),
@@ -198,7 +198,7 @@ class AgentProjectionCase(unittest.TestCase):
                            ('stellaris_get', {'target': 'zzzz_nonexistent_identifier'})]:
             result = self.call(tool, **args)
             self.assertEqual(result['status'], 'NOT_FOUND')
-            self.assertIn('mod', result['tips'])
+            self.assertNotIn('tips', result)
 
     def test_projection_is_detached_and_omits_internal_evidence(self):
         for tool, payload in [('stellaris_get', self.db.get('has_background_job')),

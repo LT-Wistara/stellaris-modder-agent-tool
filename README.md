@@ -1,4 +1,4 @@
-# Stellaris Agent Tool 1.2.0
+# Stellaris Agent Tool 0.1.3
 
 让 AI Agent 在写 Stellaris Mod 时**查真实规则、验真实代码**的离线工具。
 
@@ -25,9 +25,9 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 |---|---|---|
 | **内置 CWT 语料** | 规则：哪些字段合法、作用域、别名、模板 | 始终 |
 | **游戏本体** | 对象：真实存在的科技、建筑、资源、事件……（约 12,800 个定义） | 检测到游戏安装时 |
-| **你的 Mod** | 对象：你自己声明的名字 | 工具放在 Mod 根目录里时 |
+| **你的 Mod** | 对象：你自己声明的名字 | 显式设置 Mod 目录后 |
 
-因此它**不会**说"这个字段存在"，它说的是"这个字段在 `modifiers.cwt` 第 N 行被声明"（`CONFIRMED_CWT`）或"这个建筑在你硬盘上的游戏数据里存在"（`CONFIRMED_GAME_DATA`）。分不清的两者，它明确说 `UNKNOWN`，并告诉你**缺少证据不等于不存在**。
+因此它**不会**说"这个字段存在"，它说的是"这个字段在 `modifiers.cwt` 第 N 行被声明"（`CONFIRMED_CWT`）或"这个建筑在你硬盘上的游戏数据里存在"（`CONFIRMED_GAME_DATA`）。没有匹配声明时返回 `UNKNOWN`。
 
 ### 五个证据状态
 
@@ -37,35 +37,36 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 | `CONFIRMED_GAME_DATA` | 已加载的游戏/Mod 数据里有声明（含游戏生成的修饰符） |
 | `TEMPLATE_MATCH` | 只匹配到**文档化的形状**（如动态生成的 `<分类>_<资源>_mult`），不证明具体名字存在 |
 | `SUGGESTION` | 仅为候选，**永远不作为存在依据** |
-| `UNKNOWN` | 这里没有证据 —— 不等于不存在 |
+| `UNKNOWN` | 已加载的规则与数据中没有匹配声明 |
 
 ---
 
 ## 二、快速开始（Windows）
 
-**EXE 发布版无需安装 Python**：下载 `Releases/stellaris-modder-agent-tool-1.2.0-windows-x64.zip`，将整个 `StellarisModderAgent` 文件夹解压到自己的 Mod 中，双击 `StellarisModderAgent.exe` 打开图形面板，不再出现命令行窗口。
+**EXE 版无需安装 Python**：将整个 `StellarisModderAgent` 文件夹解压到任意有写入权限的位置，双击 `StellarisModderAgent.exe` 打开图形面板。
 
-- **服务控制台**：启动 / 停止服务、设置端口、切换游戏数据与热更新。
-- **数据与更新**：选择游戏 / Mod 目录、保存设置、检查 / 安装 CWT 更新。
+- **服务控制台**：单按钮启动 / 停止服务，启动时按钮内显示旋转等待动画；复制 HTTP 接入配置、设置端口、切换游戏数据与热更新。
+- **数据与更新**：手动输入或浏览选择 Mod 根目录，设置游戏目录、保存设置；一个按钮先检查 CWT 更新，有新版本时切换为更新语料，并显示下载与安装进度。Mod 目录留空时不从 GUI 指定 Mod；后端仍接受显式环境变量。
 - **客户端接入**：复制 HTTP、stdio 或 Codex 配置。
 - **运行日志**：查看启动与更新进度、复制错误日志。
+- **关于软件**：查看版本、用途、许可与项目地址。
 
-保留同目录的 `StellarisModderAgent-server.exe` 与 `_internal` 文件夹。stdio 客户端使用服务 EXE，参数为 `["serve"]`；旧版本用户请从面板重新复制配置。关闭面板会停止它启动的 HTTP 服务，客户端独立启动的 stdio 服务不受影响。更新语料前先停止面板内的服务。
+保留同目录的 `StellarisModderAgent-server.exe` 与 `_internal` 文件夹。stdio 客户端使用服务 EXE，参数为 `["serve"]`。关闭面板会停止它启动的 HTTP 服务，客户端独立启动的 stdio 服务不受影响。更新语料前先停止面板内的服务；更新期间关闭面板可选择继续等待或仍然退出。
 
 详见 [Windows 发布版说明](docs/WINDOWS_RELEASE.md) 与 [GUI 发布记录](docs/GUI_RELEASE.md)。源码 GUI 运行方式：`python -m pip install -r requirements-gui.txt`，然后运行 `python gui.py`。
 
 以下为保留的**源码命令行版**步骤，要求 Python 3.9 或更新版本，安装时勾选加入 PATH。
 
-1. 把整个文件夹解压到**你自己的 Mod 根目录**里（与 `descriptor.mod` 同级的那一层，放其下任意子目录也可以）；
-2. 双击 **`start.py`**；
-3. 黑窗口会依次：检查 Python 与语料 → 探测游戏本体和你的 Mod → 建索引并打印统计 → 在 `http://127.0.0.1:8765/mcp` 起服务 → **打印可直接复制粘贴的客户端配置片段**；
+1. 把整个文件夹解压到任意位置；
+2. 使用 `python start.py --mod-root "你的 Mod 根目录"` 启动；
+3. 黑窗口会依次：检查 Python 与语料 → 探测游戏本体、读取指定 Mod → 建索引并打印统计 → 在 `http://127.0.0.1:8765/mcp` 起服务 → **打印可直接复制粘贴的客户端配置片段**；
 4. 把片段贴进你的 MCP 客户端，重新加载客户端即可。
 
 黑窗口就是服务器进程，**关掉窗口即停止**。重复双击不会起第二个进程 —— 它会检测到已有服务，直接把片段打出来。启动失败会打印原因，并把完整堆栈写入 `start-error.log`。
 
 **模式自动判断**：有控制台（双击）走 HTTP；被客户端用管道拉起（`serve` 参数，或 stdin 不是终端）自动走 stdio，此时 stdout 只输出 JSON-RPC。同一个脚本既能给人用，也能给 Agent 用。
 
-> **Mod 根目录由 `descriptor.mod` 唯一确定。** 工具只读"自己所在的那个 Mod"——判定方式是"从工具自身位置向上找 `descriptor.mod`"。找不到就报未检测到并打印修复提示（退化为只能查内置规则），**不会**根据 `common/`、`events/` 这类目录名去猜，以免静默读错脚本。位置放错了用 `STELLARIS_MOD_ROOT` 或 `--mod-root` 显式指定。
+> **Mod 目录必须手动指定。** GUI 的「数据与更新」可直接输入路径；命令行使用 `--mod-root` 或 `STELLARIS_MOD_ROOT`。工具不会根据自身位置或 `descriptor.mod` 自动寻找 Mod；未指定时仍可查询内置规则与已找到的游戏本体。
 
 
 ---
@@ -113,7 +114,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 ### `stellaris_doctor()`
 
-排障第一步：报告检测到了哪个游戏本体（含版本）、哪个 Mod、索引了多少文件/定义、游戏生成了多少修饰符，以及**每一步探测失败的原因**。当某个名字查不到时先跑它 —— 很可能只是游戏/Mod 数据没被加载。
+查看数据源配置：报告检测到的游戏本体（含版本）、手动指定的 Mod、索引的文件/定义数、游戏生成的修饰符，以及数据源不可用的原因。
 
 ### 提示词里已经写了"用工具，不要用 CLI"
 
@@ -168,7 +169,7 @@ stellaris-modder-agent-tool/
 │  ├─ retrieval.py / scoring.py  模糊检索与评分
 │  ├─ validate.py              验证器
 │  ├─ gamedata.py / dynamic.py  游戏与 Mod 数据、游戏生成的修饰符
-│  ├─ environment.py           游戏/Mod/用户目录探测（含版本识别）
+│  ├─ environment.py           游戏与用户目录探测、Mod 路径配置（含版本识别）
 │  ├─ corpus.py                语料库更新
 │  ├─ http_server.py           Streamable HTTP 传输
 │  └─ data/                    内置 CWT 语料 + UPSTREAM.json
@@ -180,7 +181,7 @@ stellaris-modder-agent-tool/
 │  └─ build_release.py         打包源码 ZIP / Windows EXE ZIP（--windows）
 ├─ tests/                      核心、协议、桌面进程与设置回归测试
 ├─ deploy/                     systemd / nginx / certbot 模板
-└─ docs/                       设计文档与评测报告
+└─ docs/                       当前说明与历史评测报告（见 docs/README.md）
 ```
 
 ---
@@ -197,4 +198,4 @@ stellaris-modder-agent-tool/
 
 ## 八、许可
 
-MIT。内置 CWT 语料来自 [cwtools-stellaris-config](https://github.com/cwtools/cwtools-stellaris-config)（DragonKnightOfBreeze fork），版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_modder_agent/data/LICENSE.cwt`。
+项目代码采用 [MIT 许可](LICENSE)，版权署名已更新。内置 CWT 语料来自 [DragonKnightOfBreeze/cwtools-stellaris-config](https://github.com/DragonKnightOfBreeze/cwtools-stellaris-config)，独立版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_modder_agent/data/LICENSE.cwt`。
