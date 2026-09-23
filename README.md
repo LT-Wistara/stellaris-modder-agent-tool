@@ -27,8 +27,6 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 | **游戏本体** | 对象：真实存在的科技、建筑、资源、事件……（约 12,800 个定义） | 检测到游戏安装时 |
 | **你的 Mod** | 对象：你添加的各个 Mod 中声明的名字 | 显式添加源文件夹后 |
 
-因此它**不会**说"这个字段存在"，它说的是"这个字段在 `modifiers.cwt` 第 N 行被声明"（`CONFIRMED_CWT`）或"这个建筑在你硬盘上的游戏数据里存在"（`CONFIRMED_GAME_DATA`）。没有匹配声明时返回 `UNKNOWN`。
-
 ### 五个证据状态
 
 | 状态 | 含义 |
@@ -41,37 +39,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 ---
 
-## 二、快速开始（Windows）
-
-**EXE 版无需安装 Python**：将整个 `StellarisModderAgent` 文件夹解压到任意有写入权限的位置，双击 `StellarisModderAgent.exe` 打开图形面板。
-
-- **服务控制台**：单按钮启动 / 停止服务，启动时按钮内显示旋转等待动画；复制 HTTP 接入配置、设置端口、切换游戏数据与热更新。
-- **数据与更新**：输入路径后按回车添加 Mod 源文件夹，或点「浏览」在 Windows 文件夹选择器中多选；源文件夹横向显示并可悬停删除，增删后自动保存。游戏目录和运行选项也自动保存。语料按钮先检查 CWT 更新，有新版本时切换为更新语料，并显示下载与安装进度。没有源文件夹时，后端仍接受显式环境变量。
-- **客户端接入**：复制 HTTP、stdio 或 Codex 配置。
-- **运行日志**：查看启动与更新进度、复制错误日志。
-- **关于软件**：查看版本、用途、许可与项目地址。
-
-保留同目录的 `StellarisModderAgent-server.exe` 与 `_internal` 文件夹。stdio 客户端使用服务 EXE，参数为 `["serve"]`。关闭面板会停止它启动的 HTTP 服务，客户端独立启动的 stdio 服务不受影响。更新语料前先停止面板内的服务；更新期间关闭面板可选择继续等待或仍然退出。
-
-详见 [Windows 发布版说明](docs/WINDOWS_RELEASE.md) 与 [GUI 发布记录](docs/GUI_RELEASE.md)。源码 GUI 运行方式：`python -m pip install -r requirements-gui.txt`，然后运行 `python gui.py`。
-
-以下为保留的**源码命令行版**步骤，要求 Python 3.9 或更新版本，安装时勾选加入 PATH。
-
-1. 把整个文件夹解压到任意位置；
-2. 使用 `python start.py --mod-root "你的 Mod 根目录"` 启动；
-3. 黑窗口会依次：检查 Python 与语料 → 探测游戏本体、读取指定 Mod → 建索引并打印统计 → 在 `http://127.0.0.1:8765/mcp` 起服务 → **打印可直接复制粘贴的客户端配置片段**；
-4. 把片段贴进你的 MCP 客户端，重新加载客户端即可。
-
-黑窗口就是服务器进程，**关掉窗口即停止**。重复双击不会起第二个进程 —— 它会检测到已有服务，直接把片段打出来。启动失败会打印原因，并把完整堆栈写入 `start-error.log`。
-
-**模式自动判断**：有控制台（双击）走 HTTP；被客户端用管道拉起（`serve` 参数，或 stdin 不是终端）自动走 stdio，此时 stdout 只输出 JSON-RPC。同一个脚本既能给人用，也能给 Agent 用。
-
-> **Mod 目录必须手动指定。** GUI 的「数据与更新」可添加多个源文件夹；命令行可重复使用 `--mod-root`，或设置 `STELLARIS_MOD_ROOT`。工具不会根据自身位置或 `descriptor.mod` 自动寻找 Mod；未指定时仍可查询内置规则与已找到的游戏本体。
-
-
----
-
-## 三、四个 MCP 工具
+## 二、四个 MCP 工具
 
 接入后，Agent 拿到的就是这四个工具。**典型流程：接口用一次 `search`，完整 schema 用 `list → search(path)`，写完代码用 `validate`。**
 
@@ -87,9 +55,8 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 | 大文件里定向找 | `query="<identifier>", type="<该 .cwt 的真实路径>"` |
 | 查**文本**（本地化、事件 id、注释） | `mode="text"` —— 名字模式找不到这些 |
 
-**拼错也能查。** 支持漏/多下划线、轻微拼写错误、相邻换位、token 截断缩写：`any_pop_job` → `any_owned_pop_job`、`has_backgroud_job` → `has_background_job`。模糊命中一律是 `SUGGESTION`，**永不升级为存在依据**。
+**拼错也能查。** 支持漏/多下划线、轻微拼写错误、相邻换位、token 截断缩写：`any_pop_job` → `any_owned_pop_job`、`has_backgroud_job` → `has_background_job`。
 
-不要猜 `.cwt` 路径 —— 先用 `stellaris_list()` 拿真实路径。
 
 ### `stellaris_list()`
 
@@ -116,17 +83,9 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 查看数据源配置：报告检测到的游戏本体（含版本）、手动指定的 Mod、索引的文件/定义数、游戏生成的修饰符，以及数据源不可用的原因。
 
-### 提示词里已经写了"用工具，不要用 CLI"
-
-服务器在 `initialize` 时会把一段说明注入客户端的 system prompt，开头就是这条规则：
-
-> 用 `stellaris_search` / `stellaris_list` / `stellaris_validate` / `stellaris_doctor` 回答问题，**不要**跑命令、**不要**读文件。不要调用本工具自己的 CLI（`stellaris_modder_tool.py`、`start.py`、`scripts/*`），不要打开、grep 或读取 `stellaris_modder_agent/data` 下的 `.cwt` 或服务器源码 —— 工具里已经有解析好的索引、调用点、游戏/Mod 数据和证据规则，而原始语料只是没有状态标注的文本，读它花更多上下文、得到更少确定性。shell 只用于看你自己的 Mod 文件。
-
-原因很实际：LLM 习惯性地去 shell 里跑 CLI，但那样会丢掉索引、调用点和证据状态，而且把几万行语料灌进上下文。这段提示词就是为了拦住它。
-
 ---
 
-## 四、命令行
+## 三、命令行
 
 CLI 与 MCP **共用同一套解析、检索与验证规则**，区别只在输出：MCP 是给模型看的紧凑投影，CLI 保留全部细节（`source.file/line`、原始节点、逐项诊断、评分解释）。
 
@@ -147,7 +106,7 @@ python stellaris_modder_tool.py serve --http
 
 ---
 
-## 五、热更新与检索细节
+## 四、热更新与检索细节
 
 **正在运行的 MCP 会自己发现 Mod 改动，新建条目无需重启。** 它用"文件数 + 总字节数 + mtime 之和"对白名单目录做指纹（约 4 ms），变化即重建索引（含模糊索引），按 2 秒节流。新建、修改（即使长度不变）、删除都能识别。`--no-watch` 或 `STELLARIS_WATCH=0` 可关闭，`stellaris_doctor` 的 `watch` 字段会报告状态、节流间隔与重建次数。
 
@@ -155,7 +114,7 @@ python stellaris_modder_tool.py serve --http
 
 ---
 
-## 六、目录结构
+## 五、目录结构
 
 ```text
 stellaris-modder-agent-tool/
@@ -195,16 +154,6 @@ stellaris-modder-agent-tool/
 
 ---
 
-## 七、已知限制
-
-- **行尾差异不会误报，但 `--apply` 会把语料统一成 LF**（上游原始字节）。
-- **不读启动器数据库、playset 和未添加的其他 Mod** —— 只看原版和你明确添加的源文件夹。
-- **语料是快照，不代表游戏运行正确性**。`stellaris.version` 表示语料声明的目标游戏版本，个别文件可能保留更早的更新标记。
-- **验证器不保证游戏内正确**。它证明的是"规则里有这个字段"，不是"这样写在游戏里一定生效"。
-- 没有覆盖的领域：GUI 定义、图形资源、本地化键的完整性、性能与兼容性。
-
----
-
-## 八、许可
+## 六、许可
 
 项目代码采用 [MIT 许可](LICENSE)，版权署名已更新。内置 CWT 语料来自 [DragonKnightOfBreeze/cwtools-stellaris-config](https://github.com/DragonKnightOfBreeze/cwtools-stellaris-config)，独立版权与许可见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 `stellaris_modder_agent/data/LICENSE.cwt`。
