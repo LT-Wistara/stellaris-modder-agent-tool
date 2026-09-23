@@ -2,6 +2,9 @@
 
 让 AI Agent 在写 Stellaris Mod 时**查真实规则、验真实代码**的离线工具。
 
+> [!WARNING]
+> 警告：Agent目前仍然无法解决所有需求，无法理清所有逻辑，在使用过程中建议以手搓为主，agent为辅。
+
 附带 **173 个 CWT 规则文件**（23,057 个符号），提供桌面 GUI、4 个 MCP 工具、一套 CLI 和一个 Python API。核心服务只依赖 Python **3.9+** 标准库；源码 GUI 使用 CustomTkinter 和 Pillow，EXE 发布版已包含全部依赖。
 
 ```text
