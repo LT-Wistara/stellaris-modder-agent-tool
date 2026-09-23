@@ -70,7 +70,7 @@ TOOLS = [
                     'description': 'Deprecated: accepted and ignored. Every call returns the one compact shape.'}},
                      'required': ['code'], 'additionalProperties': False}},
     {'name': 'stellaris_doctor',
-     'description': 'Report the detected Stellaris installation and manually configured Mod directory, game version, indexed file and definition counts, generated modifiers, and source errors. Use to inspect source configuration. Read-only; configure the Mod in the GUI, with --mod-root, or with STELLARIS_MOD_ROOT.',
+      'description': 'Report the detected Stellaris installation and manually configured Mod directories, game version, indexed file and definition counts, generated modifiers, and source errors. Use to inspect source configuration. Read-only; add Mod folders in the GUI, repeat --mod-root, or set STELLARIS_MOD_ROOT.',
      'inputSchema': {'type': 'object', 'properties': {}, 'required': [], 'additionalProperties': False}}
 ]
 for tool in TOOLS:

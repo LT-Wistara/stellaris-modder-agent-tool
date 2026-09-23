@@ -25,7 +25,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 |---|---|---|
 | **内置 CWT 语料** | 规则：哪些字段合法、作用域、别名、模板 | 始终 |
 | **游戏本体** | 对象：真实存在的科技、建筑、资源、事件……（约 12,800 个定义） | 检测到游戏安装时 |
-| **你的 Mod** | 对象：你自己声明的名字 | 显式设置 Mod 目录后 |
+| **你的 Mod** | 对象：你添加的各个 Mod 中声明的名字 | 显式添加源文件夹后 |
 
 因此它**不会**说"这个字段存在"，它说的是"这个字段在 `modifiers.cwt` 第 N 行被声明"（`CONFIRMED_CWT`）或"这个建筑在你硬盘上的游戏数据里存在"（`CONFIRMED_GAME_DATA`）。没有匹配声明时返回 `UNKNOWN`。
 
@@ -46,7 +46,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 **EXE 版无需安装 Python**：将整个 `StellarisModderAgent` 文件夹解压到任意有写入权限的位置，双击 `StellarisModderAgent.exe` 打开图形面板。
 
 - **服务控制台**：单按钮启动 / 停止服务，启动时按钮内显示旋转等待动画；复制 HTTP 接入配置、设置端口、切换游戏数据与热更新。
-- **数据与更新**：手动输入或浏览选择 Mod 根目录，设置游戏目录、保存设置；一个按钮先检查 CWT 更新，有新版本时切换为更新语料，并显示下载与安装进度。Mod 目录留空时不从 GUI 指定 Mod；后端仍接受显式环境变量。
+- **数据与更新**：输入路径后按回车添加 Mod 源文件夹，或点「浏览」在 Windows 文件夹选择器中多选；源文件夹横向显示并可悬停删除，增删后自动保存。游戏目录和运行选项也自动保存。语料按钮先检查 CWT 更新，有新版本时切换为更新语料，并显示下载与安装进度。没有源文件夹时，后端仍接受显式环境变量。
 - **客户端接入**：复制 HTTP、stdio 或 Codex 配置。
 - **运行日志**：查看启动与更新进度、复制错误日志。
 - **关于软件**：查看版本、用途、许可与项目地址。
@@ -66,7 +66,7 @@ Stellaris 的脚本规则散在 173 个 `.cwt` 里，游戏本体和你的 Mod �
 
 **模式自动判断**：有控制台（双击）走 HTTP；被客户端用管道拉起（`serve` 参数，或 stdin 不是终端）自动走 stdio，此时 stdout 只输出 JSON-RPC。同一个脚本既能给人用，也能给 Agent 用。
 
-> **Mod 目录必须手动指定。** GUI 的「数据与更新」可直接输入路径；命令行使用 `--mod-root` 或 `STELLARIS_MOD_ROOT`。工具不会根据自身位置或 `descriptor.mod` 自动寻找 Mod；未指定时仍可查询内置规则与已找到的游戏本体。
+> **Mod 目录必须手动指定。** GUI 的「数据与更新」可添加多个源文件夹；命令行可重复使用 `--mod-root`，或设置 `STELLARIS_MOD_ROOT`。工具不会根据自身位置或 `descriptor.mod` 自动寻找 Mod；未指定时仍可查询内置规则与已找到的游戏本体。
 
 
 ---
@@ -143,7 +143,7 @@ python stellaris_modder_tool.py update-corpus --check
 python stellaris_modder_tool.py serve --http
 ```
 
-通用参数：`--game-root DIR`、`--mod-root DIR`、`--no-game-data`（只读内置语料）、`--no-watch`。
+通用参数：`--game-root DIR`、`--mod-root DIR`（可重复）、`--no-game-data`（只读内置语料）、`--no-watch`。
 
 ---
 
@@ -159,10 +159,16 @@ python stellaris_modder_tool.py serve --http
 
 ```text
 stellaris-modder-agent-tool/
-├─ start.cmd / start.py        入口（双击即用；也是 stdio 入口）
-├─ stellaris_modder_tool.py           CLI 入口
-├─ 使用说明.txt                 中文速查（面向双击使用者）
+├─ gui.py                      源码桌面界面入口
+├─ start.cmd / start.py        源码服务启动器（HTTP / stdio）
+├─ stellaris_modder_tool.py    CLI 入口
+├─ pyproject.toml              包元数据与版本号
+├─ requirements*.txt           源码、GUI 与构建依赖
+├─ 使用说明.txt                 中文速查
 ├─ stellaris_modder_agent/
+│  ├─ desktop.py               桌面界面
+│  ├─ desktop_runtime.py       桌面服务与更新任务
+│  ├─ folder_picker.py         Windows 文件夹选择器
 │  ├─ server.py                MCP 协议 + 工具声明 + 注入提示词
 │  ├─ cli.py                   命令行
 │  ├─ index.py                 语料解析与索引
@@ -178,10 +184,13 @@ stellaris-modder-agent-tool/
 │  ├─ update_corpus.py         语料库更新（脚本形式）
 │  ├─ evaluate_fuzzy.py        模糊检索评测
 │  ├─ verify.py                跑测试并写 docs/TEST_REPORT.*
-│  └─ build_release.py         打包源码 ZIP / Windows EXE ZIP（--windows）
+│  ├─ build_release.py         打包源码 ZIP / Windows EXE ZIP（--windows）
+│  ├─ smoke_release.py         验证解压后的 Windows 发布包
+│  └─ windows.spec             PyInstaller 构建配置
 ├─ tests/                      核心、协议、桌面进程与设置回归测试
 ├─ deploy/                     systemd / nginx / certbot 模板
-└─ docs/                       当前说明与历史评测报告（见 docs/README.md）
+├─ docs/                       使用说明与评测报告（见 docs/README.md）
+└─ Releases/                   本地生成的发布包（已被 Git 忽略）
 ```
 
 ---
@@ -189,7 +198,7 @@ stellaris-modder-agent-tool/
 ## 七、已知限制
 
 - **行尾差异不会误报，但 `--apply` 会把语料统一成 LF**（上游原始字节）。
-- **不读启动器数据库、playset 和其他已安装的 Mod** —— 只看原版 + 你自己那一个 Mod，这是刻意的：你要验的是自己的 Mod。
+- **不读启动器数据库、playset 和未添加的其他 Mod** —— 只看原版和你明确添加的源文件夹。
 - **语料是快照，不代表游戏运行正确性**。`stellaris.version` 表示语料声明的目标游戏版本，个别文件可能保留更早的更新标记。
 - **验证器不保证游戏内正确**。它证明的是"规则里有这个字段"，不是"这样写在游戏里一定生效"。
 - 没有覆盖的领域：GUI 定义、图形资源、本地化键的完整性、性能与兼容性。

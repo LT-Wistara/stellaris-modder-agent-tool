@@ -1,5 +1,5 @@
 """Desktop process control, kept independent from Tk for testing and stdio use."""
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import json
 import os
 from pathlib import Path
@@ -23,27 +23,33 @@ def backend_command():
 class Settings:
     port: int = 8765
     game_root: str = ''
-    mod_root: str = ''
+    mod_roots: list[str] = field(default_factory=list)
     game_data: bool = True
     watch: bool = True
 
-    def validate(self):
+    def validate(self, check_paths=True):
         if isinstance(self.port, bool) or not isinstance(self.port, int) or not 1 <= self.port <= 65535:
             raise ValueError('端口必须是 1 到 65535 之间的整数。')
-        for value, label in ((self.game_root, '游戏'), (self.mod_root, 'Mod')):
-            if not isinstance(value, str):
-                raise ValueError(label + '路径格式错误。')
-            if value and not Path(value).is_dir():
-                raise ValueError(label + '目录不存在，请重新选择。')
+        if not isinstance(self.game_root, str):
+            raise ValueError('游戏路径格式错误。')
+        if check_paths and self.game_root and not Path(self.game_root).is_dir():
+            raise ValueError('游戏目录不存在，请重新选择。')
+        if not isinstance(self.mod_roots, list) or any(not isinstance(root, str) or not root for root in self.mod_roots):
+            raise ValueError('Mod 目录格式错误。')
+        if len({os.path.normcase(os.path.abspath(root)) for root in self.mod_roots}) != len(self.mod_roots):
+            raise ValueError('Mod 目录不能重复。')
+        if check_paths and any(not Path(root).is_dir() for root in self.mod_roots):
+            raise ValueError('Mod 目录不存在，请移除或重新选择。')
         if not isinstance(self.game_data, bool) or not isinstance(self.watch, bool):
             raise ValueError('数据源开关格式错误。')
         return self
 
     def flags(self):
         flags = []
-        for option, value in (('--game-root', self.game_root), ('--mod-root', self.mod_root)):
-            if value:
-                flags += [option, value]
+        if self.game_root:
+            flags += ['--game-root', self.game_root]
+        for root in self.mod_roots:
+            flags += ['--mod-root', root]
         if not self.game_data:
             flags.append('--no-game-data')
         if not self.watch:
@@ -60,14 +66,13 @@ def load_settings(path):
         data = json.loads(Path(path).read_text('utf-8'))
         if not isinstance(data, dict):
             raise ValueError('设置文件必须是 JSON 对象。')
+        if 'mod_roots' not in data and 'mod_root' in data:
+            if not isinstance(data['mod_root'], str):
+                raise ValueError('Mod 路径格式错误。')
+            data['mod_roots'] = [data['mod_root']] if data['mod_root'] else []
         settings = Settings(**{key: value for key, value in data.items() if key in Settings.__dataclass_fields__})
         # Keep missing paths visible so the user can repair a moved installation.
-        if not isinstance(settings.port, int) or isinstance(settings.port, bool) or not 1 <= settings.port <= 65535:
-            raise ValueError('端口格式错误。')
-        if not all(isinstance(v, str) for v in (settings.game_root, settings.mod_root)):
-            raise ValueError('路径格式错误。')
-        if not all(isinstance(v, bool) for v in (settings.game_data, settings.watch)):
-            raise ValueError('开关格式错误。')
+        settings.validate(check_paths=False)
         return settings, None
     except FileNotFoundError:
         return Settings(), None
@@ -75,8 +80,8 @@ def load_settings(path):
         return Settings(), '无法读取设置，已恢复默认值：' + str(error)
 
 
-def save_settings(path, settings):
-    settings.validate()
+def save_settings(path, settings, check_paths=True):
+    settings.validate(check_paths=check_paths)
     path = Path(path)
     temporary = path.with_suffix('.tmp')
     temporary.write_text(json.dumps(asdict(settings), ensure_ascii=False, indent=2), encoding='utf-8')

@@ -14,8 +14,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Offline Stellaris CWT evidence tools / MCP server')
     parser.add_argument('--game-root', metavar='DIR',
                         help='Stellaris installation directory; overrides automatic detection')
-    parser.add_argument('--mod-root', metavar='DIR',
-                        help='manually chosen mod directory; omitted means no mod unless STELLARIS_MOD_ROOT is set')
+    parser.add_argument('--mod-root', metavar='DIR', action='append',
+                        help='Mod directory to index; repeat for multiple Mods')
     parser.add_argument('--no-game-data', action='store_true',
                         help='read only the bundled CWT corpus; never touch the game or the mod')
     parser.add_argument('--no-watch', action='store_true',
@@ -98,14 +98,15 @@ def main(argv=None):
             # too high would otherwise degrade to CWT-only answers in silence.
             if environment is not None:
                 game_root = getattr(environment, 'game_root', None)
-                mod_root = getattr(environment, 'mod_root', None)
-                health = environment_module.inspect_mod_root(mod_root)
+                mod_roots = getattr(environment, 'mod_roots', [])
                 print('Stellaris data: game=' + (str(game_root) if game_root else 'not detected')
-                      + ' | mod=' + (str(mod_root) if mod_root else 'not detected'), file=sys.stderr)
-                if health['reason']:
-                    print('Warning: ' + health['reason'], file=sys.stderr)
-                if health['hint']:
-                    print('Hint: ' + health['hint'], file=sys.stderr)
+                      + ' | mods=' + (', '.join(map(str, mod_roots)) if mod_roots else 'not configured'), file=sys.stderr)
+                for mod_root in mod_roots or [None]:
+                    health = environment_module.inspect_mod_root(mod_root)
+                    if health['reason']:
+                        print('Warning: ' + health['reason'], file=sys.stderr)
+                    if health['hint']:
+                        print('Hint: ' + health['hint'], file=sys.stderr)
             else:
                 print('Stellaris data: disabled by --no-game-data; only the bundled CWT corpus is '
                       'read, so mod-defined interfaces stay unresolved.', file=sys.stderr)

@@ -5,8 +5,8 @@ The bundled corpus already says *where* every definition type lives: each
 exactly those directories -- instead of the whole game tree -- is what keeps this
 step cheap enough to run lazily inside a request.
 
-Read order is ``[game, mod]``: the user's own files are read last and therefore
-win, mirroring how the game itself applies a mod on top of vanilla.
+Read order is ``[game, mod, mod, ...]``: configured Mod folders are all scanned
+after the game. Later folders win when they define the same name.
 
 Only the members a consumer actually needs are extracted (see ``EXTRACTORS``);
 the parsed document is dropped afterwards so the index stays small.
@@ -734,7 +734,7 @@ def fingerprint(db, environment, types=None):
 
 
 def build_index(db, environment, types=None, max_files=MAX_FILES, max_seconds=MAX_SECONDS):
-    """Scan ``[game, mod]`` for the requested types and index their definitions."""
+    """Scan the game and every configured Mod for requested definition types."""
     started = time.perf_counter()
     entries = environment.entries() if environment is not None else []
     wanted = sorted(types if types is not None else needed_types(db))

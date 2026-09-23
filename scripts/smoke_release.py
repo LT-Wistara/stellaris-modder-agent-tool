@@ -23,6 +23,10 @@ def main():
         scripts = root / 'common' / 'scripted_triggers'
         scripts.mkdir(parents=True)
         (scripts / 'smoke.txt').write_text('release_smoke_trigger = { always = yes }', encoding='utf-8')
+        second_mod = Path(temp) / '第二个 Mod'
+        second_scripts = second_mod / 'common' / 'scripted_triggers'
+        second_scripts.mkdir(parents=True)
+        (second_scripts / 'smoke.txt').write_text('second_mod_trigger = { always = yes }', encoding='utf-8')
         with zipfile.ZipFile(args.archive) as archive:
             archive.extractall(root)
         exe = root / 'StellarisModderAgent' / 'StellarisModderAgent-server.exe'
@@ -51,8 +55,12 @@ def main():
         assert stats['PARSED'] == 173 and stats['lossless_roundtrip'], stats
         snippets = run('--print-only', '--no-game-data')
         assert str(exe) in snippets and 'start.py' not in snippets, snippets
-        doctor = json.loads(run('cli', '--mod-root', str(root), 'doctor'))
+        doctor = json.loads(run('cli', '--mod-root', str(root), '--mod-root', str(second_mod), 'doctor'))
         assert doctor['environment']['mod_root'] == str(root), doctor
+        assert doctor['environment']['mod_roots'] == [str(root), str(second_mod)], doctor
+        second_result = json.loads(run('cli', '--mod-root', str(root), '--mod-root', str(second_mod),
+                                       'search', 'second_mod_trigger', '--type', 'trigger'))
+        assert second_result['status'] == 'CONFIRMED_GAME_DATA', second_result
         messages = [
             {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize',
              'params': {'protocolVersion': '2025-11-25'}},
@@ -112,7 +120,7 @@ def main():
                 process.wait(timeout=10)
         print(json.dumps({'status': 'passed', 'corpus_files': stats['PARSED'],
                           'version': '0.1.3', 'checks': ['Windows GUI subsystem', 'console MCP helper', 'relocated Unicode path', 'empty PATH',
-                          'CLI corpus roundtrip', 'EXE client configuration', 'manual mod directory',
+                          'CLI corpus roundtrip', 'EXE client configuration', 'multiple mod directories indexed',
                           'stdio handshake and all four tools', 'HTTP handshake/list/search']}, indent=2))
     return 0
 

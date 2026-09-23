@@ -74,6 +74,7 @@ class Step:
 class Environment:
     game_root: Path | None = None
     mod_root: Path | None = None
+    mod_roots: list[Path] = field(default_factory=list)
     userdata_root: Path | None = None
     game_version: str | None = None
     mod_name: str | None = None
@@ -87,18 +88,20 @@ class Environment:
         return self.game_root is not None and self.dynamic_ready
 
     def entries(self):
-        """Ordered read sources: vanilla first, the user's mod second (it wins)."""
+        """Read the game, then every configured Mod in order."""
         result = []
         if self.game_root is not None:
             result.append(('game', self.game_root))
-        if self.mod_root is not None:
-            result.append(('mod', self.mod_root))
+        roots = self.mod_roots or ([self.mod_root] if self.mod_root is not None else [])
+        for number, root in enumerate(roots, 1):
+            result.append(('mod' if number == 1 else f'mod-{number}', root))
         return result
 
     def as_dict(self):
         return {
             'game_root': str(self.game_root) if self.game_root else None,
             'mod_root': str(self.mod_root) if self.mod_root else None,
+            'mod_roots': [str(root) for root in (self.mod_roots or ([self.mod_root] if self.mod_root else []))],
             'userdata_root': str(self.userdata_root) if self.userdata_root else None,
             'game_version': self.game_version,
             'mod_name': self.mod_name,
@@ -411,7 +414,19 @@ def detect_environment(game_root=None, mod_root=None, start=None):
     steps = []
     warnings = []
     env = Environment(steps=steps, warnings=warnings)
-    env.mod_root = detect_mod_root(mod_root, start=start, steps=steps)
+    configured = mod_root if isinstance(mod_root, (list, tuple)) else ([mod_root] if mod_root else [])
+    if configured:
+        seen = set()
+        for value in configured:
+            root = detect_mod_root(value, start=start, steps=steps)
+            if root is not None and str(root).casefold() not in seen:
+                env.mod_roots.append(root)
+                seen.add(str(root).casefold())
+    else:
+        root = detect_mod_root(start=start, steps=steps)
+        if root is not None:
+            env.mod_roots.append(root)
+    env.mod_root = env.mod_roots[0] if env.mod_roots else None
     if env.mod_root is not None:
         descriptor = read_descriptor(env.mod_root)
         env.mod_name = descriptor.get('name')

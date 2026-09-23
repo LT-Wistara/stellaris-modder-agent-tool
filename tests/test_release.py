@@ -19,6 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseCase(unittest.TestCase):
+    def test_launcher_accepts_multiple_mod_roots(self):
+        args = start.parse_arguments(['--mod-root', 'first', '--mod-root', 'second'])
+        self.assertEqual(args.mod_root, ['first', 'second'])
+
     def test_print_only_exits_when_stdin_is_piped(self):
         result = subprocess.run([sys.executable, str(ROOT / 'start.py'), '--print-only',
                                  '--no-game-data'], input='', capture_output=True,
@@ -32,7 +36,7 @@ class ReleaseCase(unittest.TestCase):
                 patch.object(start, 'build_database', return_value=object()), \
                 patch('stellaris_modder_agent.server.serve'):
             self.assertEqual(start.run(args), 0)
-        detect.assert_called_once_with(True, 'my-game', 'my-mod')
+        detect.assert_called_once_with(True, 'my-game', ['my-mod'])
 
     def test_frozen_config_calls_exe_without_script(self):
         output = io.StringIO()

@@ -98,6 +98,43 @@ class DesktopStateCase(unittest.TestCase):
         finally:
             self.app.settings = original
 
+    def test_mod_sources_are_saved_and_removable(self):
+        from stellaris_modder_agent.desktop_runtime import load_settings
+
+        with tempfile.TemporaryDirectory() as temp:
+            roots = [Path(temp) / 'mod-a', Path(temp) / 'mod-b']
+            for root in roots:
+                root.mkdir()
+                self.app.mod.set(str(root))
+                self.assertTrue(self.app.add_mod_root())
+            self.assertEqual(load_settings(self.app.settings_path)[0].mod_roots, list(map(str, roots)))
+            self.app.show_page('data')
+            self.app.update_idletasks()
+            tile = self.app._source_tiles[0]
+            title = next(child for child in tile.winfo_children() if child.winfo_manager() == 'place')
+            self.assertLessEqual(title.winfo_y() + title.winfo_height(), tile.winfo_height())
+            self.assertEqual(self.app._source_tiles[0].grid_info()['row'],
+                             self.app._source_tiles[1].grid_info()['row'])
+            self.app._show_source_remove(self.app._source_tiles[0], self.app._source_delete_buttons[0], str(roots[0]))
+            self.assertEqual(self.app._source_delete_buttons[0].winfo_manager(), 'place')
+            self.assertTrue(self.app.remove_mod_root(str(roots[0])))
+            self.assertEqual(load_settings(self.app.settings_path)[0].mod_roots, [str(roots[1])])
+            self.assertTrue(self.app.remove_mod_root(str(roots[1])))
+            self.app.show_page('overview')
+
+    def test_browse_adds_multiple_mod_sources_together(self):
+        from stellaris_modder_agent.desktop_runtime import load_settings
+
+        with tempfile.TemporaryDirectory() as temp:
+            roots = [Path(temp) / 'mod-a', Path(temp) / 'mod-b']
+            for root in roots:
+                root.mkdir()
+            with patch('stellaris_modder_agent.desktop.select_folders', return_value=list(map(str, roots))):
+                self.app.browse_mod()
+            self.assertEqual(load_settings(self.app.settings_path)[0].mod_roots, list(map(str, roots)))
+            for root in roots:
+                self.app.remove_mod_root(str(root))
+
     def test_force_exit_choice_closes_update_dialog(self):
         self.app._show_exit_dialog()
         self.assertTrue(self.app._exit_dialog.winfo_exists())

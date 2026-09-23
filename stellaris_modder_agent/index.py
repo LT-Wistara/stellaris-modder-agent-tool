@@ -325,8 +325,8 @@ class Database:
         report['version_check'] = self._version_check(report.get('environment') or {})
         report['sources'] = self._source_summary(report.get('environment') or {}, report)
         report['note'] = ('Read-only report. Game detection checks explicit configuration, '
-                          'Steam and default locations. Mod data is read only from an explicitly '
-                          'configured directory.')
+                          'Steam and default locations. Mod data is read only from explicitly '
+                          'configured directories.')
         return report
 
     @staticmethod
@@ -346,16 +346,16 @@ class Database:
     def _source_summary(self, environment, report):
         """State plainly which sources are usable here, and how to get the missing one."""
         project = 'https://github.com/LT-Wistara/stellaris-modder-agent-tool'
-        available = environment.get('mod_root') is not None
+        mod_roots = environment.get('mod_roots') or ([environment['mod_root']] if environment.get('mod_root') else [])
+        available = bool(mod_roots)
         index = report.get('index') or {}
         mod = {'root': environment.get('mod_root'), 'available': available,
+               'roots': mod_roots,
                'mod_name': environment.get('mod_name'),
                'mod_supported_version': environment.get('mod_supported_version')}
         if not available:
-            mod['note'] = ('Remote MCP server: it reads only the game installation and the mod '
-                           'directory it was started from, so your own mod cannot be resolved here. '
-                           'To resolve it, run the server inside your local mod root (the directory '
-                           'containing descriptor.mod).')
+            mod['note'] = ('No Mod source folder was configured for this server. Add Mod directories '
+                           'in the GUI or pass --mod-root for each folder to index them.')
             mod['project'] = project
         return {'game': {'root': environment.get('game_root'),
                          'version': environment.get('game_version'),

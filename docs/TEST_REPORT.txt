@@ -3,7 +3,7 @@ PARSED: 173
 FAILED: 0
 
 TESTS:
-363 passed
+368 passed
 0 failed
 
 CLI: passed
@@ -139,12 +139,15 @@ test_missing_path_retained_but_start_rejected (test_desktop.DesktopSettingsCase.
 test_missing_settings_use_defaults (test_desktop.DesktopSettingsCase.test_missing_settings_use_defaults) ... ok
 test_removed_theme_setting_is_ignored (test_desktop.DesktopSettingsCase.test_removed_theme_setting_is_ignored) ... ok
 test_settings_roundtrip_with_unicode_paths (test_desktop.DesktopSettingsCase.test_settings_roundtrip_with_unicode_paths) ... ok
+test_single_mod_setting_migrates_to_source_list (test_desktop.DesktopSettingsCase.test_single_mod_setting_migrates_to_source_list) ... ok
 test_stdio_config_preserves_flags_and_spaces (test_desktop.DesktopSettingsCase.test_stdio_config_preserves_flags_and_spaces) ... ok
+test_browse_adds_multiple_mod_sources_together (test_desktop_ui.DesktopStateCase.test_browse_adds_multiple_mod_sources_together) ... ok
 test_check_result_distinguishes_current_and_new (test_desktop_ui.DesktopStateCase.test_check_result_distinguishes_current_and_new) ... ok
 test_close_during_update_offers_exit_choice (test_desktop_ui.DesktopStateCase.test_close_during_update_offers_exit_choice) ... ok
 test_copy_http_button_uses_saved_port (test_desktop_ui.DesktopStateCase.test_copy_http_button_uses_saved_port) ... ok
 test_force_exit_choice_closes_update_dialog (test_desktop_ui.DesktopStateCase.test_force_exit_choice_closes_update_dialog) ... ok
 test_hidden_pages_are_unmapped (test_desktop_ui.DesktopStateCase.test_hidden_pages_are_unmapped) ... ok
+test_mod_sources_are_saved_and_removable (test_desktop_ui.DesktopStateCase.test_mod_sources_are_saved_and_removable) ... ok
 test_ready_and_stop_states (test_desktop_ui.DesktopStateCase.test_ready_and_stop_states) ... ok
 test_starting_button_spins_and_restores (test_desktop_ui.DesktopStateCase.test_starting_button_spins_and_restores) ... ok
 test_update_failure_restores_controls (test_desktop_ui.DesktopStateCase.test_update_failure_restores_controls) ... ok
@@ -296,6 +299,7 @@ A rule buried under a wall of detail is a rule that gets skipped. ... ok
 test_the_evidence_vocabulary_is_still_documented (test_instructions.InstructionCase.test_the_evidence_vocabulary_is_still_documented) ... ok
 test_environment_variable_is_manual_configuration (test_mod_root.ModRootCase.test_environment_variable_is_manual_configuration) ... ok
 test_explicit_path_is_used_with_or_without_descriptor (test_mod_root.ModRootCase.test_explicit_path_is_used_with_or_without_descriptor) ... ok
+test_multiple_mod_directories_are_both_indexed (test_mod_root.ModRootCase.test_multiple_mod_directories_are_both_indexed) ... ok
 test_placement_does_not_select_mod_even_with_descriptor (test_mod_root.ModRootCase.test_placement_does_not_select_mod_even_with_descriptor) ... ok
 test_all_declared_apis_and_registry_entries_remain_public (test_public_identifiers.PublicIdentifiersCase.test_all_declared_apis_and_registry_entries_remain_public) ... ok
 test_base_does_not_impersonate_an_effect (test_public_identifiers.PublicIdentifiersCase.test_base_does_not_impersonate_an_effect) ... ok
@@ -307,6 +311,7 @@ test_explicit_roots_are_forwarded (test_release.ReleaseCase.test_explicit_roots_
 test_frozen_config_calls_exe_without_script (test_release.ReleaseCase.test_frozen_config_calls_exe_without_script) ... ok
 test_frozen_mod_placement_is_not_used (test_release.ReleaseCase.test_frozen_mod_placement_is_not_used) ... ok
 test_ipv6_loopback_can_bind_and_url_is_valid (test_release.ReleaseCase.test_ipv6_loopback_can_bind_and_url_is_valid) ... ok
+test_launcher_accepts_multiple_mod_roots (test_release.ReleaseCase.test_launcher_accepts_multiple_mod_roots) ... ok
 test_port_probe_checks_server_identity_and_full_response (test_release.ReleaseCase.test_port_probe_checks_server_identity_and_full_response) ... ok
 test_print_only_exits_when_stdin_is_piped (test_release.ReleaseCase.test_print_only_exits_when_stdin_is_piped) ... ok
 test_printed_stdio_config_keeps_manual_mod_root (test_release.ReleaseCase.test_printed_stdio_config_keeps_manual_mod_root) ... ok
@@ -418,6 +423,6 @@ test_unknown_schema_field (test_tool.ValidateCase.test_unknown_schema_field) ...
 test_unknown_scope_context (test_tool.ValidateCase.test_unknown_scope_context) ... ok
 
 ----------------------------------------------------------------------
-Ran 363 tests in 134.982s
+Ran 368 tests in 137.292s
 
 OK

@@ -1,12 +1,12 @@
 # Game and mod data (dynamic names)
 
-The server reads exactly **two** data sources, and only when they exist:
+The server reads these data sources when available:
 
 1. **the Stellaris installation** — the game's own script files;
-2. **the manually configured mod directory** — the work in progress.
+2. **every manually configured Mod directory** — the source folders added by the user.
 
 The launcher database, playsets and other installed mods are deliberately *not*
-read: a modder validating their own mod needs vanilla plus their own files.
+read: indexing uses vanilla plus only the folders the user selects.
 
 Everything is read-only. If neither a game installation nor a Mod directory is available,
 the server uses only the bundled CWT corpus. `stellaris_doctor` reports the available sources.
@@ -23,14 +23,15 @@ the server uses only the bundled CWT corpus. `stellaris_doctor` reports the avai
 4. the usual install locations per platform.
 
 A game candidate is accepted only when it contains the game executable, `common/defines/00_defines.txt`
-and `common/economic_categories/`. The Mod root is never inferred from the tool's location.
-Enter it in the GUI, pass `--mod-root`, or set `STELLARIS_MOD_ROOT`. Without one of those,
+and `common/economic_categories/`. Mod roots are never inferred from the tool's location.
+Add them in the GUI, repeat `--mod-root`, or set `STELLARIS_MOD_ROOT` for one directory. Without these,
 Mod scripts are not indexed. An explicit path remains usable even without `descriptor.mod`.
 
 ```bash
 python stellaris_modder_tool.py doctor                 # what was detected, and what was indexed
 python stellaris_modder_tool.py --game-root "D:/Games/Stellaris" search has_background_job
 python stellaris_modder_tool.py --mod-root "D:/MyMod" doctor
+python stellaris_modder_tool.py --mod-root "D:/MyMod" --mod-root "D:/OtherMod" doctor
 python stellaris_modder_tool.py --no-game-data stats   # pure CWT: never touches disk outside the tool
 ```
 
@@ -38,7 +39,7 @@ python stellaris_modder_tool.py --no-game-data stats   # pure CWT: never touches
 
 The bundled corpus already declares *where* every definition type lives (`type[x]` with
 `path` / `path_extension` / `name_field`). Only those directories are scanned, from the
-game first and then from the mod, so the mod wins on conflict. That is a few dozen files
+game first and then from each configured Mod in order. Later folders win on conflicts. That is a few dozen files
 instead of the whole game tree.
 
 Only the members consumers need are kept (for example the economic-category declaration

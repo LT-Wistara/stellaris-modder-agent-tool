@@ -87,28 +87,29 @@ def write_archive(output, files):
                 archive.writestr(info, handle.read())
 
 
-def build_windows():
+def build_windows(staged=False):
     """Build an onedir EXE; the adjacent corpus remains updateable across runs."""
     if sys.platform != 'win32' or platform.machine().lower() not in ('amd64', 'x86_64'):
         raise SystemExit('Windows x64 Python is required for this release.')
     release = ROOT / 'Releases'
     work = ROOT / 'build' / 'windows'
+    dist = ROOT / 'build' / 'windows-dist' if staged else release
     release.mkdir(exist_ok=True)
     work.mkdir(parents=True, exist_ok=True)
     subprocess.run([
         sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean',
-        '--distpath', str(release), '--workpath', str(work),
+        '--distpath', str(dist), '--workpath', str(work),
         str(ROOT / 'scripts' / 'windows.spec'),
     ], check=True, cwd=ROOT)
-    return package_windows()
+    return package_windows(dist / 'StellarisModderAgent')
 
 
-def package_windows():
+def package_windows(folder=None):
     """Refresh release documentation and archive an already-built executable."""
     from importlib.metadata import distribution
     release = ROOT / 'Releases'
     name = 'StellarisModderAgent'
-    folder = release / name
+    folder = Path(folder) if folder is not None else release / name
     if not (folder / (name + '.exe')).is_file():
         raise SystemExit('Build the Windows EXE before packaging it.')
     for filename in ('README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md'):
@@ -134,7 +135,7 @@ def package_windows():
         if source.exists():
             shutil.copy2(source, docs / filename)
     output = release / f'{TOP}-{project_version()}-windows-x64.zip'
-    write_archive(output, [(path, path.relative_to(release).as_posix())
+    write_archive(output, [(path, (Path(name) / path.relative_to(folder)).as_posix())
                            for path in sorted(folder.rglob('*')) if path.is_file()
                            and path.name not in ('gui-settings.json', 'gui-settings.tmp') and path.suffix != '.log'])
     with zipfile.ZipFile(output) as archive:
@@ -148,9 +149,10 @@ def package_windows():
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--windows', action='store_true', help='build a standalone Windows x64 EXE zip')
+    parser.add_argument('--windows-staged', action='store_true', help='build the Windows zip while an older EXE is running')
     args = parser.parse_args(argv)
-    if args.windows:
-        return build_windows()
+    if args.windows or args.windows_staged:
+        return build_windows(staged=args.windows_staged)
     files = included_files()
     names = {archive_name[len(TOP) + 1:] for _, archive_name in files}
     missing = [name for name in REQUIRED if name not in names]

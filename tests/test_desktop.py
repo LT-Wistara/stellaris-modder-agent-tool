@@ -18,7 +18,7 @@ class DesktopSettingsCase(unittest.TestCase):
             folder = Path(temp) / '中文 Mod'
             folder.mkdir()
             path = Path(temp) / 'settings.json'
-            expected = Settings(port=12345, mod_root=str(folder), watch=False)
+            expected = Settings(port=12345, mod_roots=[str(folder)], watch=False)
             save_settings(path, expected)
             self.assertEqual(load_settings(path), (expected, None))
             self.assertFalse(path.with_suffix('.tmp').exists())
@@ -26,7 +26,8 @@ class DesktopSettingsCase(unittest.TestCase):
     def test_malformed_settings_recover(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'settings.json'
-            for content in ('broken', '[]', '{"port":true}', '{"port":70000}', '{"watch":"yes"}'):
+            for content in ('broken', '[]', '{"port":true}', '{"port":70000}', '{"watch":"yes"}',
+                            '{"mod_roots":"not-a-list"}'):
                 path.write_text(content, encoding='utf-8')
                 actual, warning = load_settings(path)
                 self.assertEqual(actual, Settings())
@@ -42,6 +43,12 @@ class DesktopSettingsCase(unittest.TestCase):
             path.write_text('{"port":9123,"theme":"light"}', encoding='utf-8')
             self.assertEqual(load_settings(path), (Settings(port=9123), None))
 
+    def test_single_mod_setting_migrates_to_source_list(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'settings.json'
+            path.write_text(json.dumps({'mod_root': str(Path(temp) / 'old-mod')}), encoding='utf-8')
+            self.assertEqual(load_settings(path)[0].mod_roots, [str(Path(temp) / 'old-mod')])
+
     def test_invalid_port_rejected(self):
         for value in (0, -1, 65536, True, '123'):
             with self.assertRaises(ValueError):
@@ -49,18 +56,19 @@ class DesktopSettingsCase(unittest.TestCase):
 
     def test_missing_path_retained_but_start_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
-            settings = Settings(mod_root=str(Path(temp) / 'missing'))
+            settings = Settings(mod_roots=[str(Path(temp) / 'missing')])
             path = Path(temp) / 'settings.json'
-            path.write_text(json.dumps({'mod_root': settings.mod_root}), encoding='utf-8')
+            path.write_text(json.dumps({'mod_roots': settings.mod_roots}), encoding='utf-8')
             self.assertEqual(load_settings(path)[0], settings)
             with self.assertRaises(ValueError):
                 settings.validate()
 
     def test_stdio_config_preserves_flags_and_spaces(self):
-        settings = Settings(mod_root='D:\\中文 Mod', game_data=False, watch=False)
+        settings = Settings(mod_roots=['D:\\中文 Mod', 'D:\\Second Mod'], game_data=False, watch=False)
         result = json.loads(client_config(settings, 'stdio', ['D:\\My Tool\\server.exe']))
         self.assertEqual(result['mcpServers']['stellaris']['args'],
-                         ['serve', '--mod-root', 'D:\\中文 Mod', '--no-game-data', '--no-watch'])
+                         ['serve', '--mod-root', 'D:\\中文 Mod', '--mod-root', 'D:\\Second Mod',
+                          '--no-game-data', '--no-watch'])
 
     def test_http_configuration_uses_selected_port(self):
         result = json.loads(client_config(Settings(port=9123), 'HTTP'))

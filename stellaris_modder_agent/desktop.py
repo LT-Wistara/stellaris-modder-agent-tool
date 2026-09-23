@@ -1,14 +1,17 @@
 """Modern desktop shell. All Tk work stays on the main thread."""
 import datetime
+from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import queue
-from tkinter import filedialog, messagebox
+from tkinter import Label as TkLabel, filedialog, messagebox
 
 import customtkinter as ctk
 
 from . import __version__
 from .desktop_runtime import Settings, ProcessTask, app_root, client_config, load_settings, save_settings
+from .folder_picker import select_folders
 
 BG = '#0b1020'
 SIDE = '#101729'
@@ -56,7 +59,8 @@ class Desktop(ctk.CTk):
         self.content.grid_rowconfigure(0, weight=1)
         self.port = ctk.StringVar(value=str(self.settings.port))
         self.game = ctk.StringVar(value=self.settings.game_root)
-        self.mod = ctk.StringVar(value=self.settings.mod_root)
+        self.mod = ctk.StringVar()
+        self.mod_roots = list(self.settings.mod_roots)
         self.game_data = ctk.BooleanVar(value=self.settings.game_data)
         self.watch = ctk.BooleanVar(value=self.settings.watch)
         self._overview()
@@ -158,10 +162,13 @@ class Desktop(ctk.CTk):
         self.label(row, '端口', 13, MUTED).pack(side='left', padx=(0, 12))
         entry = ctk.CTkEntry(row, textvariable=self.port, width=90, height=34, fg_color=BG, border_color=BORDER)
         entry.pack(side='left')
+        entry.bind('<FocusOut>', lambda _: self.save())
+        entry.bind('<Return>', lambda _: self.save())
         self.editable.append(entry)
         for text, variable in [('读取游戏 / Mod 数据', self.game_data), ('自动发现 Mod 改动', self.watch)]:
             switch = ctk.CTkSwitch(row, text=text, variable=variable, font=self.font(12),
-                                   progress_color=ACCENT, button_color='#f2f7ff', width=160)
+                                   progress_color=ACCENT, button_color='#f2f7ff', width=160,
+                                   command=self.save)
             switch.pack(side='left', padx=(22, 0))
             self.editable.append(switch)
         self.label(page, '首次启动会建立索引。关闭面板会停止由此面板启动的服务。', 12, MUTED).pack(anchor='w', pady=(18, 0))
@@ -170,25 +177,45 @@ class Desktop(ctk.CTk):
 
     def _data_page(self):
         page = self.page('data', 'WORKSPACE / 02', '数据与更新', '选择数据位置，管理随工具附带的 CWT 规则语料。')
-        paths = self.card(page)
+        body = ctk.CTkScrollableFrame(page, fg_color='transparent', corner_radius=0)
+        body.pack(fill='both', expand=True)
+        self.data_scroll = body
+        paths = self.card(body)
         paths.pack(fill='x')
         self.label(paths, '工作空间路径', 17).pack(anchor='w', padx=22, pady=(18, 0))
-        self.label(paths, '游戏目录留空时自动检测；Mod 目录请手动填写，留空则不指定 Mod。修改后下次启动生效。', 12, MUTED).pack(anchor='w', padx=22, pady=(4, 14))
-        for title, var in [('游戏安装目录', self.game), ('Mod 目录', self.mod)]:
-            self.label(paths, title, 12, MUTED).pack(anchor='w', padx=22)
-            row = ctk.CTkFrame(paths, fg_color='transparent')
-            row.pack(fill='x', padx=22, pady=(4, 14))
-            entry = ctk.CTkEntry(row, textvariable=var,
-                                placeholder_text='自动检测' if var is self.game else '输入 Mod 根目录', height=36,
-                                fg_color=BG, border_color=BORDER, font=self.font(12))
-            entry.pack(side='left', fill='x', expand=True)
-            browse = self.button(row, '浏览', lambda v=var: self.browse(v), width=74)
-            browse.pack(side='left', padx=(10, 0))
-            self.editable.extend([entry, browse])
-        self.save_button = self.button(paths, '保存设置', self.save, width=110)
-        self.save_button.pack(anchor='e', padx=22, pady=(0, 18))
-        self.editable.append(self.save_button)
-        update = self.card(page)
+        self.label(paths, '游戏目录留空时自动检测；可添加多个 Mod 源文件夹。更改会自动保存，下次启动服务时生效。', 12, MUTED).pack(anchor='w', padx=22, pady=(4, 14))
+        self.label(paths, '游戏安装目录', 12, MUTED).pack(anchor='w', padx=22)
+        game_row = ctk.CTkFrame(paths, fg_color='transparent')
+        game_row.pack(fill='x', padx=22, pady=(4, 14))
+        game_entry = ctk.CTkEntry(game_row, textvariable=self.game, placeholder_text='自动检测',
+                                  height=36, fg_color=BG, border_color=BORDER, font=self.font(12))
+        game_entry.pack(side='left', fill='x', expand=True)
+        game_entry.bind('<FocusOut>', lambda _: self.save())
+        game_entry.bind('<Return>', lambda _: self.save())
+        game_browse = self.button(game_row, '浏览', self.browse_game, width=74)
+        game_browse.pack(side='left', padx=(10, 0))
+        self.editable.extend([game_entry, game_browse])
+        self.label(paths, 'Mod 目录', 12, MUTED).pack(anchor='w', padx=22)
+        mod_row = ctk.CTkFrame(paths, fg_color='transparent')
+        mod_row.pack(fill='x', padx=22, pady=(4, 12))
+        mod_entry = ctk.CTkEntry(mod_row, textvariable=self.mod, placeholder_text='输入 Mod 目录后按回车添加',
+                                 height=36, fg_color=BG, border_color=BORDER, font=self.font(12))
+        mod_entry.pack(side='left', fill='x', expand=True)
+        mod_entry.bind('<Return>', lambda _: self.add_mod_root())
+        mod_browse = self.button(mod_row, '浏览', self.browse_mod, width=74)
+        mod_browse.pack(side='left', padx=(10, 0))
+        self.editable.extend([mod_entry, mod_browse])
+        self.label(paths, '源文件夹', 12, MUTED).pack(anchor='w', padx=22, pady=(0, 6))
+        self.source_grid = ctk.CTkFrame(paths, fg_color='transparent')
+        self.source_grid.pack(fill='x', padx=22)
+        self.source_grid.bind('<Configure>', lambda event: self._layout_sources(event.width))
+        self.source_hint = self.label(paths, '', 11, MUTED, wraplength=650, justify='left')
+        self.source_hint.pack(anchor='w', padx=22, pady=(2, 14))
+        self._source_tiles = []
+        self._source_delete_buttons = []
+        self._source_columns = 0
+        self._render_sources()
+        update = self.card(body)
         update.pack(fill='x', pady=(18, 0))
         self.label(update, 'CWT 规则语料', 17).pack(anchor='w', padx=22, pady=(18, 4))
         self.corpus_info = self.label(update, '正在读取本地语料…', 12, MUTED)
@@ -206,6 +233,112 @@ class Desktop(ctk.CTk):
         self.update_button = self.button(row, '检查更新', self.start_job, width=150)
         self.update_button.pack(side='left')
         self.label(row, '更新前请先停止服务', 12, MUTED).pack(side='right')
+
+    def _render_sources(self):
+        for child in self.source_grid.winfo_children():
+            child.destroy()
+        self._source_tiles = []
+        self._source_delete_buttons = []
+        self._source_columns = 0
+        self.source_hint.configure(text='')
+        if not self.mod_roots:
+            self.label(self.source_grid, '尚未添加源文件夹', 12, MUTED).grid(row=0, column=0, sticky='w', pady=(0, 6))
+            return
+        for root in self.mod_roots:
+            tile = ctk.CTkFrame(self.source_grid, width=80, height=21, fg_color='#23324b', corner_radius=3,
+                                border_width=1, border_color=BORDER)
+            tile.grid_propagate(False)
+            name = Path(root).name or root
+            name = name if len(name) <= 9 else name[:8] + '…'
+            title = TkLabel(tile, text=name, font=('Microsoft YaHei UI', 11), bg='#23324b', fg=TEXT,
+                            borderwidth=0, highlightthickness=0, padx=0, pady=0, anchor='w')
+            title.place(x=4, y=2, relwidth=1, width=-24, relheight=1, height=-4)
+            close = TkLabel(tile, text='×', font=('Arial', 11), bg='#34445d', fg=TEXT,
+                            borderwidth=0, cursor='hand2')
+            close.bind('<Button-1>', lambda _, value=root: self.remove_mod_root(value))
+            for widget in (tile, title, close):
+                widget.bind('<Enter>', lambda _, t=tile, b=close, value=root: self._show_source_remove(t, b, value), add='+')
+                widget.bind('<Leave>', lambda _, t=tile, b=close: self.after(60, self._hide_source_remove, t, b), add='+')
+            self._source_tiles.append(tile)
+            self._source_delete_buttons.append(close)
+        self._layout_sources(self.source_grid.winfo_width())
+
+    def _layout_sources(self, width):
+        if not self._source_tiles:
+            return
+        tile_width = self._source_tiles[0].winfo_reqwidth()
+        columns = min(8, max(1, width // (tile_width + 16)))
+        if columns == self._source_columns:
+            return
+        self._source_columns = columns
+        for index, tile in enumerate(self._source_tiles):
+            tile.grid(row=index // columns, column=index % columns, sticky='w', padx=(0, 8), pady=(0, 8))
+
+    def _show_source_remove(self, tile, button, root):
+        if tile.winfo_exists() and not (self.service.active or self.running or self.job.active):
+            button.place(relx=1, x=-2, y=2, anchor='ne', width=16, height=16)
+            self.source_hint.configure(text=root)
+
+    def _hide_source_remove(self, tile, button):
+        if not tile.winfo_exists():
+            return
+        x, y = tile.winfo_pointerx(), tile.winfo_pointery()
+        if tile.winfo_rootx() <= x < tile.winfo_rootx() + tile.winfo_width() and \
+                tile.winfo_rooty() <= y < tile.winfo_rooty() + tile.winfo_height():
+            return
+        button.place_forget()
+        self.source_hint.configure(text='')
+
+    def add_mod_root(self):
+        return self.add_mod_roots([self.mod.get().strip()])
+
+    def add_mod_roots(self, paths):
+        if self.service.active or self.running or self.job.active:
+            return False
+        if not paths:
+            return False
+        try:
+            roots = []
+            seen = {os.path.normcase(value) for value in self.mod_roots}
+            for raw in paths:
+                if not raw.strip():
+                    continue
+                root = str(Path(raw).resolve())
+                if not Path(root).is_dir():
+                    raise ValueError('Mod 目录不存在，请重新选择。')
+                if os.path.normcase(root) not in seen:
+                    roots.append(root)
+                    seen.add(os.path.normcase(root))
+            if not roots:
+                return False
+            settings = replace(self.settings, mod_roots=self.mod_roots + roots)
+            save_settings(self.settings_path, settings, check_paths=False)
+        except (ValueError, OSError) as error:
+            messagebox.showerror('无法添加源文件夹', str(error), parent=self)
+            return False
+        self.settings = settings
+        self.mod_roots.extend(roots)
+        self.mod.set('')
+        self._render_sources()
+        for root in roots:
+            self.log('已添加源文件夹：' + root)
+        return True
+
+    def remove_mod_root(self, root):
+        if self.service.active or self.running or self.job.active or root not in self.mod_roots:
+            return False
+        roots = [value for value in self.mod_roots if value != root]
+        settings = replace(self.settings, mod_roots=roots)
+        try:
+            save_settings(self.settings_path, settings, check_paths=False)
+        except (ValueError, OSError) as error:
+            messagebox.showerror('无法移除源文件夹', str(error), parent=self)
+            return False
+        self.settings = settings
+        self.mod_roots = roots
+        self._render_sources()
+        self.log('已移除源文件夹：' + root)
+        return True
 
     def _clients(self):
         page = self.page('clients', 'WORKSPACE / 03', '客户端接入', '复制配置到你的 MCP 客户端，重新加载后即可使用四个工具。')
@@ -273,12 +406,14 @@ class Desktop(ctk.CTk):
             port = int(self.port.get())
         except ValueError:
             raise ValueError('端口必须是 1 到 65535 之间的整数。') from None
-        return Settings(port, self.game.get().strip(), self.mod.get().strip(),
+        return Settings(port, self.game.get().strip(), list(self.mod_roots),
                         self.game_data.get(), self.watch.get()).validate()
 
     def save(self):
         try:
             settings = self.current_settings()
+            if settings == self.settings:
+                return True
             save_settings(self.settings_path, settings)
             self.settings = settings
             self.endpoint.configure(text=settings.url)
@@ -289,10 +424,20 @@ class Desktop(ctk.CTk):
             messagebox.showerror('无法保存设置', str(error), parent=self)
             return False
 
-    def browse(self, variable):
+    def browse_game(self):
         path = filedialog.askdirectory(parent=self, title='选择目录')
         if path:
-            variable.set(path)
+            self.game.set(path)
+            self.save()
+
+    def browse_mod(self):
+        try:
+            paths = select_folders(self)
+        except OSError:
+            path = filedialog.askdirectory(parent=self, title='选择 Mod 目录')
+            paths = [path] if path else []
+        if paths:
+            self.add_mod_roots(paths)
 
     def copy(self, text):
         self.clipboard_clear()

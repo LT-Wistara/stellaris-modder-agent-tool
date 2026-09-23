@@ -112,7 +112,8 @@ def parse_arguments(argv):
     parser.add_argument('--no-watch', action='store_true',
                         help='do not re-index game/mod files when they change')
     parser.add_argument('--game-root', metavar='DIR', help='Stellaris installation directory')
-    parser.add_argument('--mod-root', metavar='DIR', help='mod directory containing descriptor.mod')
+    parser.add_argument('--mod-root', metavar='DIR', action='append',
+                        help='Mod directory to index; repeat for multiple Mods')
     parser.add_argument('--print-only', action='store_true',
                         help='print configuration and exit without starting a server')
     parser.add_argument('--no-update-check', action='store_true',
@@ -185,7 +186,8 @@ def report(database, environment, health):
     game_root = getattr(environment, 'game_root', None)
     mod_root = getattr(environment, 'mod_root', None)
     say('  游戏本体    : ' + (str(game_root) if game_root else '未检测到'))
-    say('  Mod 目录    : ' + (str(mod_root) if mod_root else '未检测到'))
+    mod_roots = getattr(environment, 'mod_roots', []) or ([mod_root] if mod_root else [])
+    say('  Mod 目录    : ' + (', '.join(map(str, mod_roots)) if mod_roots else '未配置'))
     if health and health.get('reason'):
         say('')
         say('  [注意] ' + health['reason'])
@@ -486,8 +488,9 @@ def run(argv):
     client_flags = []
     if args.game_root:
         client_flags += ['--game-root', args.game_root]
-    if environment is not None and environment.mod_root is not None:
-        client_flags += ['--mod-root', str(environment.mod_root)]
+    if environment is not None:
+        for root in environment.mod_roots:
+            client_flags += ['--mod-root', str(root)]
     if args.no_game_data:
         client_flags.append('--no-game-data')
     if args.no_watch:
